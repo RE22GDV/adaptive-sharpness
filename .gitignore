@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Measurement output. The committed results live in docs/results/ and
+# docs/figures/; everything a run produces locally stays out of the repository.
+data/*.csv
+data/*.json
+data/*_frames/
+data/logs/
+
+# Snapshots written by the UI's `s` key
+focus_ui_*.png
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

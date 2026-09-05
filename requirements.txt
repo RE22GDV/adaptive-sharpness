@@ -1,0 +1,22 @@
+# Runtime dependencies of the core library.
+#
+# These two are the ONLY hard requirements. Configuration is TOML, read with the
+# standard library's tomllib (Python 3.11+), and the Haar wavelet transform is
+# implemented directly in sharpness/metrics/frequency.py, so neither a TOML
+# package nor PyWavelets is needed.
+numpy>=1.24
+opencv-python>=4.8
+
+# --- Optional -------------------------------------------------------------
+# PTP live view (Panasonic GH6 and other PTP cameras over USB).
+# On Raspberry Pi OS install the system packages instead of this wheel:
+#     sudo apt install gphoto2 libgphoto2-dev python3-gphoto2
+# gphoto2>=2.3
+#
+# Figure generation for the documentation (tools/make_figures.py):
+# matplotlib>=3.5
+
+# Verified versions on the target machine (Raspberry Pi 5, Raspberry Pi OS
+# bookworm, Python 3.11.2, aarch64):
+#     numpy 1.26.4, opencv-python 4.13.0, matplotlib 3.6.3,
+#     python-gphoto2 1.9.0 (libgphoto2 2.5.30), pytest 9.1.1

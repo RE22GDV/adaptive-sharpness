@@ -1,0 +1,8 @@
+# Everything needed to run the tests, the experiments and the figure scripts.
+-r requirements.txt
+
+pytest>=7.0
+matplotlib>=3.5
+
+# Optional but recommended for working on the camera path:
+# gphoto2>=2.3

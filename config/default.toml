@@ -1,0 +1,206 @@
+# Default configuration for the adaptive sharpness evaluator.
+#
+# Every key mirrors a field of the dataclasses in sharpness/config.py, and any
+# key not listed here keeps its documented default.  Unknown keys and unknown
+# sections are rejected at load time, so a typo fails loudly instead of being
+# silently ignored.
+#
+#   from sharpness import load_config, SharpnessEvaluator
+#   evaluator = SharpnessEvaluator(load_config("config/default.toml"))
+
+[pipeline]
+# Metrics run on a downscaled copy; the full frame is only used for display.
+# 320 px costs about 8 ms per frame on a Raspberry Pi 5, comfortably inside the
+# 40 ms the GH6 live view allows.
+# Pick a width whose resulting HEIGHT factorises well: measured on a 640x360
+# source, width 240 (height 135, odd) costs 8.61 ms while width 320 (height 180)
+# costs 7.91 ms - smaller but slower, because the FFT length is unfriendly.
+analysis_width = 320
+allow_upscale = false
+interpolation = "INTER_AREA"
+# 1.0 analyses the whole frame. Pass an explicit ROI to evaluate() instead of
+# changing this unless every call should use the same centred region.
+default_roi_fraction = 1.0
+# A pre-blur removes sensor noise but also part of the signal being measured;
+# leave it off unless the source is genuinely noisy.
+prefilter_sigma = 0.0
+
+[metrics]
+enabled = ["laplacian", "tenengrad", "brenner", "wavelet", "fourier", "edge_width"]
+# Divides the energy-type metrics by mean(I)^2, making them invariant to a pure
+# illumination change. Set false for the textbook definitions.
+contrast_normalize = true
+fourier_high_cutoff = 0.25
+wavelet_levels = 2
+brenner_shift = 2
+# Percentile-adaptive Canny thresholds. Fixed thresholds were measured to make
+# the edge-width metric non-monotone in the defocus (see docs/ALGORITHM.md).
+edge_canny_percentile = 97.0
+edge_canny_ratio = 0.4
+# Bounds the largest measurable edge width, at roughly window - 2 pixels.
+edge_range_window = 11
+edge_min_gradient = 1.0
+
+[metrics.priors]
+laplacian = 1.0
+tenengrad = 1.0
+brenner = 1.0
+wavelet = 1.0
+fourier = 0.8
+edge_width = 0.8
+
+[normalization]
+window = 120
+warmup = 5
+log_compress = true
+low_percentile = 5.0
+high_percentile = 95.0
+min_range_ratio = 0.001
+
+[analysis]
+# Noise sigma (8-bit units) that counts as fully degraded.
+# Note: the GH6 live-view JPEG is denoised in-camera and measures ~0 here, so
+# the noise adaptation stays inactive on that source. See docs/LIMITATIONS.md.
+noise_ref_sigma = 6.0
+motion_ref_px = 3.0
+# Measured with tools/calibrate_stats.py: a rich synthetic scene reaches ~0.045
+# and a real GH6 frame of an ordinary indoor subject sits at 0.006-0.009.
+edge_ref_density = 0.03
+contrast_ref = 0.08
+clip_high_level = 250
+clip_low_level = 5
+clip_ref_fraction = 0.15
+brightness_low = 0.15
+brightness_high = 0.85
+motion_downscale = 4
+
+[focus_map]
+# Dense per-tile map used to answer "what is in focus", as opposed to "how
+# sharp is the frame". At the 320 px analysis width a 32 px tile gives a
+# 10 x 5 grid on a 16:9 frame, and the whole stage costs about 2 ms.
+tile_size = 32
+# Chosen by measurement (tools/compare_focus_measures.py). All three candidate
+# measures separate sharp from blurred on clean scenes, but at noise sigma 20
+# "lap_over_grad" collapses to a 0.039 margin while "grad_over_var" keeps 0.257
+# and also has the smallest false margin when both halves are equally sharp.
+measure = "grad_over_var"
+# Below this RMS contrast a tile carries no focus information at all and is
+# marked invalid. Reporting a blank wall as "out of focus" would be wrong.
+min_contrast = 0.02
+min_gradient_energy = 0.0
+low_percentile = 10.0
+high_percentile = 90.0
+# How much the tile measure must vary across the frame, relative to its own
+# median, before the rescale may stretch to the full range. Without this, a
+# uniformly sharp frame has its numerical noise amplified into a
+# confident-looking winner.
+min_relative_spread = 0.8
+smooth = true
+
+[regions]
+# "faces" uses the Haar cascade bundled with OpenCV (no download needed) and
+# gives a named subject; "sharp_blobs" clusters the focus map itself and works
+# on anything, including objects no classifier knows about.
+detectors = ["faces", "sharp_blobs"]
+face_cascade = "haarcascade_frontalface_default.xml"
+face_scale_factor = 1.15
+face_min_neighbors = 5
+face_min_size_fraction = 0.08
+# The cascade is the most expensive step here, so run it every Nth frame and
+# reuse its boxes in between.
+face_interval = 3
+blob_relative_threshold = 0.55
+blob_min_tiles = 2
+max_regions = 5
+min_area_fraction = 0.004
+merge_iou = 0.45
+subject_iou_match = 0.30
+
+[ensemble]
+use_agreement = true
+agreement_scale = 1.5
+weight_floor = 0.02
+# Ablation switches used by tools/compare_methods.py.
+use_noise_compensation = true
+use_motion_compensation = true
+confidence_snr_ref = 12.0
+# Measured on live GH6 frames over a subject-sized ROI: the routine metric
+# spread is 0.18 median / 0.33 p95, so 0.25 zeroed the confidence on about a
+# quarter of good frames.
+confidence_dispersion_ref = 0.45
+warmup_confidence = 0.3
+
+# Sensitivity coefficients kappa_ij of the reliability model
+#   r_i = exp( -sum_j kappa_ij * d_j )
+# Larger means the metric degrades faster under that condition. These are
+# reasoned starting points, not measured constants - see docs/ALGORITHM.md for
+# what still needs validating.
+[ensemble.sensitivity.laplacian]
+noise = 2.2
+edge = 0.6
+clip = 0.5
+motion = 0.6
+contrast = 0.7
+
+[ensemble.sensitivity.tenengrad]
+noise = 1.2
+edge = 0.7
+clip = 0.6
+motion = 0.7
+contrast = 0.8
+
+[ensemble.sensitivity.brenner]
+noise = 1.0
+edge = 0.9
+clip = 0.6
+motion = 0.9
+contrast = 0.9
+
+[ensemble.sensitivity.wavelet]
+noise = 1.6
+edge = 0.5
+clip = 0.5
+motion = 0.6
+contrast = 0.6
+
+[ensemble.sensitivity.fourier]
+noise = 1.9
+edge = 0.4
+clip = 0.7
+motion = 0.5
+contrast = 0.6
+
+[ensemble.sensitivity.edge_width]
+noise = 1.4
+edge = 2.2
+clip = 0.9
+motion = 1.0
+contrast = 1.0
+
+[temporal]
+enabled = true
+# Baseline smoothing. The gate raises this towards 1 when the innovation is
+# large, so a real focus transition is not delayed.
+alpha_base = 0.35
+gate_sigma = 2.5
+gate_full_sigma = 5.0
+gate_abs_jump = 0.12
+history = 30
+confidence_coupling = true
+min_confidence_gain = 0.3
+
+[capture]
+# auto -> a real V4L2 capture node if one exists, else PTP live view.
+# The GH6 in its tethering USB mode offers no UVC interface, so it resolves to
+# gphoto2. See docs/GH6_SETUP.md.
+backend = "auto"
+device = "0"
+path = ""
+width = 1280
+height = 720
+fps = 30
+fourcc = "MJPG"
+# Threaded capture measured 7.4 ms of frame age against 9.1 ms serial on the
+# GH6, at the same 25 fps. Under overload it trades latency for throughput.
+threaded = true
+loop = false

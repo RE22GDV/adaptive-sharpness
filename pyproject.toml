@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adaptive-sharpness"
+version = "1.0.0"
+description = "Real-time adaptive ensemble sharpness evaluation and in-focus subject detection for autofocus systems"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+keywords = [
+    "autofocus",
+    "sharpness",
+    "focus-measure",
+    "computer-vision",
+    "raspberry-pi",
+    "opencv",
+    "gphoto2",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video :: Capture",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+# The library core needs nothing but these two.
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python>=4.8",
+]
+
+[project.optional-dependencies]
+# PTP live view, the working path for the Panasonic GH6 over USB-C.
+# On Raspberry Pi OS prefer the system package: sudo apt install python3-gphoto2
+camera = ["gphoto2>=2.3"]
+# Figure generation for the documentation.
+figures = ["matplotlib>=3.5"]
+dev = [
+    "pytest>=7.0",
+    "matplotlib>=3.5",
+]
+
+[project.scripts]
+sharpness-probe = "tools.probe_camera:main"
+sharpness-bench = "tools.benchmark:main"
+sharpness-compare = "tools.compare_methods:main"
+sharpness-collect = "tools.collect_dataset:main"
+sharpness-ui = "demo.focus_ui:main"
+
+[tool.setuptools]
+packages = ["sharpness", "sharpness.metrics", "capture", "tools"]
+
+[tool.setuptools.package-data]
+sharpness = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# No addopts: a -q here would stack with a -q on the command line and
+# suppress the summary line entirely.
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 92
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
