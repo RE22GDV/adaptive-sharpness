@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: py${{ matrix.python }} / opencv ${{ matrix.opencv }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+        # Both ends of the supported OpenCV range. The upper bound exists
+        # because a 5.0 run fails a substantial part of the suite, largely
+        # around CascadeClassifier availability; this matrix is what will show
+        # when that stops being true.
+        opencv: ["4.8.1.78", "4.11.0.86"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install "opencv-python==${{ matrix.opencv }}"
+          pip install -e ".[dev]"
+
+      - name: Report versions
+        run: |
+          python -c "import sys, numpy, cv2; print(sys.version); print('numpy', numpy.__version__); print('opencv', cv2.__version__)"
+
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+  wheel:
+    name: clean wheel install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+
+      # A previous release shipped a console script pointing at a module the
+      # wheel did not contain, declared py.typed without the file, and left the
+      # default config outside the package. None of that is visible from a
+      # source checkout, so the wheel is installed and exercised on its own.
+      - name: Install the wheel into a clean environment
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+
+      - name: Import and evaluate from outside the source tree
+        working-directory: /
+        run: |
+          /tmp/clean/bin/python - <<'PY'
+          import numpy as np
+          import adaptive_sharpness as a
+          from adaptive_sharpness.capture import open_source  # noqa: F401
+
+          print("version", a.__version__)
+
+          cfg = a.load_default_config()
+          assert a.default_config_path().is_file(), "packaged config missing"
+          assert cfg == a.SharpnessConfig(), "packaged config drifted from defaults"
+
+          import pathlib
+          assert (pathlib.Path(a.__file__).parent / "py.typed").is_file(), "py.typed missing"
+
+          rng = np.random.default_rng(0)
+          frame = np.clip(rng.normal(128, 40, (360, 640, 3)), 0, 255).astype(np.uint8)
+          result = a.SharpnessEvaluator(cfg).evaluate(frame)
+          assert 0.0 <= result.filtered_score <= 1.0
+          assert result.instantaneous_score is not None
+          assert len(result.metrics) == 6
+
+          scene = a.SceneEvaluator(cfg).evaluate(frame)
+          assert scene.focus_map is not None
+          print("wheel OK")
+          PY
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check src tools demo tests
+        continue-on-error: true

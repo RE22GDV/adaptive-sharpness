@@ -19,7 +19,12 @@ from typing import Any, Callable
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+_ROOT = Path(__file__).resolve().parents[1]
+# src/ for the library; the repository root because this script imports a
+# sibling tool, and tools/ is deliberately not an installed package.
+for _entry in (_ROOT / "src", _ROOT):
+    if str(_entry) not in sys.path:
+        sys.path.insert(0, str(_entry))
 
 import matplotlib  # noqa: E402
 
@@ -145,7 +150,9 @@ def figure_sweep(config: SharpnessConfig, out: Path) -> None:
 def figure_methods(config: SharpnessConfig, out: Path) -> None:
     """Hill-climb distance and discrimination, per method and condition."""
     conditions = build_synthetic_conditions(config, 41, seed=7)
-    shown = ["clean", "low_texture", "noise_sigma_20", "clipped_highlights"]
+    # Conditions that actually separate the methods once the hill-climb
+    # criterion no longer stops dead on the normalisation plateau.
+    shown = ["clean", "low_texture", "low_texture_noisy", "dark_and_noisy"]
     methods = [
         "single:laplacian", "single:edge_width", "plain_mean",
         "fixed_weighted", "adaptive",
@@ -162,7 +169,7 @@ def figure_methods(config: SharpnessConfig, out: Path) -> None:
             discrim[row, col] = results[method]["discrimination"]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
-    width = 0.19
+    width = 0.2
     x = np.arange(len(methods))
     palette = ["#2e4057", "#00798c", "#edae49", "#d1495b"]
 
@@ -173,7 +180,7 @@ def figure_methods(config: SharpnessConfig, out: Path) -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("steps from the true peak")
-    ax.set_title("Hill-climb distance (lower is better)")
+    ax.set_title("Hill-climb distance, steps from the true peak (lower is better)")
     ax.legend(fontsize=8)
 
     ax = axes[1]

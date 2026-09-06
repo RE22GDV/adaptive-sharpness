@@ -37,7 +37,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from adaptive_sharpness.capture import CaptureError, open_source  # noqa: E402
-from adaptive_sharpness import ROI, SharpnessEvaluator, load_config  # noqa: E402
+from adaptive_sharpness import ROI, SharpnessEvaluator, load_config, load_default_config  # noqa: E402
 
 logger = logging.getLogger("collect")
 

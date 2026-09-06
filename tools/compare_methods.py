@@ -57,7 +57,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from adaptive_sharpness import ROI, SharpnessConfig, load_config  # noqa: E402
+from adaptive_sharpness import ROI, SharpnessConfig, load_config, load_default_config  # noqa: E402
 from adaptive_sharpness.analysis import ImageAnalyzer  # noqa: E402
 from adaptive_sharpness.ensemble import AdaptiveEnsemble  # noqa: E402
 from adaptive_sharpness.metrics import build_metrics  # noqa: E402
@@ -307,35 +307,67 @@ def count_false_peaks(scores: Sequence[float], threshold: float = 0.7) -> int:
 def hill_climb_distance(scores: Sequence[float], best_index: int) -> float:
     """Mean distance from the true peak after a greedy search from both ends.
 
-    This is the criterion that matters operationally: an autofocus loop never
-    sees the whole curve, it takes steps and follows the gradient.  A score with
-    good monotonicity but one misleading bump still fails here.
+    This models what an autofocus loop actually does: it never sees the whole
+    curve, it takes steps and follows the gradient.
+
+    Two corrections over a naive implementation, both of which mattered:
+
+    * **Plateaus must be traversable.** The normalisation clips to ``[0, 1]``,
+      so several frames near focus can share exactly the same value.  A strict
+      ``>`` comparison stops dead at the first of them and scores a curve as a
+      total failure when it is merely saturated, which is a property of the
+      display scale rather than of the focus measure.  Steps within
+      ``tolerance`` of flat are therefore allowed to continue.
+    * **The search must not wander forever.** Traversing flat regions needs a
+      step budget, or a completely flat score runs to the far end.
     """
     values = list(scores)
     size = len(values)
     if size < 2:
         return 0.0
+    span = max(values) - min(values)
+    tolerance = max(1e-9, 0.01 * span)
 
     def climb(start: int) -> int:
         position = start
         direction = 1 if start < best_index else -1
-        while 0 <= position + direction < size:
-            if values[position + direction] > values[position]:
-                position += direction
+        best_seen = position
+        for _ in range(size * 2):
+            nxt = position + direction
+            if not 0 <= nxt < size:
+                break
+            if values[nxt] > values[position] - tolerance:
+                position = nxt
+                if values[position] > values[best_seen]:
+                    best_seen = position
                 continue
-            # Try the other direction once before stopping, as a real search
-            # would when a step fails to improve.
             other = -direction
-            if 0 <= position + other < size and values[position + other] > values[position]:
+            if 0 <= position + other < size and \
+                    values[position + other] > values[position] + tolerance:
                 direction = other
-                position += direction
                 continue
             break
-        return position
+        # A real search reports the best position it saw, not where it stopped.
+        return best_seen
 
     return float(
         np.mean([abs(climb(0) - best_index), abs(climb(size - 1) - best_index)])
     )
+
+
+def peak_plateau_width(scores: Sequence[float], tolerance_fraction: float = 0.01) -> int:
+    """How many frames sit within ``tolerance`` of the maximum.
+
+    Reported alongside ``peak_error`` because a wide plateau means the metric
+    genuinely cannot resolve those frames, and demanding a unique argmax there
+    tests the tie-breaking of ``np.argmax`` rather than the focus measure.
+    """
+    values = np.asarray(scores, dtype=np.float64)
+    if values.size == 0:
+        return 0
+    span = float(values.max() - values.min())
+    tolerance = max(1e-9, tolerance_fraction * span)
+    return int(np.count_nonzero(values >= values.max() - tolerance))
 
 
 def evaluate_series(scores: Sequence[float], best_index: int) -> dict[str, float]:
@@ -343,6 +375,7 @@ def evaluate_series(scores: Sequence[float], best_index: int) -> dict[str, float
         "monotonicity": round(monotonicity(scores, best_index), 4),
         "peak_error": peak_error(scores, best_index),
         "hill_climb": round(hill_climb_distance(scores, best_index), 2),
+        "peak_plateau": peak_plateau_width(scores),
         "discrimination": round(discrimination(scores), 3),
         "false_peaks": count_false_peaks(scores),
     }
@@ -494,15 +527,15 @@ def print_table(title: str, results: dict[str, dict[str, Any]]) -> None:
     print(f"\n{title}")
     header = (
         f"  {'method':26s} {'monotonic':>10} {'peak_err':>9} {'climb':>7} "
-        f"{'discrim':>8} {'false_pk':>9} {'us/frame':>9}"
+        f"{'plateau':>8} {'discrim':>8} {'false_pk':>9}"
     )
     print(header)
     print("  " + "-" * (len(header) - 2))
     for name, entry in results.items():
         print(
             f"  {name:26s} {entry['monotonicity']:10.3f} {entry['peak_error']:9d} "
-            f"{entry['hill_climb']:7.1f} {entry['discrimination']:8.2f} "
-            f"{entry['false_peaks']:9d} {entry['combine_us_per_frame']:9.1f}"
+            f"{entry['hill_climb']:7.1f} {entry['peak_plateau']:8d} "
+            f"{entry['discrimination']:8.2f} {entry['false_peaks']:9d}"
         )
 
 
