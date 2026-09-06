@@ -44,6 +44,7 @@ import logging
 import sys
 import time
 from collections import deque
+from datetime import datetime
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Sequence
@@ -55,6 +56,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from adaptive_sharpness.capture import CaptureError, open_source  # noqa: E402
 from adaptive_sharpness import (  # noqa: E402
     METRIC_NAMES,
+    RunRecorder,
     SceneEvaluator,
     SceneResult,
     SharpnessConfig,
@@ -78,6 +80,13 @@ POOR = (92, 92, 240)
 WINNER = (110, 235, 130)
 CANDIDATE = (170, 170, 90)
 OFF = (78, 78, 88)
+REC_IDLE = (70, 70, 200)
+REC_LIVE = (60, 60, 235)
+
+#: Canvas-space rectangle of the record button, refreshed by render() so the
+#: mouse callback can hit-test it. Kept module level because OpenCV's
+#: highgui has no widget model to attach it to.
+RECORD_BUTTON: dict[str, tuple[int, int, int, int]] = {}
 
 TILE_SIZES = (16, 24, 32, 48)
 #: Short labels for the metric toggles, in the order of METRIC_NAMES.
@@ -319,6 +328,7 @@ def draw_panel(
     confidence_history: Sequence[float],
     dropped: int,
     paused: bool,
+    recorder: RunRecorder | None = None,
 ) -> np.ndarray:
     import cv2
 
@@ -342,6 +352,23 @@ def draw_panel(
     subject = result.subject
     subject_result = result.subject_result
     fmap = result.focus_map
+
+    # --- record button ------------------------------------------------------
+    bx1, by1 = PANEL_WIDTH - 104, 12
+    bx2, by2 = PANEL_WIDTH - 14, 40
+    recording = recorder is not None and recorder.active
+    cv2.rectangle(panel, (bx1, by1), (bx2, by2),
+                  REC_LIVE if recording else (52, 52, 60), -1)
+    cv2.rectangle(panel, (bx1, by1), (bx2, by2),
+                  REC_LIVE if recording else REC_IDLE, 1)
+    if recording:
+        cv2.rectangle(panel, (bx1 + 9, by1 + 10), (bx1 + 17, by1 + 18), (255, 255, 255), -1)
+        text("STOP", by2 - 9, (255, 255, 255), 0.42, x=bx1 + 24)
+    else:
+        cv2.circle(panel, (bx1 + 13, by1 + 14), 5, REC_IDLE, -1)
+        text("REC", by2 - 9, TEXT, 0.42, x=bx1 + 24)
+    # Panel-space rect; render() converts it to canvas space for hit-testing.
+    RECORD_BUTTON["panel"] = (bx1, by1, bx2, by2)
 
     # --- what is in focus --------------------------------------------------
     y = 24
@@ -467,6 +494,12 @@ def draw_panel(
     text(f"dropped {dropped}", y, MUTED, 0.35)
     if paused:
         text("PAUSED", y, OKAY, 0.43, x=column)
+    if recorder is not None and recorder.active:
+        y += 15
+        text(f"REC {recorder.elapsed:5.1f} s   {recorder.frames} frames",
+             y, REC_LIVE, 0.4)
+        y += 14
+        text(f"-> {recorder.directory}", y, MUTED, 0.34)
 
     # --- legend and history -------------------------------------------------
     legend_y = height - PLOT_HEIGHT - 76
@@ -481,7 +514,7 @@ def draw_panel(
     plot_y = height - PLOT_HEIGHT - 24
     draw_plot(panel, list(history), list(confidence_history),
               (left, plot_y), (right - left, PLOT_HEIGHT))
-    text("q quit  h heat  b boxes  g grid  s save  0 reset switches",
+    text("q quit  h heat  b boxes  g grid  s save  R record  0 reset",
          height - 8, DIM, 0.33)
     return panel
 
@@ -507,18 +540,52 @@ def render(
     confidence_history: Sequence[float] = (),
     dropped: int = 0,
     paused: bool = False,
+    recorder: RunRecorder | None = None,
 ) -> np.ndarray:
     """Build the complete UI image for one frame."""
     target_height = max(MIN_CANVAS_HEIGHT, frame.shape[0])
     video = compose_video(frame, result, state, target_height)
     panel = draw_panel(result, state, video.shape[0], fps, age_ms,
-                       history, confidence_history, dropped, paused)
+                       history, confidence_history, dropped, paused, recorder)
+    # The panel sits to the right of the video, so shift the button rect by the
+    # video width to get canvas coordinates for hit-testing.
+    if "panel" in RECORD_BUTTON:
+        bx1, by1, bx2, by2 = RECORD_BUTTON["panel"]
+        offset = video.shape[1]
+        RECORD_BUTTON["canvas"] = (bx1 + offset, by1, bx2 + offset, by2)
     return compose(video, panel)
 
 
 # ---------------------------------------------------------------------------
 # Runners
 # ---------------------------------------------------------------------------
+
+def toggle_recording(
+    recorder: RunRecorder | None,
+    config: SharpnessConfig,
+    out_root: Path,
+    save_every: int,
+    source_description: str,
+) -> RunRecorder | None:
+    """Start a new recording, or stop the running one.
+
+    Each recording gets its own timestamped directory, so pressing the button
+    twice never overwrites an earlier run.
+    """
+    if recorder is not None and recorder.active:
+        summary = recorder.stop()
+        print(f"recording stopped: {summary.get('frames', 0)} frames, "
+              f"{summary.get('duration_s', 0):.1f} s, "
+              f"{summary.get('images_saved', 0)} images -> {recorder.directory}")
+        return None
+
+    directory = out_root / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    new = RunRecorder(directory, config, save_every=save_every,
+                      note="recorded from the UI")
+    new.start(source_description)
+    print(f"recording to {directory}")
+    return new
+
 
 def describe(result: SceneResult) -> str:
     subject = result.subject
@@ -623,6 +690,14 @@ def main(argv: list[str] | None = None) -> int:
         help="start with fixed weights instead of adaptive ones",
     )
     parser.add_argument("--no-temporal", action="store_true")
+    parser.add_argument(
+        "--record-dir", type=Path, default=Path("data"),
+        help="where the record button writes runs (default: data/)",
+    )
+    parser.add_argument(
+        "--save-every", type=int, default=10,
+        help="record every Nth frame as PNG",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -686,6 +761,22 @@ def main(argv: list[str] | None = None) -> int:
     age_ms = 0.0
     previous = time.perf_counter()
     snapshots = 0
+    recorder: RunRecorder | None = None
+    record_root = args.record_dir
+    save_every = max(1, args.save_every)
+
+    def on_mouse(event: int, x: int, y: int, flags: int, param: Any) -> None:  # noqa: ARG001
+        nonlocal recorder
+        if event != cv2.EVENT_LBUTTONDOWN:
+            return
+        rect = RECORD_BUTTON.get("canvas")
+        if rect and rect[0] <= x <= rect[2] and rect[1] <= y <= rect[3]:
+            recorder = toggle_recording(
+                recorder, state.apply(base), record_root, save_every,
+                source.description,
+            )
+
+    cv2.setMouseCallback(window, on_mouse)
 
     def rebuild() -> SceneEvaluator:
         """Recreate the evaluator after a switch changed the configuration."""
@@ -696,7 +787,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"source: {source.description}")
     print("keys: q quit | 1-6 metrics | a adapt | n noise | m motion | c agree | "
-          "e temporal | f faces | h heat | b boxes | g grid | t tiles | s save | 0 reset")
+          "e temporal | f faces | h heat | b boxes | g grid | t tiles | s save | "
+          "R record | 0 reset")
     try:
         while True:
             if not paused:
@@ -715,6 +807,31 @@ def main(argv: list[str] | None = None) -> int:
                 confidence_history.append(conf)
                 last_frame, last_result = frame.data, result
 
+                if recorder is not None and recorder.active and result.frame_result:
+                    subject = result.subject
+                    recorder.add(
+                        result.frame_result, frame.data, frame.index,
+                        extra={
+                            "subject_label": result.subject_label,
+                            "subject_x": "" if subject is None else subject.center[0],
+                            "subject_y": "" if subject is None else subject.center[1],
+                            "subject_map_score": "" if subject is None else subject.map_score,
+                            "subject_score": (
+                                "" if result.subject_result is None
+                                else result.subject_result.filtered_score
+                            ),
+                            "subject_confidence": (
+                                "" if result.subject_result is None
+                                else result.subject_result.confidence
+                            ),
+                            "decision_margin": result.separation(),
+                            "region_count": len(result.regions),
+                            "map_valid_fraction": result.focus_map.valid_fraction,
+                            "scene_time_s": result.scene_time_s,
+                            "total_time_s": result.total_time_s,
+                        },
+                    )
+
             if last_frame is None or last_result is None:
                 continue
 
@@ -723,6 +840,7 @@ def main(argv: list[str] | None = None) -> int:
                 last_frame, last_result, state, fps, age_ms,
                 history, confidence_history,
                 dropped=int(getattr(source, "dropped", 0)), paused=paused,
+                recorder=recorder,
             )
             cv2.imshow(window, canvas)
 
@@ -768,12 +886,23 @@ def main(argv: list[str] | None = None) -> int:
                 confidence_history.clear()
             elif key == ord(" "):
                 paused = not paused
+            elif key == ord("R"):
+                recorder = toggle_recording(
+                    recorder, state.apply(base), record_root, save_every,
+                    source.description,
+                )
             elif key == ord("s"):
                 path = Path(f"focus_ui_{snapshots:03d}.png")
                 cv2.imwrite(str(path), canvas)
                 snapshots += 1
                 print(f"saved {path}")
     finally:
+        # A recording must be closed even on an exception, or the CSV is left
+        # unflushed and the manifest never written.
+        if recorder is not None and recorder.active:
+            summary = recorder.stop()
+            print(f"recording stopped: {summary.get('frames', 0)} frames "
+                  f"-> {recorder.directory}")
         source.close()
         cv2.destroyAllWindows()
     return 0

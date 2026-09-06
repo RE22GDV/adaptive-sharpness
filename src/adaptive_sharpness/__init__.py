@@ -39,6 +39,7 @@ from .normalize import NormalizerBank, RunningNormalizer
 from .regions import Region, RegionProposer
 from .scene import SceneEvaluator, SceneResult
 from .preprocess import AnalysisImage, Preprocessor
+from .recording import RunRecorder
 from .temporal import TemporalFilter
 from .types import ROI, Frame, ImageStats, MetricSample, SharpnessResult
 
@@ -82,6 +83,7 @@ __all__ = [
     "ImageAnalyzer",
     "AdaptiveEnsemble",
     "EnsembleOutput",
+    "RunRecorder",
     "NormalizerBank",
     "RunningNormalizer",
     "TemporalFilter",
