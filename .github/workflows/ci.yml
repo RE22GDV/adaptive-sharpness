@@ -8,17 +8,29 @@ on:
 
 jobs:
   tests:
-    name: py${{ matrix.python }} / opencv ${{ matrix.opencv }}
+    name: py${{ matrix.python }} / cv ${{ matrix.opencv }} / ${{ matrix.numpy }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12"]
-        # Both ends of the supported OpenCV range. The upper bound exists
-        # because a 5.0 run fails a substantial part of the suite, largely
-        # around CascadeClassifier availability; this matrix is what will show
-        # when that stops being true.
-        opencv: ["4.8.1.78", "4.11.0.86"]
+        include:
+          # Oldest and newest supported OpenCV, on the NumPy the project
+          # actually declares.
+          - python: "3.11"
+            opencv: "4.10.0.84"
+            numpy: "numpy>=2"
+          - python: "3.12"
+            opencv: "4.10.0.84"
+            numpy: "numpy>=2"
+          - python: "3.12"
+            opencv: "4.11.0.86"
+            numpy: "numpy>=2"
+          # Legacy pair: pre-4.10 OpenCV wheels were built against NumPy 1 and
+          # fail at import under NumPy 2. Kept green so the combination stays
+          # usable for anyone pinned to it.
+          - python: "3.11"
+            opencv: "4.8.1.78"
+            numpy: "numpy<2"
 
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +43,11 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install "opencv-python==${{ matrix.opencv }}"
-          pip install -e ".[dev]"
+          # Install the whole set at once: installing OpenCV first and the
+          # project second let the second step upgrade NumPy out from under a
+          # pinned OpenCV, which then failed at import.
+          pip install "opencv-python==${{ matrix.opencv }}" "${{ matrix.numpy }}" pytest matplotlib
+          pip install -e . --no-deps
 
       - name: Report versions
         run: |

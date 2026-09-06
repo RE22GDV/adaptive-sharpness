@@ -104,7 +104,7 @@ pip install ".[camera]"
 
 | Purpose | Package | Required? |
 | --- | --- | --- |
-| Core library | `numpy>=1.24`, `opencv-python>=4.8,<5` | yes |
+| Core library | `numpy>=1.24`, `opencv-python>=4.10,<5` | yes |
 | PTP live view | `gphoto2>=2.3` | only for the optional PTP backend |
 | Tests | `pytest>=7.0` | development |
 | Figures | `matplotlib>=3.5` | documentation only |
@@ -113,9 +113,13 @@ Python 3.11+ is required: configuration loading uses the standard library's
 `tomllib`. The Haar wavelet transform is implemented directly, so PyWavelets is
 not needed.
 
-OpenCV is pinned below 5.0. A 5.0 run was reported to fail a substantial part of
-the suite, largely around `CascadeClassifier` availability; the bound will be
-lifted once a 5.x run is green.
+Both OpenCV bounds are load-bearing. The floor is 4.10 because that is the first
+release with wheels built against NumPy 2 — declaring `>=4.8` alongside
+`numpy>=1.24` let a resolver pick OpenCV 4.8 with NumPy 2, which fails at import
+with `AttributeError: _ARRAY_API not found`. The ceiling is 5.0 because a 5.0 run
+fails a substantial part of the suite, largely around `CascadeClassifier`
+availability. Older OpenCV still works if NumPy is pinned back with it, and CI
+keeps one such pair green.
 
 <details>
 <summary>Raspberry Pi OS</summary>

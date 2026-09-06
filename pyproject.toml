@@ -31,12 +31,20 @@ classifiers = [
 
 # The library core needs nothing but these two.
 #
-# OpenCV is pinned below 5.0: on 5.0 a substantial part of the suite fails,
-# largely because CascadeClassifier is no longer available where this code
-# expects it. The upper bound will be lifted once a 5.x run is green.
+# Both bounds on OpenCV are load-bearing:
+#
+#   >=4.10  the first release with wheels built against NumPy 2. Declaring
+#           `opencv-python>=4.8` together with `numpy>=1.24` let a resolver pick
+#           OpenCV 4.8 with NumPy 2, which fails at import with
+#           "AttributeError: _ARRAY_API not found". CI caught it.
+#   <5      on 5.0 a substantial part of the suite fails, largely because
+#           CascadeClassifier is no longer available where this code expects it.
+#
+# Older OpenCV still works if NumPy is pinned back with it; the CI matrix keeps
+# one such legacy pair green.
 dependencies = [
     "numpy>=1.24",
-    "opencv-python>=4.8,<5",
+    "opencv-python>=4.10,<5",
 ]
 
 [project.optional-dependencies]
