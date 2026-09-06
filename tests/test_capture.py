@@ -73,6 +73,17 @@ class TestSyntheticSource:
         assert "defocus_radius" in frame.meta
 
     def test_best_focus_index_is_sharpest(self) -> None:
+        """The in-focus frame must be among the score's maximal frames.
+
+        Not `argmax == best_index`: the normalisation clips to [0, 1], so the
+        frames nearest focus saturate and tie exactly, and `np.argmax` then
+        returns whichever of them comes first.  Which one that is depends on
+        floating-point details - this assertion held on aarch64 and failed on
+        x86-64 with `9 == 10`, testing the tie-break rather than the measure.
+
+        The plateau is also required to stay narrow, so a flat or degenerate
+        score cannot satisfy the test by tying everywhere.
+        """
         from adaptive_sharpness import SharpnessEvaluator
 
         source = SyntheticSweepSource(width=640, height=360, steps=21, loop=False)
@@ -82,8 +93,23 @@ class TestSyntheticSource:
         for _ in range(2):
             for frame in frames:
                 evaluator.evaluate(frame)
-        scores = [evaluator.evaluate(f).instantaneous_score for f in frames]
-        assert int(np.argmax(scores)) == source.best_focus_index
+        scores = np.array(
+            [evaluator.evaluate(f).instantaneous_score for f in frames]
+        )
+
+        span = float(scores.max() - scores.min())
+        assert span > 0.5, "the sweep must actually move the score"
+        tolerance = 0.01 * span
+        plateau = np.flatnonzero(scores >= scores.max() - tolerance)
+
+        assert len(plateau) <= 4, (
+            f"maximum is not resolved: {len(plateau)} frames tie within "
+            f"{tolerance:.4f} of the peak"
+        )
+        assert source.best_focus_index in plateau, (
+            f"true focus {source.best_focus_index} is not among the maximal "
+            f"frames {plateau.tolist()}"
+        )
 
     def test_loops_when_asked(self) -> None:
         source = SyntheticSweepSource(width=160, height=90, steps=4, loop=True)
