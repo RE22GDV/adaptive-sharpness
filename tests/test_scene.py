@@ -5,12 +5,12 @@ import cv2
 import numpy as np
 import pytest
 
-from sharpness import SceneEvaluator, SharpnessConfig
-from sharpness.config import FocusMapConfig, PipelineConfig, RegionsConfig
-from sharpness.focusmap import TILE_MEASURES, FocusMapper
-from sharpness.preprocess import Preprocessor
-from sharpness.regions import Region, RegionProposer
-from tools.synthetic import add_noise, defocus, make_scene
+from adaptive_sharpness import SceneEvaluator, SharpnessConfig
+from adaptive_sharpness.config import FocusMapConfig, PipelineConfig, RegionsConfig
+from adaptive_sharpness.focusmap import TILE_MEASURES, FocusMapper
+from adaptive_sharpness.preprocess import Preprocessor
+from adaptive_sharpness.regions import Region, RegionProposer
+from adaptive_sharpness.synthetic import add_noise, defocus, make_scene
 
 WIDTH, HEIGHT = 640, 360
 

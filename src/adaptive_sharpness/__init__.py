@@ -2,7 +2,7 @@
 
 Typical library use::
 
-    from sharpness import SharpnessEvaluator, ROI, load_config
+    from adaptive_sharpness import SharpnessEvaluator, ROI, load_config
 
     evaluator = SharpnessEvaluator(load_config("config/default.toml"))
     result = evaluator.evaluate(bgr_frame, roi=ROI(320, 180, 640, 360))
@@ -27,7 +27,9 @@ from .config import (
     RegionsConfig,
     SharpnessConfig,
     TemporalConfig,
+    default_config_path,
     load_config,
+    load_default_config,
 )
 from .ensemble import AdaptiveEnsemble, EnsembleOutput
 from .focusmap import FocusMap, FocusMapper
@@ -40,7 +42,7 @@ from .preprocess import AnalysisImage, Preprocessor
 from .temporal import TemporalFilter
 from .types import ROI, Frame, ImageStats, MetricSample, SharpnessResult
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "__version__",
@@ -71,6 +73,8 @@ __all__ = [
     "FocusMapConfig",
     "RegionsConfig",
     "load_config",
+    "load_default_config",
+    "default_config_path",
     "METRIC_NAMES",
     # components
     "Preprocessor",

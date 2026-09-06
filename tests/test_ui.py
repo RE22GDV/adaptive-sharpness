@@ -16,8 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "demo"))
 
 from focus_ui import MIN_CANVAS_HEIGHT, PANEL_WIDTH, UiState, describe, render  # noqa: E402
 
-from sharpness import METRIC_NAMES, SceneEvaluator, SharpnessConfig  # noqa: E402
-from tools.synthetic import defocus, make_scene  # noqa: E402
+from adaptive_sharpness import METRIC_NAMES, SceneEvaluator, SharpnessConfig  # noqa: E402
+from adaptive_sharpness.synthetic import defocus, make_scene  # noqa: E402
 
 
 @pytest.fixture(scope="module")

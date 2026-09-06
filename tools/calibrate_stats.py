@@ -21,12 +21,12 @@ import numpy as np
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from capture import CaptureError, open_source  # noqa: E402
-from sharpness import ROI, load_config  # noqa: E402
-from sharpness.analysis import ImageAnalyzer  # noqa: E402
-from sharpness.preprocess import Preprocessor  # noqa: E402
+from adaptive_sharpness.capture import CaptureError, open_source  # noqa: E402
+from adaptive_sharpness import ROI, load_config, load_default_config  # noqa: E402
+from adaptive_sharpness.analysis import ImageAnalyzer  # noqa: E402
+from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
 
 logger = logging.getLogger("calibrate")
 
@@ -63,7 +63,8 @@ def quantiles(values: list[float]) -> dict[str, float]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument("--config", type=Path, default=None,
+                        help="TOML config; defaults to the packaged one")
     parser.add_argument(
         "--backend", default="gphoto2",
         choices=["auto", "v4l2", "gphoto2", "file", "synthetic"],
@@ -81,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(levelname)s %(name)s: %(message)s",
     )
 
-    config = load_config(args.config)
+    config = load_config(args.config) if args.config else load_default_config()
     overrides: dict[str, Any] = {"backend": args.backend}
     if args.path:
         overrides["path"] = args.path
@@ -99,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     # The confidence references are just as easy to miscalibrate as the image
     # ones, and a wrong dispersion reference silently destroys the confidence on
     # perfectly good frames, so measure those too.
-    from sharpness import SharpnessEvaluator  # noqa: PLC0415
+    from adaptive_sharpness import SharpnessEvaluator  # noqa: PLC0415
 
     evaluator = SharpnessEvaluator(config)
     confidence_fields = ("confidence", "dispersion", "snr_component", "concordance")

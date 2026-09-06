@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 
-from sharpness.types import Frame
+from ..types import Frame
 
 from .base import FrameSource
 
@@ -56,7 +56,7 @@ class SyntheticSweepSource(FrameSource):
     def open(self) -> None:
         # Imported here so the capture package does not depend on the tools
         # package unless a synthetic source is actually used.
-        from tools.synthetic import focus_sweep, make_scene
+        from ..synthetic import focus_sweep, make_scene
 
         scene = make_scene(self.width, self.height, seed=self.seed)
         self._frames = list(

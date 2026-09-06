@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from sharpness.config import CaptureConfig
+from ..config import CaptureConfig
 
 from .base import CaptureError, FrameSource, ThreadedSource
 from .file_source import IMAGE_SUFFIXES, ImageDirectorySource, VideoFileSource

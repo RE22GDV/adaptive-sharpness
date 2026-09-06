@@ -6,13 +6,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from sharpness.config import (
+from adaptive_sharpness.config import (
     METRIC_NAMES,
     NormalizationConfig,
     SharpnessConfig,
+    default_config_path,
     load_config,
+    load_default_config,
 )
-from sharpness.normalize import NormalizerBank, RunningNormalizer
+from adaptive_sharpness.normalize import NormalizerBank, RunningNormalizer
 
 
 class TestDefaults:
@@ -91,12 +93,23 @@ class TestTomlLoading:
         with pytest.raises(KeyError, match="unknown configuration section"):
             load_config(path)
 
-    def test_shipped_default_config_loads(self) -> None:
-        path = Path(__file__).resolve().parents[1] / "config" / "default.toml"
-        if not path.is_file():
-            pytest.skip("config/default.toml is not present")
-        config = load_config(path)
-        assert isinstance(config, SharpnessConfig)
+    def test_packaged_default_config_loads(self) -> None:
+        """The shipped TOML must be inside the package, not beside it.
+
+        A repository-root copy would not survive `pip install`, so any example
+        that reads it would break for installed users.
+        """
+        path = default_config_path()
+        assert path.is_file(), f"packaged config missing at {path}"
+        assert isinstance(load_default_config(), SharpnessConfig)
+
+    def test_packaged_config_matches_the_dataclass_defaults(self) -> None:
+        """The shipped file documents the defaults; it must not contradict them.
+
+        If they diverge, the comments in the TOML become quietly wrong and the
+        fallback in load_default_config() would change behaviour.
+        """
+        assert load_default_config() == SharpnessConfig()
 
 
 class TestRunningNormalizer:

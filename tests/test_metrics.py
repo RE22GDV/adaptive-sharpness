@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 import pytest
 
-from sharpness.config import MetricsConfig
-from sharpness.metrics import (
+from adaptive_sharpness.config import MetricsConfig
+from adaptive_sharpness.metrics import (
     Brenner,
     EdgeWidth,
     FourierHighFrequency,
@@ -17,8 +17,8 @@ from sharpness.metrics import (
     build_metrics,
     haar_decompose,
 )
-from sharpness.metrics.base import MetricError, normalization_factor
-from tools.synthetic import apply_exposure, defocus
+from adaptive_sharpness.metrics.base import MetricError, normalization_factor
+from adaptive_sharpness.synthetic import apply_exposure, defocus
 
 
 ALL_METRIC_CLASSES = (

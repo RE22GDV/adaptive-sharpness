@@ -4,14 +4,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from sharpness import (
+from adaptive_sharpness import (
     ROI,
     Frame,
     RegionEvaluator,
     SharpnessConfig,
     SharpnessEvaluator,
 )
-from tools.synthetic import add_noise, apply_exposure, defocus, make_scene
+from adaptive_sharpness.synthetic import add_noise, apply_exposure, defocus, make_scene
 
 
 def warm(evaluator: SharpnessEvaluator, frames, passes: int = 2) -> None:

@@ -26,6 +26,8 @@ __all__ = [
     "CaptureConfig",
     "SharpnessConfig",
     "load_config",
+    "load_default_config",
+    "default_config_path",
 ]
 
 # Names of the six built-in metrics, in a stable order.
@@ -351,6 +353,32 @@ def _coerce_section(section_cls: type, values: Mapping[str, Any], path: str) -> 
             value = tuple(value)
         kwargs[key] = value
     return section_cls(**kwargs)
+
+
+def default_config_path() -> Path:
+    """Path to the configuration file that ships inside the package.
+
+    The repository also has ``config/default.toml``, but that copy is not part
+    of the wheel: after a plain ``pip install`` it does not exist.  Anything
+    that needs the shipped defaults must go through here.
+    """
+    return Path(__file__).resolve().parent / "data" / "default.toml"
+
+
+def load_default_config() -> SharpnessConfig:
+    """Load the packaged default configuration.
+
+    Falls back to the dataclass defaults if the file is missing, so an unusual
+    installation degrades instead of failing.  ``tests/test_config.py`` keeps
+    the two in agreement.
+    """
+    path = default_config_path()
+    if not path.is_file():
+        logger.warning(
+            "packaged default config not found at %s; using built-in defaults", path
+        )
+        return SharpnessConfig()
+    return load_config(path)
 
 
 def load_config(path: str | Path | None = None) -> SharpnessConfig:

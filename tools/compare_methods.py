@@ -55,17 +55,17 @@ from typing import Any, Callable, Iterable, Sequence
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from sharpness import ROI, SharpnessConfig, load_config  # noqa: E402
-from sharpness.analysis import ImageAnalyzer  # noqa: E402
-from sharpness.ensemble import AdaptiveEnsemble  # noqa: E402
-from sharpness.metrics import build_metrics  # noqa: E402
-from sharpness.normalize import NormalizerBank  # noqa: E402
-from sharpness.preprocess import Preprocessor  # noqa: E402
-from sharpness.temporal import TemporalFilter  # noqa: E402
-from sharpness.types import ImageStats  # noqa: E402
-from tools.synthetic import apply_exposure, focus_sweep, make_scene  # noqa: E402
+from adaptive_sharpness import ROI, SharpnessConfig, load_config  # noqa: E402
+from adaptive_sharpness.analysis import ImageAnalyzer  # noqa: E402
+from adaptive_sharpness.ensemble import AdaptiveEnsemble  # noqa: E402
+from adaptive_sharpness.metrics import build_metrics  # noqa: E402
+from adaptive_sharpness.normalize import NormalizerBank  # noqa: E402
+from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
+from adaptive_sharpness.temporal import TemporalFilter  # noqa: E402
+from adaptive_sharpness.types import ImageStats  # noqa: E402
+from adaptive_sharpness.synthetic import apply_exposure, focus_sweep, make_scene  # noqa: E402
 
 logger = logging.getLogger("compare")
 
@@ -446,7 +446,7 @@ def step_response(config: SharpnessConfig, hold: int = 30) -> dict[str, Any]:
     real focus change.
     """
     scene = make_scene(640, 360, seed=7)
-    from tools.synthetic import add_noise, defocus
+    from adaptive_sharpness.synthetic import add_noise, defocus
 
     blurred = defocus(scene, 6.0)
     frames = [add_noise(blurred, 4.0, seed=i) for i in range(hold)]
@@ -508,7 +508,8 @@ def print_table(title: str, results: dict[str, dict[str, Any]]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument("--config", type=Path, default=None,
+                        help="TOML config; defaults to the packaged one")
     parser.add_argument("--steps", type=int, default=41)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument(
@@ -529,7 +530,7 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.DEBUG if args.verbose else logging.WARNING,
         format="%(levelname)s %(name)s: %(message)s",
     )
-    config = load_config(args.config)
+    config = load_config(args.config) if args.config else load_default_config()
 
     roi = None
     if args.roi:
@@ -546,7 +547,7 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--frames-dir requires --best-index")
         import cv2
 
-        from capture.file_source import IMAGE_SUFFIXES
+        from adaptive_sharpness.capture.file_source import IMAGE_SUFFIXES
 
         files = sorted(
             p for p in args.frames_dir.iterdir()

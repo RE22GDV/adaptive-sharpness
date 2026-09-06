@@ -28,11 +28,12 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Sequence
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from capture import CaptureError, open_source  # noqa: E402
-from sharpness import (  # noqa: E402
+from adaptive_sharpness.capture import CaptureError, open_source  # noqa: E402
+from adaptive_sharpness import (  # noqa: E402
     ROI, SceneEvaluator, SharpnessConfig, SharpnessEvaluator, load_config,
+    load_default_config,
 )
 
 logger = logging.getLogger("benchmark")
@@ -233,7 +234,8 @@ def print_summary(title: str, summary: dict[str, Any]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=None, help="TOML config file")
+    parser.add_argument("--config", type=Path, default=None,
+                        help="TOML config; defaults to the packaged one")
     parser.add_argument(
         "--backend", default=None,
         choices=["auto", "v4l2", "gphoto2", "file", "synthetic"],
@@ -269,7 +271,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(levelname)s %(name)s: %(message)s",
     )
 
-    config = load_config(args.config)
+    config = load_config(args.config) if args.config else load_default_config()
     capture_overrides: dict[str, Any] = {}
     if args.backend:
         capture_overrides["backend"] = args.backend

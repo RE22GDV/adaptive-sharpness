@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import pytest
 
-from capture import (
+from adaptive_sharpness.capture import (
     CaptureError,
     ImageDirectorySource,
     SyntheticSweepSource,
@@ -20,9 +20,9 @@ from capture import (
     VideoFileSource,
     open_source,
 )
-from capture.base import FrameSource
-from sharpness.config import CaptureConfig
-from sharpness.types import Frame
+from adaptive_sharpness.capture.base import FrameSource
+from adaptive_sharpness.config import CaptureConfig
+from adaptive_sharpness.types import Frame
 
 
 class SlowStubSource(FrameSource):
@@ -73,7 +73,7 @@ class TestSyntheticSource:
         assert "defocus_radius" in frame.meta
 
     def test_best_focus_index_is_sharpest(self) -> None:
-        from sharpness import SharpnessEvaluator
+        from adaptive_sharpness import SharpnessEvaluator
 
         source = SyntheticSweepSource(width=640, height=360, steps=21, loop=False)
         with source:
@@ -101,7 +101,7 @@ class TestSyntheticSource:
 class TestFileSources:
     @pytest.fixture
     def image_dir(self, tmp_path: Path, scene: np.ndarray) -> Path:
-        from tools.synthetic import defocus
+        from adaptive_sharpness.synthetic import defocus
 
         for index, radius in enumerate((0.0, 2.0, 4.0)):
             cv2.imwrite(str(tmp_path / f"frame_{index:03d}.png"), defocus(scene, radius))
@@ -127,7 +127,7 @@ class TestFileSources:
 
     def test_replay_is_reproducible(self, image_dir: Path) -> None:
         def run() -> list[float]:
-            from sharpness import SharpnessEvaluator
+            from adaptive_sharpness import SharpnessEvaluator
 
             evaluator = SharpnessEvaluator()
             with ImageDirectorySource(image_dir) as source:

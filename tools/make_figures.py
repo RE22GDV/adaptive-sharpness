@@ -19,17 +19,19 @@ from typing import Any, Callable
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from sharpness import SharpnessConfig, load_config  # noqa: E402
-from sharpness.config import FocusMapConfig, PipelineConfig  # noqa: E402
-from sharpness.focusmap import TILE_MEASURES, FocusMapper  # noqa: E402
-from sharpness.preprocess import Preprocessor  # noqa: E402
+from adaptive_sharpness import (  # noqa: E402
+    SharpnessConfig, load_config, load_default_config,
+)
+from adaptive_sharpness.config import FocusMapConfig, PipelineConfig  # noqa: E402
+from adaptive_sharpness.focusmap import TILE_MEASURES, FocusMapper  # noqa: E402
+from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
 from tools.compare_methods import (  # noqa: E402
     analyse_frames,
     build_synthetic_conditions,
@@ -38,7 +40,7 @@ from tools.compare_methods import (  # noqa: E402
     run_comparison,
     step_response,
 )
-from tools.synthetic import add_noise, defocus, focus_sweep, make_scene  # noqa: E402
+from adaptive_sharpness.synthetic import add_noise, defocus, focus_sweep, make_scene  # noqa: E402
 
 logger = logging.getLogger("figures")
 
@@ -226,8 +228,8 @@ def figure_step(config: SharpnessConfig, out: Path) -> None:
 
 def figure_weights(config: SharpnessConfig, out: Path) -> None:
     """The weight each metric receives under different degradations."""
-    from sharpness.ensemble import AdaptiveEnsemble
-    from sharpness.types import ImageStats
+    from adaptive_sharpness.ensemble import AdaptiveEnsemble
+    from adaptive_sharpness.types import ImageStats
 
     names = tuple(config.metrics.enabled)
     ensemble = AdaptiveEnsemble(names, config.ensemble, config.metrics.priors)
@@ -419,7 +421,8 @@ FIGURES: dict[str, Callable[[SharpnessConfig, Path], None]] = {
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=Path("config/default.toml"))
+    parser.add_argument("--config", type=Path, default=None,
+                        help="TOML config; defaults to the packaged one")
     parser.add_argument("--out", type=Path, default=Path("docs/figures"))
     parser.add_argument("--only", nargs="+", choices=sorted(FIGURES), default=None)
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -430,7 +433,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(levelname)s %(name)s: %(message)s",
     )
     style()
-    config = load_config(args.config if args.config.is_file() else None)
+    config = load_config(args.config) if args.config else load_default_config()
 
     selected = args.only or list(FIGURES)
     print(f"generating {len(selected)} figure(s) into {args.out}")

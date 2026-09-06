@@ -15,11 +15,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from sharpness.config import PipelineConfig  # noqa: E402
-from sharpness.preprocess import Preprocessor  # noqa: E402
-from tools.synthetic import defocus, make_scene  # noqa: E402
+from adaptive_sharpness.config import PipelineConfig  # noqa: E402
+from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
+from adaptive_sharpness.synthetic import defocus, make_scene  # noqa: E402
 
 SOBEL_SCALE = 1.0 / 8.0
 EPS = 1e-9

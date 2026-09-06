@@ -18,7 +18,7 @@ import threading
 import time
 from typing import Iterator
 
-from sharpness.types import Frame
+from ..types import Frame
 
 logger = logging.getLogger(__name__)
 

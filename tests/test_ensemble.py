@@ -4,9 +4,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from sharpness.config import EnsembleConfig, MetricsConfig
-from sharpness.ensemble import AdaptiveEnsemble
-from sharpness.types import ImageStats
+from adaptive_sharpness.config import EnsembleConfig, MetricsConfig
+from adaptive_sharpness.ensemble import AdaptiveEnsemble
+from adaptive_sharpness.types import ImageStats
 
 NAMES = ("laplacian", "tenengrad", "brenner", "wavelet", "fourier", "edge_width")
 

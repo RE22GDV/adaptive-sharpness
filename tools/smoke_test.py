@@ -8,10 +8,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from sharpness import ROI, SharpnessEvaluator, available_metrics  # noqa: E402
-from tools.synthetic import defocus, make_scene  # noqa: E402
+from adaptive_sharpness import ROI, SharpnessEvaluator, available_metrics  # noqa: E402
+from adaptive_sharpness.synthetic import defocus, make_scene  # noqa: E402
 
 
 def is_non_increasing(values: list[float], tolerance: float = 1e-9) -> bool:

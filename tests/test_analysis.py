@@ -5,10 +5,10 @@ import cv2
 import numpy as np
 import pytest
 
-from sharpness.analysis import DEGRADATION_KEYS, ImageAnalyzer
-from sharpness.config import AnalysisConfig
-from sharpness.types import ImageStats
-from tools.synthetic import translate
+from adaptive_sharpness.analysis import DEGRADATION_KEYS, ImageAnalyzer
+from adaptive_sharpness.config import AnalysisConfig
+from adaptive_sharpness.types import ImageStats
+from adaptive_sharpness.synthetic import translate
 
 
 @pytest.fixture

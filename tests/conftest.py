@@ -8,10 +8,13 @@ import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# src/ holds the installed package; the repository root is added as well so the
+# tests can reach tools/ and demo/, which are scripts rather than packages.
+for entry in (ROOT / "src", ROOT):
+    if str(entry) not in sys.path:
+        sys.path.insert(0, str(entry))
 
-from tools.synthetic import defocus, make_scene  # noqa: E402
+from adaptive_sharpness.synthetic import defocus, make_scene  # noqa: E402
 
 
 @pytest.fixture(scope="session")

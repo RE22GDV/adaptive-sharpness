@@ -8,8 +8,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from sharpness.config import TemporalConfig
-from sharpness.temporal import TemporalFilter
+from adaptive_sharpness.config import TemporalConfig
+from adaptive_sharpness.temporal import TemporalFilter
 
 
 def feed_noise(

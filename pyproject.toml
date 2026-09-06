@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "adaptive-sharpness"
 version = "1.0.0"
-description = "Real-time adaptive ensemble sharpness evaluation and in-focus subject detection for autofocus systems"
+description = "Real-time no-reference focus evaluation: six focus-measure families with adaptive weighting, confidence estimation and a spatial sharpness map"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -13,10 +13,10 @@ keywords = [
     "autofocus",
     "sharpness",
     "focus-measure",
+    "no-reference",
     "computer-vision",
     "raspberry-pi",
     "opencv",
-    "gphoto2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -26,16 +26,21 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Multimedia :: Video :: Capture",
     "Topic :: Scientific/Engineering :: Image Processing",
+    "Typing :: Typed",
 ]
 
 # The library core needs nothing but these two.
+#
+# OpenCV is pinned below 5.0: on 5.0 a substantial part of the suite fails,
+# largely because CascadeClassifier is no longer available where this code
+# expects it. The upper bound will be lifted once a 5.x run is green.
 dependencies = [
     "numpy>=1.24",
-    "opencv-python>=4.8",
+    "opencv-python>=4.8,<5",
 ]
 
 [project.optional-dependencies]
-# PTP live view, the working path for the Panasonic GH6 over USB-C.
+# PTP live view (Panasonic GH6 and other PTP cameras over USB).
 # On Raspberry Pi OS prefer the system package: sudo apt install python3-gphoto2
 camera = ["gphoto2>=2.3"]
 # Figure generation for the documentation.
@@ -45,28 +50,35 @@ dev = [
     "matplotlib>=3.5",
 ]
 
-[project.scripts]
-sharpness-probe = "tools.probe_camera:main"
-sharpness-bench = "tools.benchmark:main"
-sharpness-compare = "tools.compare_methods:main"
-sharpness-collect = "tools.collect_dataset:main"
-sharpness-ui = "demo.focus_ui:main"
+# No console_scripts are declared on purpose. The research tools in tools/ and
+# the UI in demo/ are repository scripts, not part of the installed library, so
+# an entry point pointing at them would resolve to a module the wheel does not
+# contain. Run them from a checkout instead: python3 tools/benchmark.py
+
+[project.urls]
+Homepage = "https://github.com/RE22GDV/adaptive-sharpness"
+Repository = "https://github.com/RE22GDV/adaptive-sharpness"
+Issues = "https://github.com/RE22GDV/adaptive-sharpness/issues"
 
 [tool.setuptools]
-packages = ["sharpness", "sharpness.metrics", "capture", "tools"]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
-sharpness = ["py.typed"]
+adaptive_sharpness = ["py.typed", "data/*.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# No addopts: a -q here would stack with a -q on the command line and
-# suppress the summary line entirely.
+# No addopts: a -q here would stack with a -q on the command line and suppress
+# the summary line entirely.
 filterwarnings = ["error::DeprecationWarning"]
 
 [tool.ruff]
 line-length = 92
 target-version = "py311"
+src = ["src", "tools", "demo", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
