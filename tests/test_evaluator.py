@@ -46,7 +46,7 @@ class TestBasicEvaluation:
         assert np.array_equal(scene, original)
 
     def test_rejects_a_bad_shape(self) -> None:
-        with pytest.raises(ValueError, match="2-D or 3-D"):
+        with pytest.raises(ValueError, match="2-D"):
             SharpnessEvaluator().evaluate(np.zeros((4, 4, 4, 4), dtype=np.uint8))
 
     def test_metric_names_are_stable(self) -> None:
@@ -240,14 +240,34 @@ class TestState:
 
 class TestSerialisation:
     def test_row_has_every_metric(self, scene: np.ndarray) -> None:
+        """Nothing computed may be dropped on the way to the CSV.
+
+        The agreement term and the per-metric timings were previously computed
+        and then discarded here, which made a recorded run un-analysable
+        without re-running it.
+        """
         result = SharpnessEvaluator().evaluate(scene)
         row = result.as_row()
         for name in result.weights:
-            assert f"raw_{name}" in row
-            assert f"norm_{name}" in row
-            assert f"w_{name}" in row
-            assert f"rel_{name}" in row
-        assert "score" in row and "confidence" in row
+            for prefix in ("raw_", "norm_", "w_", "rel_", "agree_", "ms_"):
+                assert f"{prefix}{name}" in row
+        for key in ("instantaneous_score", "filtered_score", "confidence",
+                    "ready", "informative_fraction", "warmup_samples",
+                    "score_change_detected", "roi_x", "roi_w"):
+            assert key in row
+
+    def test_to_dict_round_trips_through_json(self, scene: np.ndarray) -> None:
+        import json
+
+        result = SharpnessEvaluator().evaluate(scene, roi=ROI(10, 10, 200, 150))
+        payload = json.loads(result.to_json())
+        assert payload["scores"]["instantaneous"] == pytest.approx(
+            result.instantaneous_score
+        )
+        assert payload["scores"]["filtered"] == pytest.approx(result.filtered_score)
+        assert payload["roi"]["width"] == 200
+        assert set(payload["metrics"]) == set(result.weights)
+        assert "agreement" in next(iter(payload["metrics"].values()))
 
     def test_row_values_are_serialisable(self, scene: np.ndarray) -> None:
         import json

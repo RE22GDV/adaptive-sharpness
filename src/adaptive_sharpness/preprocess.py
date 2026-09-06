@@ -76,10 +76,65 @@ class Preprocessor:
                 f"unknown interpolation {config.interpolation!r}; "
                 f"choose from {', '.join(_INTERPOLATIONS)}"
             ) from None
+        if config.color_order.upper() not in ("BGR", "RGB"):
+            raise ValueError(
+                f"unknown color_order {config.color_order!r}; expected 'BGR' or 'RGB'"
+            )
         # Reused output buffers; OpenCV writes in place when the shape matches.
         self._gray_buf: np.ndarray | None = None
         self._resize_buf: np.ndarray | None = None
         self._float_buf: np.ndarray | None = None
+
+    #: dtypes the pipeline knows how to interpret.
+    _SUPPORTED_DTYPES = (np.uint8, np.uint16, np.float32, np.float64)
+
+    def validate(self, data: np.ndarray) -> None:
+        """Check the input contract, raising ``ValueError`` with a fix.
+
+        Every one of these used to pass silently and produce plausible-looking
+        but wrong numbers, which is worse than an exception: a 2-channel array
+        reached ``cvtColor``, an RGB frame was weighted as BGR, and float data
+        in [0, 1] made every brightness, clipping and noise statistic
+        meaningless.
+        """
+        if not isinstance(data, np.ndarray):
+            raise TypeError(f"expected a numpy.ndarray, got {type(data).__name__}")
+        if data.ndim not in (2, 3):
+            raise ValueError(
+                f"expected a 2-D (grey) or 3-D (colour) frame, got shape {data.shape}"
+            )
+        if data.ndim == 3 and data.shape[2] not in (1, 3, 4):
+            raise ValueError(
+                f"expected 1, 3 or 4 channels, got {data.shape[2]}. "
+                "Planar or multi-spectral input must be reduced first."
+            )
+        if data.dtype.type not in self._SUPPORTED_DTYPES:
+            names = ", ".join(t.__name__ for t in self._SUPPORTED_DTYPES)
+            raise ValueError(
+                f"unsupported dtype {data.dtype}; expected one of {names}"
+            )
+        if data.size == 0:
+            raise ValueError("frame is empty")
+
+        if data.dtype.kind == "f" and self.config.input_max is None:
+            peak = float(np.nanmax(data))
+            if 0.0 < peak <= 1.0:
+                raise ValueError(
+                    "float frame appears to be normalised to [0, 1] "
+                    f"(max = {peak:.4f}), but [0, 255] is assumed. Either scale "
+                    "it by 255 or set pipeline.input_max = 1.0."
+                )
+
+    def _scale_factor(self, dtype: np.dtype) -> float:
+        """Multiplier bringing the input onto the documented [0, 255] scale."""
+        configured = self.config.input_max
+        if configured is not None:
+            if configured <= 0:
+                raise ValueError("pipeline.input_max must be positive")
+            return 255.0 / float(configured)
+        if dtype == np.uint16:
+            return 255.0 / 65535.0
+        return 1.0
 
     def _to_gray(self, data: np.ndarray) -> np.ndarray:
         """Single-channel uint8/float view of ``data`` without copying if possible."""
@@ -88,7 +143,11 @@ class Preprocessor:
         channels = data.shape[2]
         if channels == 1:
             return data[:, :, 0]
-        code = cv2.COLOR_BGRA2GRAY if channels == 4 else cv2.COLOR_BGR2GRAY
+        rgb = self.config.color_order.upper() == "RGB"
+        if channels == 4:
+            code = cv2.COLOR_RGBA2GRAY if rgb else cv2.COLOR_BGRA2GRAY
+        else:
+            code = cv2.COLOR_RGB2GRAY if rgb else cv2.COLOR_BGR2GRAY
         shape = data.shape[:2]
         if (
             self._gray_buf is None
@@ -111,8 +170,7 @@ class Preprocessor:
 
     def prepare(self, data: np.ndarray, roi: ROI | None = None) -> AnalysisImage:
         """Prepare ``data`` (an H x W [x C] array) for metric computation."""
-        if data.ndim not in (2, 3):
-            raise ValueError(f"expected a 2-D or 3-D frame, got shape {data.shape}")
+        self.validate(data)
         source_shape = data.shape
 
         gray = self._to_gray(data)
@@ -148,12 +206,18 @@ class Preprocessor:
             shape = gray.shape
             if self._float_buf is None or self._float_buf.shape != shape:
                 self._float_buf = np.empty(shape, dtype=np.float32)
-            # Bring integer sensor data onto the documented [0, 255] scale.
-            if gray.dtype == np.uint16:
-                np.multiply(gray, 255.0 / 65535.0, out=self._float_buf, casting="unsafe")
+            # Bring the input onto the documented [0, 255] scale.  Deliberately
+            # not called `scale`: that name holds the *geometric* analysis
+            # scale, and shadowing it here silently reported every tile and
+            # region coordinate in analysis pixels instead of source pixels.
+            intensity_scale = self._scale_factor(gray.dtype)
+            if intensity_scale != 1.0:
+                np.multiply(gray, intensity_scale, out=self._float_buf, casting="unsafe")
             else:
                 self._float_buf[...] = gray
             gray = self._float_buf
+        elif self._scale_factor(gray.dtype) != 1.0:
+            gray = (gray * self._scale_factor(gray.dtype)).astype(np.float32)
         elif gray.base is not None and not gray.flags["C_CONTIGUOUS"]:
             # A float32 non-contiguous view: OpenCV handles row-strided
             # submatrices, but np.fft does not benefit, so materialise it once.

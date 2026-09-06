@@ -56,7 +56,10 @@ class TemporalFilterOutput:
     gate: float
     innovation: float
     sigma: float
-    focus_change_detected: bool
+    #: The score jumped by much more than its recent noise.  A focus change is
+    #: one possible cause; subject motion, a ROI change or an exposure change
+    #: are others, so the name deliberately says *score*, not *focus*.
+    score_change_detected: bool
 
 
 def _smoothstep(x: float) -> float:
@@ -77,6 +80,10 @@ class TemporalFilter:
             raise ValueError("history must be at least 2")
         self.config = config
         self._value: float | None = None
+        # Raw input of the previous call.  The delta history must be built from
+        # consecutive *observations*; using score-minus-filtered-value instead
+        # mixes in the filter's own lag and is not the measurement noise.
+        self._previous_score: float | None = None
         self._deltas: deque[float] = deque(maxlen=config.history)
 
     @property
@@ -87,10 +94,11 @@ class TemporalFilter:
     def reset(self) -> None:
         """Drop all state (use when the stream restarts or the ROI changes)."""
         self._value = None
+        self._previous_score = None
         self._deltas.clear()
 
     def _sigma(self) -> float:
-        """Robust scale of the recent frame-to-frame variation."""
+        """Robust scale of the recent frame-to-frame variation of the input."""
         if len(self._deltas) < 2:
             return _MIN_SIGMA
         data = np.fromiter(self._deltas, dtype=np.float64, count=len(self._deltas))
@@ -109,11 +117,19 @@ class TemporalFilter:
 
         if not cfg.enabled:
             self._value = score
+            self._previous_score = score
             return TemporalFilterOutput(score, 1.0, 1.0, 0.0, _MIN_SIGMA, False)
 
         if self._value is None:
             self._value = score
+            self._previous_score = score
             return TemporalFilterOutput(score, 1.0, 0.0, 0.0, _MIN_SIGMA, False)
+
+        # Measurement noise: how much the *input* moves between consecutive
+        # frames.  Recorded before the gate uses it, so a genuine jump does not
+        # inflate the very scale it is being compared against.
+        observed_delta = score - self._previous_score
+        self._previous_score = score
 
         innovation = score - self._value
         magnitude = abs(innovation)
@@ -135,14 +151,12 @@ class TemporalFilter:
         alpha = min(1.0, max(0.0, alpha))
 
         self._value += alpha * innovation
-        # The history tracks the *observed* variation, not the filtered one, so
-        # the gate keeps a faithful picture of the measurement noise.
-        self._deltas.append(innovation)
+        self._deltas.append(observed_delta)
 
         detected = gate >= 0.5
         if detected:
             logger.debug(
-                "focus change: innovation=%.4f sigma=%.4f z=%.2f alpha=%.2f",
+                "score change: innovation=%.4f sigma=%.4f z=%.2f alpha=%.2f",
                 innovation, sigma, z, alpha,
             )
 
@@ -152,5 +166,5 @@ class TemporalFilter:
             gate=float(gate),
             innovation=float(innovation),
             sigma=float(sigma),
-            focus_change_detected=detected,
+            score_change_detected=detected,
         )

@@ -386,8 +386,8 @@ def draw_panel(
         y += 22
         bar(y, subject_result.score, colour, 5)
         y += 16
-        if subject_result.focus_change_detected:
-            text("FOCUS CHANGED", y, GOOD, 0.41)
+        if subject_result.score_change_detected:
+            text("SCORE JUMPED", y, GOOD, 0.41)
             y += 14
 
         text("metric         norm  weight", y, MUTED, 0.37)

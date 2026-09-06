@@ -74,7 +74,7 @@ class TestFocusChangeGate:
         feed_noise(filt, 0.30, 40, 0.01, seed=2)
         before = filt.value
         out = filt.update(0.85)
-        assert out.focus_change_detected
+        assert out.score_change_detected
         assert out.gate == pytest.approx(1.0)
         assert out.alpha > 0.9
         # Nearly the whole step lands in a single frame.
@@ -86,7 +86,7 @@ class TestFocusChangeGate:
         rng = np.random.default_rng(3)
         for _ in range(60):
             results.append(filt.update(0.5 + float(rng.normal(0, 0.01))))
-        detections = sum(r.focus_change_detected for r in results[10:])
+        detections = sum(r.score_change_detected for r in results[10:])
         assert detections == 0
 
     def test_absolute_escape_hatch_on_a_quiet_history(self) -> None:
@@ -97,7 +97,7 @@ class TestFocusChangeGate:
         for _ in range(30):
             filt.update(0.40)
         out = filt.update(0.40 + 0.15)
-        assert out.focus_change_detected
+        assert out.score_change_detected
         assert out.alpha > 0.9
 
     def test_step_response_is_fast(self) -> None:
@@ -161,7 +161,7 @@ class TestConfidenceCoupling:
         feed_noise(filt, 0.3, 40, 0.01, seed=6)
         out = filt.update(0.9, confidence=0.05)
         assert out.alpha > 0.9
-        assert out.focus_change_detected
+        assert out.score_change_detected
 
     def test_coupling_can_be_disabled(self) -> None:
         config = TemporalConfig(confidence_coupling=False)

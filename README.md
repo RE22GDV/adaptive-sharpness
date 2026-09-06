@@ -200,7 +200,7 @@ flowchart TD
     A --> W
 
     W --> SC["score = weighted sum"]
-    R --> C["<b>confidence</b><br/>reported separately,<br/>never modifies the score"]
+    R --> C["<b>confidence</b><br/>not in the ensemble sum;<br/>couples into the filter gain"]
     A --> C
     SC --> T["<b>temporal filter</b><br/>gain opens on a<br/>real focus change"]
 ```
@@ -351,7 +351,9 @@ in the frame there is nothing whose sharpness could be measured, however good
 the exposure and SNR are. The weakest-link cap expresses that; the square root
 stops a merely mediocre factor from dominating.
 
-**The confidence never modifies the score.** They are two separate outputs.
+**The confidence never enters the ensemble sum**, so `instantaneous_score` is
+free of it. It *does* scale the temporal filter's baseline gain when
+`temporal.confidence_coupling` is enabled, and so affects `filtered_score`.
 
 ### Temporal filtering without hiding focus changes
 

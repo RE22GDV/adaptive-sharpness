@@ -138,7 +138,9 @@ view. The one deliberate copy per frame is the motion reference, because
 metric given the wrong dtype, a ROI outside the frame - all raise. A silently
 ignored configuration typo would be far more damaging than an error at startup.
 
-**Confidence never modifies the score.** They are two separate outputs. A caller
+**Confidence never modifies `instantaneous_score`.** It does reach the
+temporal filter when confidence coupling is enabled, so it affects
+`filtered_score`. A caller
 that wants to ignore low-confidence frames does so explicitly.
 
 ## Extending

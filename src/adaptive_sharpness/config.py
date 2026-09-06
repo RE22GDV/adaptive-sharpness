@@ -58,6 +58,17 @@ class PipelineConfig:
     # Apply a light blur before the metrics to tame sensor noise.  Off by
     # default because it also removes part of the signal the metrics measure.
     prefilter_sigma: float = 0.0
+    # Channel order of colour input: "BGR" (the OpenCV convention, and the
+    # default) or "RGB".  Getting this wrong is silent - the frame still
+    # converts to greyscale, just with the red and blue weights swapped - so it
+    # is stated explicitly rather than guessed.
+    color_order: str = "BGR"
+    # Pixel value that represents white.  ``None`` infers it from the dtype:
+    # 255 for uint8 and float, 65535 for uint16.  Set it explicitly for sensor
+    # data that occupies only part of its container, e.g. 4095 for 12-bit
+    # samples stored in uint16 - otherwise the frame is scaled as if it were
+    # full-range and every brightness-dependent statistic is wrong.
+    input_max: float | None = None
 
 
 @dataclass(frozen=True)

@@ -125,8 +125,8 @@ def draw_panel(
     cv2.rectangle(panel, (12, y), (12 + filled, y + 8), colour, -1)
     y += 30
 
-    if result.focus_change_detected:
-        text("FOCUS CHANGE", y, ACCENT, 0.45)
+    if result.score_change_detected:
+        text("SCORE JUMPED", y, ACCENT, 0.45)
     y += 22
 
     text("metric        norm  weight", y, MUTED, 0.4)

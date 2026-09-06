@@ -165,6 +165,13 @@ class NormalizerBank:
         return all(n.warmed_up for n in self._normalizers.values())
 
     @property
+    def sample_count(self) -> int:
+        """Frames observed by the least-populated normaliser."""
+        if not self._normalizers:
+            return 0
+        return min(n.sample_count for n in self._normalizers.values())
+
+    @property
     def informative_fraction(self) -> float:
         """Fraction of metrics whose normalisation is currently meaningful.
 

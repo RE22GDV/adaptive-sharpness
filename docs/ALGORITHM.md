@@ -291,7 +291,10 @@ inputs.
 
 ### 6.2 Confidence
 
-The confidence is reported separately and **never modifies the score**. It is
+The confidence does **not** enter the ensemble sum, so it never changes
+``instantaneous_score``. It *does* reach the temporal filter when
+``confidence_coupling`` is enabled, scaling its baseline gain, and therefore
+affects ``filtered_score``. It is
 built from six factors in `[0, 1]`, each a necessary condition: edge
 sufficiency, SNR, exposure, contrast, inter-metric concordance, and motion. A
 warm-up factor is added while the normalisers lack a scale.

@@ -135,9 +135,10 @@ class SharpnessEvaluator:
             for metric in self._metrics
         )
 
+        informative = self._normalizers.informative_fraction
         return SharpnessResult(
-            score=filtered.value,
             instantaneous_score=output.score,
+            filtered_score=filtered.value,
             confidence=output.confidence,
             metrics=samples,
             stats=stats,
@@ -145,9 +146,14 @@ class SharpnessEvaluator:
             timestamp=timestamp,
             processing_time_s=time.perf_counter() - started,
             capture_latency_s=capture_latency,
-            focus_change_detected=filtered.focus_change_detected,
+            score_change_detected=filtered.score_change_detected,
             roi=image.roi,
             motor_position=motor_position,
+            # Carried on every result so a host application does not have to
+            # poll the evaluator separately and keep the two in sync.
+            ready=warmed_up and informative > 0.0,
+            informative_fraction=informative,
+            warmup_samples=self._normalizers.sample_count,
         )
 
     def evaluate_raw_only(

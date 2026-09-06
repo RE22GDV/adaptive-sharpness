@@ -183,13 +183,37 @@ class MetricSample:
 
 @dataclass(frozen=True)
 class SharpnessResult:
-    """Full outcome of evaluating one frame."""
+    """Full outcome of evaluating one frame.
 
-    # Adaptive ensemble score after temporal filtering, in [0, 1].
-    score: float
-    # Ensemble score before temporal filtering, in [0, 1].
+    Score semantics
+    ---------------
+    **Both scores are relative, not absolute.**  They are normalised against a
+    rolling history held by one evaluator instance, so a value of 0.8 means
+    "near the top of what this evaluator has seen recently on this stream", not
+    "80% sharp".  Scores are **not comparable** across different scenes, ROIs,
+    configurations, metric selections or evaluator instances, and they depend on
+    the order frames arrive in.
+
+    Two scores are reported because they answer different questions:
+
+    ``instantaneous_score``
+        The ensemble output for *this frame alone*.  Confidence never affects
+        it.  Use it when you want the raw per-frame measurement.
+    ``filtered_score``
+        ``instantaneous_score`` after the temporal filter.  When
+        ``temporal.confidence_coupling`` is enabled the confidence changes the
+        filter's gain, so **confidence does affect this value**.  Use it for a
+        control loop that wants the jitter suppressed.
+    """
+
+    # Ensemble score for this frame alone, before temporal filtering, in [0, 1].
+    # Not affected by the confidence.
     instantaneous_score: float
-    # Confidence of the reported score, in [0, 1].
+    # Score after temporal filtering, in [0, 1].  Affected by the confidence
+    # when confidence coupling is enabled.
+    filtered_score: float
+    # Heuristic indicator of whether the frame carried enough information to
+    # measure focus at all, in [0, 1].  NOT a calibrated probability.
     confidence: float
     metrics: Sequence[MetricSample] = field(default_factory=tuple)
     stats: ImageStats = field(default_factory=ImageStats)
@@ -198,11 +222,40 @@ class SharpnessResult:
     # Seconds spent in the evaluator (excludes capture).
     processing_time_s: float = 0.0
     capture_latency_s: float = 0.0
-    # Whether the temporal filter detected a genuine focus transition.
-    focus_change_detected: bool = False
+    # The temporal filter saw a large jump in the score.  A focus change is one
+    # cause; subject motion, a ROI change, an exposure change or a new object
+    # entering the frame are others.
+    score_change_detected: bool = False
     roi: ROI | None = None
     # Externally supplied focus actuator position, forwarded to the logs.
     motor_position: float | None = None
+    # True once the normalisers have a usable observed range.  Before that the
+    # scores are placeholders and the confidence is deliberately low.
+    ready: bool = False
+    # Fraction of metrics whose normalisation is currently meaningful, in
+    # [0, 1].  0 means every metric is pinned at its neutral value because
+    # nothing in the stream has varied.
+    informative_fraction: float = 0.0
+    # How many frames the normalisers have observed.
+    warmup_samples: int = 0
+
+    @property
+    def score(self) -> float:
+        """Deprecated alias for :attr:`filtered_score`.
+
+        Kept so existing callers keep working; the name was ambiguous about
+        which of the two scores it meant.
+        """
+        return self.filtered_score
+
+    @property
+    def focus_change_detected(self) -> bool:
+        """Deprecated alias for :attr:`score_change_detected`.
+
+        Renamed because the filter detects a change in the *score*, which a
+        focus change is only one possible cause of.
+        """
+        return self.score_change_detected
 
     @property
     def weights(self) -> dict[str, float]:
@@ -217,22 +270,82 @@ class SharpnessResult:
         return {m.name: m.normalized for m in self.metrics}
 
     def as_row(self) -> dict[str, Any]:
-        """Flat representation used by the CSV data collector."""
+        """Flat, CSV-friendly representation of everything computed.
+
+        Nothing the evaluator worked out is dropped: the agreement term and the
+        per-metric timings used to be computed and then discarded here, which
+        made a recorded run impossible to analyse afterwards without re-running
+        it.
+        """
         row: dict[str, Any] = {
             "frame_index": self.frame_index,
             "timestamp": self.timestamp,
-            "score": self.score,
             "instantaneous_score": self.instantaneous_score,
+            "filtered_score": self.filtered_score,
             "confidence": self.confidence,
+            "ready": int(self.ready),
+            "informative_fraction": self.informative_fraction,
+            "warmup_samples": self.warmup_samples,
             "processing_time_s": self.processing_time_s,
             "capture_latency_s": self.capture_latency_s,
-            "focus_change_detected": int(self.focus_change_detected),
+            "score_change_detected": int(self.score_change_detected),
             "motor_position": "" if self.motor_position is None else self.motor_position,
+            "roi_x": "" if self.roi is None else self.roi.x,
+            "roi_y": "" if self.roi is None else self.roi.y,
+            "roi_w": "" if self.roi is None else self.roi.width,
+            "roi_h": "" if self.roi is None else self.roi.height,
         }
         for m in self.metrics:
             row[f"raw_{m.name}"] = m.raw
             row[f"norm_{m.name}"] = m.normalized
             row[f"w_{m.name}"] = m.weight
             row[f"rel_{m.name}"] = m.reliability
+            row[f"agree_{m.name}"] = m.agreement
+            row[f"ms_{m.name}"] = m.compute_time_s * 1e3
         row.update(self.stats.as_dict())
         return row
+
+    def to_dict(self) -> dict[str, Any]:
+        """Nested representation suitable for JSON, keeping the structure."""
+        return {
+            "frame_index": self.frame_index,
+            "timestamp": self.timestamp,
+            "scores": {
+                "instantaneous": self.instantaneous_score,
+                "filtered": self.filtered_score,
+            },
+            "confidence": self.confidence,
+            "state": {
+                "ready": self.ready,
+                "informative_fraction": self.informative_fraction,
+                "warmup_samples": self.warmup_samples,
+                "score_change_detected": self.score_change_detected,
+            },
+            "timing": {
+                "processing_s": self.processing_time_s,
+                "capture_latency_s": self.capture_latency_s,
+            },
+            "roi": None if self.roi is None else {
+                "x": self.roi.x, "y": self.roi.y,
+                "width": self.roi.width, "height": self.roi.height,
+            },
+            "motor_position": self.motor_position,
+            "metrics": {
+                m.name: {
+                    "raw": m.raw,
+                    "normalized": m.normalized,
+                    "weight": m.weight,
+                    "reliability": m.reliability,
+                    "agreement": m.agreement,
+                    "compute_time_s": m.compute_time_s,
+                }
+                for m in self.metrics
+            },
+            "stats": self.stats.as_dict(),
+        }
+
+    def to_json(self, **kwargs: Any) -> str:
+        """JSON form of :meth:`to_dict`."""
+        import json
+
+        return json.dumps(self.to_dict(), **kwargs)
