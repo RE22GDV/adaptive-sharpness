@@ -136,7 +136,11 @@ class AnalysisConfig:
     # Noise sigma (8-bit units) that maps to noise_level = 1.
     noise_ref_sigma: float = 6.0
     # Inter-frame displacement (pixels, at analysis scale) mapping to level 1.
-    motion_ref_px: float = 3.0
+    # Measured on a 1288-frame handheld GH6 recording while the focus ring was
+    # being turned: median 1.4 px, p75 5.8, p90 17.9, p95 29.0. The original
+    # guess of 3.0 saturated on 38% of frames, so ordinary hand-held shake read
+    # as "maximum motion".
+    motion_ref_px: float = 15.0
     # Edge-pixel fraction at/above which structure is considered sufficient.
     # Measured with tools/calibrate_stats.py rather than guessed: a rich,
     # high-contrast synthetic scene reaches ~0.045 and a real GH6 live-view

@@ -12,12 +12,16 @@ dist/
 .venv/
 venv/
 
-# Measurement output. The committed results live in docs/results/ and
-# docs/figures/; everything a run produces locally stays out of the repository.
-data/*.csv
-data/*.json
-data/*_frames/
-data/logs/
+# Measurement output stays local, all of it.
+#
+# Recordings contain PHOTOGRAPHS OF WHEREVER THE CAMERA WAS POINTED, so the
+# whole directory is excluded rather than a list of patterns: an earlier
+# pattern list (data/*.csv, data/*_frames/) did not match
+# data/run_<timestamp>/frames/, and a run would have been committed.
+#
+# Published results live in docs/figures/ and docs/FIELD_TEST.md, which are
+# reviewed by hand before they go in.
+data/
 
 # Snapshots written by the UI's `s` key
 focus_ui_*.png

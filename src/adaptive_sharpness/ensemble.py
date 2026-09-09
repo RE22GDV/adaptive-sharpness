@@ -72,7 +72,13 @@ from .types import ImageStats
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["EnsembleOutput", "AdaptiveEnsemble"]
+__all__ = ["EnsembleOutput", "AdaptiveEnsemble", "NECESSARY_FACTORS"]
+
+#: Confidence factors without which the score means nothing at all, as opposed
+#: to merely meaning less.  Only these are subject to the weakest-link cap.
+NECESSARY_FACTORS: frozenset[str] = frozenset(
+    {"edges", "contrast", "warmup", "resolution"}
+)
 
 
 @dataclass(frozen=True)
@@ -228,13 +234,21 @@ class AdaptiveEnsemble:
         log_sum = sum(math.log(max(v, floor)) for v in components.values())
         geometric = math.exp(log_sum / len(components))
 
-        # Every factor is a *necessary* condition: with no edges in the frame
-        # there is nothing whose sharpness could be measured, however good the
-        # exposure and the SNR are.  The geometric mean alone does not express
-        # that - six factors and a 1e-3 floor bottom out at 0.32 - so the
-        # confidence is additionally capped by the weakest link.  The square
-        # root keeps a merely mediocre factor from dominating the result.
-        weakest = min(components.values())
+        # The weakest-link cap applies only to the *necessary* factors.  With no
+        # edges in the frame there is nothing whose sharpness could be measured,
+        # however good the exposure is, and the geometric mean alone does not
+        # express that - it bottoms out around 0.32 even when a factor is zero.
+        #
+        # The soft factors must NOT be capped this way.  Motion, exposure, SNR
+        # and concordance degrade a measurement without making it impossible,
+        # and a hard cap on them turns a saturated factor into exactly zero
+        # confidence.  Measured on a 1288-frame handheld recording, that fired
+        # on 39% of frames - 97% of them purely because the motion factor had
+        # saturated - while the edges, SNR, exposure and contrast were all fine.
+        necessary = [
+            value for name, value in components.items() if name in NECESSARY_FACTORS
+        ]
+        weakest = min(necessary) if necessary else 1.0
         confidence = min(geometric, math.sqrt(max(0.0, weakest)))
         return float(min(1.0, max(0.0, confidence))), components
 

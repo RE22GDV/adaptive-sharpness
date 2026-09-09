@@ -276,6 +276,30 @@ def check_change_detections(rec: Recording) -> list[Finding]:
     )]
 
 
+def check_score_smoothness(rec: Recording) -> list[Finding]:
+    """Is the score actually noisy, or does the figure only look that way?
+
+    Added after a long recording was nearly diagnosed as unstable from its
+    timeline plot; the lag-1 autocorrelation was 0.986 and the median
+    frame-to-frame change 0.009, i.e. perfectly smooth.
+    """
+    if not rec.has("instantaneous_score"):
+        return []
+    values = rec.column("instantaneous_score")
+    values = values[np.isfinite(values)]
+    if values.size < 10:
+        return []
+    deltas = np.abs(np.diff(values))
+    autocorr = float(np.corrcoef(values[:-1], values[1:])[0, 1])
+    jumps = int(np.count_nonzero(deltas > 0.5))
+    level = OK if autocorr > 0.8 else (WARN if autocorr > 0.4 else FAIL)
+    return [Finding(
+        level, "score smoothness",
+        f"lag-1 autocorrelation {autocorr:.3f}, median step {np.median(deltas):.4f}, "
+        f"{jumps} step(s) over 0.5",
+    )]
+
+
 def check_timing(rec: Recording) -> list[Finding]:
     column = "total_time_s" if rec.has("total_time_s") else "processing_time_s"
     values = rec.column(column)
@@ -341,12 +365,25 @@ def check_scene(rec: Recording) -> list[Finding]:
         ))
     if rec.has("decision_margin"):
         margin = rec.column("decision_margin")
-        margin = margin[np.isfinite(margin)]
-        if margin.size:
-            level = OK if margin.mean() > 0.05 else WARN
+        # separation() returns 0 when there is no runner-up. Averaging those in
+        # reports a weak decision where there was simply nothing to decide.
+        if rec.has("region_count"):
+            contested = rec.column("region_count") > 1
+        else:
+            contested = np.isfinite(margin)
+        sole = int(np.count_nonzero(~contested))
+        values = margin[contested & np.isfinite(margin)]
+        if values.size:
+            level = OK if values.mean() > 0.05 else WARN
             out.append(Finding(
                 level, "decision margin",
-                f"mean {margin.mean():.3f} - lead of the winner over the runner-up",
+                f"mean {values.mean():.3f} over the {values.size} frames with a "
+                f"runner-up ({sole} frames had a single candidate)",
+            ))
+        elif sole:
+            out.append(Finding(
+                OK, "decision margin",
+                f"all {sole} frames had a single candidate - nothing to compare",
             ))
     if rec.has("map_valid_fraction"):
         valid = rec.column("map_valid_fraction")
@@ -371,6 +408,7 @@ def check_scene(rec: Recording) -> list[Finding]:
 CHECKS: list[Callable[[Recording], list[Finding]]] = [
     check_frame_rate,
     check_timing,
+    check_score_smoothness,
     check_readiness,
     check_confidence,
     check_saturation,
@@ -420,6 +458,13 @@ def make_figures(rec: Recording, out_dir: Path) -> None:
     wall = rec.column("wall_time") if rec.has("wall_time") else np.arange(len(rec))
 
     fig, axes = plt.subplots(3, 1, figsize=(10, 9), sharex=True)
+
+    if len(rec) > 400:
+        # A long run drawn point-per-frame in a narrow axis looks like white
+        # noise even when it is smooth, which invites exactly the wrong
+        # conclusion. Widen the figure with the run instead of decimating, so
+        # nothing is hidden.
+        fig.set_size_inches(min(26, 10 + len(rec) / 120), 9)
 
     ax = axes[0]
     if rec.has("instantaneous_score"):

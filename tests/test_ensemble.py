@@ -156,6 +156,27 @@ class TestConfidence:
         disagreeing = make().combine(scores, GOOD_STATS, IDEAL)
         assert disagreeing.confidence < agreeing.confidence
 
+    def test_saturated_motion_does_not_annihilate_confidence(self) -> None:
+        """Motion degrades a measurement; it does not make one impossible.
+
+        Regression: the weakest-link cap applied to every factor, so a single
+        saturated soft factor produced exactly 0.0. Measured on a 1288-frame
+        handheld recording that fired on 39% of frames, 97% of them purely
+        because the motion factor had saturated while edges, SNR, exposure and
+        contrast were all fine.
+        """
+        stats = ImageStats(
+            snr=40.0, local_contrast=0.18, edge_sufficiency=1.0, motion_level=1.0
+        )
+        out = make().combine(uniform_scores(), stats, MOVING)
+        assert out.confidence > 0.15, "saturated motion must not zero the confidence"
+        assert out.confidence < 0.6, "but it must still reduce it substantially"
+
+    def test_missing_edges_still_annihilates_confidence(self) -> None:
+        """The other half of the same rule: a necessary factor still caps hard."""
+        stats = ImageStats(edge_sufficiency=0.0, snr=40.0, local_contrast=0.01)
+        assert make().combine(uniform_scores(), stats, NO_EDGES).confidence < 0.1
+
     def test_motion_lowers_confidence(self) -> None:
         still = make().combine(uniform_scores(), GOOD_STATS, IDEAL)
         moving_stats = ImageStats(

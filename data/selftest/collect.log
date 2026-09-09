@@ -1,7 +1,0 @@
-2026-09-06 18:15:42,016 INFO adaptive_sharpness.capture.synthetic_source: opened synthetic sweep (41 steps, best at 0.50, max radius 8.0 px)
-2026-09-06 18:15:42,016 INFO collect: source: synthetic sweep (41 steps, best at 0.50, max radius 8.0 px)
-2026-09-06 18:15:42,016 INFO collect: recording for 4 s
-2026-09-06 18:15:42,017 INFO adaptive_sharpness.recording: recording to data/selftest
-2026-09-06 18:15:43,055 INFO collect: source exhausted
-2026-09-06 18:15:43,079 INFO adaptive_sharpness.recording: recording stopped: {"frames": 41, "duration_s": 1.039, "mean_fps": 39.47, "images_saved": 9, "images_skipped": 0, "interval_ms_mean": 24.866, "interval_ms_p95": 31.912, "interval_ms_max": 32.79}
-2026-09-06 18:15:43,079 INFO collect: summary: {"frames": 41, "duration_s": 1.039, "mean_fps": 39.47, "images_saved": 9, "images_skipped": 0, "interval_ms_mean": 24.866, "interval_ms_p95": 31.912, "interval_ms_max": 32.79, "capture_dropped_stale": 0}
