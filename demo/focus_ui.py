@@ -87,6 +87,55 @@ REC_LIVE = (60, 60, 235)
 #: mouse callback can hit-test it. Kept module level because OpenCV's
 #: highgui has no widget model to attach it to.
 RECORD_BUTTON: dict[str, tuple[int, int, int, int]] = {}
+#: Canvas-space rectangles of the experiment preset buttons, keyed by preset id.
+PRESET_BUTTONS: dict[str, tuple[int, int, int, int]] = {}
+
+
+@dataclass(frozen=True)
+class Preset:
+    """One recording protocol, startable from a button.
+
+    ``steps`` drives an on-screen prompt telling the operator when to hold the
+    focus ring still and when to move it. Inferring those boundaries afterwards
+    from the metric signal works, but only recovered 30% of a handheld run;
+    prompting makes the grouping exact and writes the step number into the CSV.
+    """
+
+    key: str
+    label: str
+    directory: str
+    duration: float
+    save_every: int
+    scene: bool
+    steps: int
+    note: str
+
+
+PRESETS: tuple[Preset, ...] = (
+    Preset("1", "1 TEX", "sweep_texture", 120.0, 1, True, 20,
+           "tripod, stepped sweep, rich texture"),
+    Preset("2", "2 PLAIN", "sweep_plain", 120.0, 1, True, 20,
+           "tripod, stepped sweep, low texture"),
+    Preset("3", "3 POINT", "point_source", 90.0, 1, False, 15,
+           "point source, dark room, stepped sweep"),
+    Preset("4", "4 COND", "cond", 30.0, 1, True, 8,
+           "condition stratum - change ISO/EV between runs"),
+)
+
+#: Fraction of each step spent holding still; the rest is for moving the ring.
+HOLD_FRACTION = 0.7
+
+
+def step_state(preset: Preset | None, elapsed: float) -> tuple[int, bool, float]:
+    """Which step we are on, whether to hold, and seconds left in this phase."""
+    if preset is None or preset.steps <= 0:
+        return 0, False, 0.0
+    period = preset.duration / preset.steps
+    index = min(int(elapsed / period), preset.steps - 1)
+    within = elapsed - index * period
+    hold = within < period * HOLD_FRACTION
+    remaining = (period * HOLD_FRACTION - within) if hold else (period - within)
+    return index + 1, hold, max(0.0, remaining)
 
 TILE_SIZES = (16, 24, 32, 48)
 #: Short labels for the metric toggles, in the order of METRIC_NAMES.
@@ -329,6 +378,7 @@ def draw_panel(
     dropped: int,
     paused: bool,
     recorder: RunRecorder | None = None,
+    active_preset: Preset | None = None,
 ) -> np.ndarray:
     import cv2
 
@@ -370,10 +420,25 @@ def draw_panel(
     # Panel-space rect; render() converts it to canvas space for hit-testing.
     RECORD_BUTTON["panel"] = (bx1, by1, bx2, by2)
 
+    # One button per experiment protocol.
+    PRESET_BUTTONS.clear()
+    pw = (PANEL_WIDTH - 28 - 3 * 6) // 4
+    for index, preset in enumerate(PRESETS):
+        px1 = 14 + index * (pw + 6)
+        px2 = px1 + pw
+        running = recording and active_preset is not None and active_preset.key == preset.key
+        cv2.rectangle(panel, (px1, 46), (px2, 70),
+                      REC_LIVE if running else (46, 46, 54), -1)
+        cv2.rectangle(panel, (px1, 46), (px2, 70),
+                      REC_LIVE if running else (70, 70, 82), 1)
+        text(preset.label, 63, (255, 255, 255) if running else MUTED, 0.36, x=px1 + 5)
+        PRESET_BUTTONS[preset.key] = (px1, 46, px2, 70)
+
     # --- what is in focus --------------------------------------------------
     y = 24
     text("IN FOCUS", y, MUTED, 0.44)
-    y += 27
+    # Below the preset button row, which occupies y = 46..70.
+    y = 94
     if subject is None:
         cv2.putText(panel, "nothing", (left, y), font, 0.76, POOR, 2, cv2.LINE_AA)
         y += 18
@@ -496,10 +561,22 @@ def draw_panel(
         text("PAUSED", y, OKAY, 0.43, x=column)
     if recorder is not None and recorder.active:
         y += 15
-        text(f"REC {recorder.elapsed:5.1f} s   {recorder.frames} frames",
+        remaining = ""
+        if active_preset is not None:
+            remaining = f" / {active_preset.duration:.0f} s"
+        text(f"REC {recorder.elapsed:5.1f}{remaining}   {recorder.frames} frames",
              y, REC_LIVE, 0.4)
         y += 14
-        text(f"-> {recorder.directory}", y, MUTED, 0.34)
+        text(f"-> {recorder.directory.name}", y, MUTED, 0.34)
+        if active_preset is not None and active_preset.steps > 0:
+            step, hold, seconds_left = step_state(active_preset, recorder.elapsed)
+            y += 20
+            colour = GOOD if hold else OKAY
+            cv2.putText(panel, "HOLD STILL" if hold else "MOVE RING",
+                        (left, y + 6), font, 0.62, colour, 2, cv2.LINE_AA)
+            y += 16
+            text(f"step {step} of {active_preset.steps}   {seconds_left:3.1f} s",
+                 y, MUTED, 0.38)
 
     # --- legend and history -------------------------------------------------
     legend_y = height - PLOT_HEIGHT - 76
@@ -541,18 +618,22 @@ def render(
     dropped: int = 0,
     paused: bool = False,
     recorder: RunRecorder | None = None,
+    active_preset: Preset | None = None,
 ) -> np.ndarray:
     """Build the complete UI image for one frame."""
     target_height = max(MIN_CANVAS_HEIGHT, frame.shape[0])
     video = compose_video(frame, result, state, target_height)
     panel = draw_panel(result, state, video.shape[0], fps, age_ms,
-                       history, confidence_history, dropped, paused, recorder)
+                       history, confidence_history, dropped, paused, recorder,
+                       active_preset)
     # The panel sits to the right of the video, so shift the button rect by the
     # video width to get canvas coordinates for hit-testing.
+    offset = video.shape[1]
     if "panel" in RECORD_BUTTON:
         bx1, by1, bx2, by2 = RECORD_BUTTON["panel"]
-        offset = video.shape[1]
         RECORD_BUTTON["canvas"] = (bx1 + offset, by1, bx2 + offset, by2)
+    for key, (px1, py1, px2, py2) in list(PRESET_BUTTONS.items()):
+        PRESET_BUTTONS[key] = (px1 + offset, py1, px2 + offset, py2)
     return compose(video, panel)
 
 
@@ -585,6 +666,23 @@ def toggle_recording(
     new.start(source_description)
     print(f"recording to {directory}")
     return new
+
+
+def start_preset(
+    preset: Preset,
+    config: SharpnessConfig,
+    out_root: Path,
+    source_description: str,
+) -> RunRecorder:
+    """Begin a protocol recording in its own timestamped directory."""
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    directory = out_root / f"{preset.directory}_{stamp}"
+    recorder = RunRecorder(directory, config, save_every=preset.save_every,
+                           note=preset.note)
+    recorder.start(source_description)
+    print(f"[{preset.label}] recording {preset.duration:.0f} s "
+          f"({preset.steps} steps) -> {directory}")
+    return recorder
 
 
 def describe(result: SceneResult) -> str:
@@ -762,19 +860,47 @@ def main(argv: list[str] | None = None) -> int:
     previous = time.perf_counter()
     snapshots = 0
     recorder: RunRecorder | None = None
+    active_preset: Preset | None = None
     record_root = args.record_dir
     save_every = max(1, args.save_every)
 
+    def stop_current() -> None:
+        nonlocal recorder, active_preset
+        if recorder is not None and recorder.active:
+            summary = recorder.stop()
+            print(f"stopped: {summary.get('frames', 0)} frames, "
+                  f"{summary.get('duration_s', 0):.1f} s -> {recorder.directory}")
+        recorder = None
+        active_preset = None
+
     def on_mouse(event: int, x: int, y: int, flags: int, param: Any) -> None:  # noqa: ARG001
-        nonlocal recorder
+        nonlocal recorder, active_preset
         if event != cv2.EVENT_LBUTTONDOWN:
             return
         rect = RECORD_BUTTON.get("canvas")
         if rect and rect[0] <= x <= rect[2] and rect[1] <= y <= rect[3]:
-            recorder = toggle_recording(
-                recorder, state.apply(base), record_root, save_every,
-                source.description,
-            )
+            if recorder is not None and recorder.active:
+                stop_current()
+            else:
+                recorder = toggle_recording(
+                    None, state.apply(base), record_root, save_every,
+                    source.description,
+                )
+                active_preset = None
+            return
+        for preset in PRESETS:
+            box = PRESET_BUTTONS.get(preset.key)
+            if not box or not (box[0] <= x <= box[2] and box[1] <= y <= box[3]):
+                continue
+            # Pressing the running preset stops it; any other press restarts.
+            running = active_preset is not None and active_preset.key == preset.key
+            stop_current()
+            if not running:
+                recorder = start_preset(
+                    preset, state.apply(base), record_root, source.description
+                )
+                active_preset = preset
+            return
 
     cv2.setMouseCallback(window, on_mouse)
 
@@ -809,9 +935,13 @@ def main(argv: list[str] | None = None) -> int:
 
                 if recorder is not None and recorder.active and result.frame_result:
                     subject = result.subject
+                    step, hold, _ = step_state(active_preset, recorder.elapsed)
                     recorder.add(
                         result.frame_result, frame.data, frame.index,
                         extra={
+                            "preset": "" if active_preset is None else active_preset.directory,
+                            "step_index": step,
+                            "step_phase": ("hold" if hold else "move") if step else "",
                             "subject_label": result.subject_label,
                             "subject_x": "" if subject is None else subject.center[0],
                             "subject_y": "" if subject is None else subject.center[1],
@@ -831,6 +961,12 @@ def main(argv: list[str] | None = None) -> int:
                             "total_time_s": result.total_time_s,
                         },
                     )
+                    # A protocol run ends itself, so the operator can keep both
+                    # hands on the focus ring.
+                    if (active_preset is not None
+                            and recorder.elapsed >= active_preset.duration):
+                        print(f"[{active_preset.label}] complete")
+                        stop_current()
 
             if last_frame is None or last_result is None:
                 continue
@@ -840,7 +976,7 @@ def main(argv: list[str] | None = None) -> int:
                 last_frame, last_result, state, fps, age_ms,
                 history, confidence_history,
                 dropped=int(getattr(source, "dropped", 0)), paused=paused,
-                recorder=recorder,
+                recorder=recorder, active_preset=active_preset,
             )
             cv2.imshow(window, canvas)
 
@@ -887,10 +1023,14 @@ def main(argv: list[str] | None = None) -> int:
             elif key == ord(" "):
                 paused = not paused
             elif key == ord("R"):
-                recorder = toggle_recording(
-                    recorder, state.apply(base), record_root, save_every,
-                    source.description,
-                )
+                if recorder is not None and recorder.active:
+                    stop_current()
+                else:
+                    recorder = toggle_recording(
+                        None, state.apply(base), record_root, save_every,
+                        source.description,
+                    )
+                    active_preset = None
             elif key == ord("s"):
                 path = Path(f"focus_ui_{snapshots:03d}.png")
                 cv2.imwrite(str(path), canvas)

@@ -254,6 +254,68 @@ class TestRecordButton:
         assert (directory / "frames.csv").is_file()
         assert (directory / "manifest.json").is_file()
 
+    def test_preset_buttons_are_published_and_distinct(self, frames) -> None:
+        """One button per protocol, all inside the panel and not overlapping."""
+        from focus_ui import PRESET_BUTTONS, PRESETS, UiState, render
+
+        PRESET_BUTTONS.clear()
+        state = UiState()
+        result = SceneEvaluator(state.apply(SharpnessConfig())).evaluate(frames[0])
+        canvas = render(frames[0], result, state)
+
+        assert set(PRESET_BUTTONS) == {p.key for p in PRESETS}
+        boxes = list(PRESET_BUTTONS.values())
+        for x1, y1, x2, y2 in boxes:
+            assert x2 > x1 and y2 > y1
+            assert x2 <= canvas.shape[1] and y2 <= canvas.shape[0]
+        for i, a in enumerate(boxes):
+            for b in boxes[i + 1:]:
+                assert a[2] <= b[0] or b[2] <= a[0], "preset buttons overlap"
+
+    def test_step_prompt_alternates_hold_and_move(self) -> None:
+        from focus_ui import PRESETS, step_state
+
+        preset = PRESETS[0]
+        period = preset.duration / preset.steps
+        step, hold, _ = step_state(preset, 0.0)
+        assert step == 1 and hold
+        # Late in a period the operator is told to move to the next position.
+        step, hold, _ = step_state(preset, period * 0.9)
+        assert step == 1 and not hold
+        step, hold, _ = step_state(preset, period * 1.1)
+        assert step == 2 and hold
+        # The last step must not run off the end.
+        step, _, _ = step_state(preset, preset.duration * 2)
+        assert step == preset.steps
+
+    def test_step_state_is_inert_without_a_preset(self) -> None:
+        from focus_ui import step_state
+
+        assert step_state(None, 12.0) == (0, False, 0.0)
+
+    def test_presets_are_self_consistent(self) -> None:
+        from focus_ui import PRESETS
+
+        assert len({p.key for p in PRESETS}) == len(PRESETS)
+        assert len({p.directory for p in PRESETS}) == len(PRESETS)
+        for preset in PRESETS:
+            assert preset.duration > 0
+            assert preset.save_every >= 1
+            assert preset.steps >= 0
+            assert preset.note
+
+    def test_start_preset_writes_into_its_own_directory(self, tmp_path: Path) -> None:
+        from focus_ui import PRESETS, start_preset
+
+        recorder = start_preset(PRESETS[0], SharpnessConfig(), tmp_path, "unit test")
+        try:
+            assert recorder.active
+            assert PRESETS[0].directory in recorder.directory.name
+            assert recorder.save_every == PRESETS[0].save_every
+        finally:
+            recorder.stop()
+        assert (recorder.directory / "manifest.json").is_file()
+
     def test_each_toggle_gets_its_own_directory(self, tmp_path: Path) -> None:
         """Pressing the button twice must not overwrite the earlier run."""
         from focus_ui import toggle_recording
