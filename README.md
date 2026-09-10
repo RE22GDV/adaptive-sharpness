@@ -555,6 +555,24 @@ The adaptive scheme is the only one at 1.0 in every condition. On `low_texture`
 the plain and fixed means additionally pick up **2 false peaks** each, where the
 adaptive scheme has none.
 
+### Validation on real frames
+
+Five experiments on a recorded session rather than generated scenes, none of
+which needs an external ground truth
+([docs/REAL_FRAME_STUDY.md](docs/REAL_FRAME_STUDY.md)):
+
+- **Monotonicity transfers to real image content**, including under halved
+  exposure and σ=20 noise. Every metric except `edge_width` scores 1.00.
+- **The same frame can be scored 0.83 apart** on a 0–1 scale purely because of
+  the order it arrived in — a direct measurement of the relativity the API
+  documents. Rank correlation stays at 0.91.
+- **The metric ranking differs from the synthetic one.** By separability of
+  focus positions on real frames, Tenengrad leads at 120× and the Laplacian
+  comes fourth at 52×; `edge_width` is last at 17×.
+- **The disc PSF matches real defocus to within ~15%** at sub-pixel blur — but
+  only there. A handheld recording never holds a view steady long enough to
+  test larger blur.
+
 ### What this does not show
 
 - **On a clean sweep every method is equivalent.** Any advantage claimed there
@@ -635,6 +653,8 @@ Not part of the installed library; run them from a checkout.
 | `tools/compare_focus_measures.py` | per-tile measure selection |
 | `tools/collect_dataset.py` | log every frame's full evaluation to CSV |
 | `tools/make_figures.py` | regenerate every figure in this README |
+| `tools/analyze_recording.py` | eleven automated checks on a recording |
+| `tools/study_real_frames.py` | the five real-frame experiments |
 
 Known gaps in the tooling, listed so nobody mistakes them for finished work: the
 recording analyser reads an image directory and ignores the collector's CSV, so
@@ -668,6 +688,8 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/FOCUS_UI.md](docs/FOCUS_UI.md) | the spatial focus map and the UI |
 | [docs/GH6_SETUP.md](docs/GH6_SETUP.md) | camera configuration and troubleshooting |
 | [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) | protocol for a real focus sweep |
+| [docs/FIELD_TEST.md](docs/FIELD_TEST.md) | first real recording, and the defects it found |
+| [docs/REAL_FRAME_STUDY.md](docs/REAL_FRAME_STUDY.md) | five experiments on recorded frames |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |
 
