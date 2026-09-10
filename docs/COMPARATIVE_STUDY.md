@@ -21,9 +21,10 @@ OpenCV 4.13.0. Source: the 70.7 s handheld GH6 recording described in
 | Question | Answer |
 | --- | --- |
 | Is it fast enough? | Yes. Six measures cost **3.99 ms**, the adaptive fusion **1.51 ms**, against a 40 ms frame interval. |
-| Is any single measure of ours the best available? | **No.** A published baseline, TENV, separates real focus positions **1.7× better** than our best, at **1/13** the cost of our set. |
-| Does the adaptive fusion beat simpler rules? | **Only in the hardest conditions.** In easy ones all eight rules tie exactly. A plain median beats it in one condition; it wins in another. |
-| Is the extra machinery worth it? | Conditionally. It costs 2500× more than an arithmetic mean and earns that back only on low-texture, heavily degraded frames. |
+| Is any single measure of ours the best available? | **No.** Two published baselines, VOL4 and TENV, separate real focus positions 2.5× and 1.4× better than our best. |
+| Does fusing the measures help? | **For separating nearby focus positions, no — it hurts.** Every fusion rule, ours included, scores below nine individual measures. |
+| Does the adaptive fusion beat simpler rules? | **Only in the hardest conditions**, and only at peak-finding. In easy ones all eight rules tie exactly. |
+| Is the extra machinery worth it? | Conditionally, and for one job only: robust peak-finding under heavy degradation. Not for resolving nearby positions. |
 
 ---
 
@@ -95,51 +96,89 @@ full-frame passes.
 
 ![Quality](figures/study_quality.png)
 
-How well does each measure distinguish real focus positions? The recording
+How well does each signal distinguish real focus positions? The recording
 contains groups of frames where the operator held the ring still, so the spread
 *between* groups can be compared against the scatter *within* a group. No ground
 truth is needed, because the comparison is internal.
 
-| measure | within | between | separability | source |
-| --- | --- | --- | --- | --- |
-| **TENV** | 0.0044 | 0.514 | **115.8** | baseline |
-| brenner | 0.0085 | 0.590 | 69.2 | this project |
-| tenengrad | 0.0088 | 0.589 | 66.9 | this project |
-| SMD | 0.0045 | 0.273 | 60.7 | baseline |
-| SML | 0.0085 | 0.481 | 56.5 | baseline |
-| GLVA | 0.0083 | 0.447 | 54.1 | baseline |
-| NVAR | — | — | 52.2 | baseline |
-| VOL5 | — | — | 51.1 | baseline |
-| VOL4 | — | — | 49.2 | baseline |
-| wavelet | — | — | 39.5 | this project |
-| laplacian | — | — | 30.3 | this project |
-| LAPE | — | — | 20.4 | baseline |
-| fourier | — | — | 13.1 | this project |
-| edge_width | — | — | 9.8 | this project |
-| DCTR | — | — | 3.7 | baseline |
+**Both the individual measures and the fusion rules are in this ranking.** An
+earlier version of this study compared only individual measures, which left the
+project's actual output — the fused score — out of the very comparison the
+project exists to win.
 
-**A published baseline wins, and not narrowly.** TENV — the variance of the
-Sobel gradient magnitude, Pertuz et al. (2013) — is 1.7× better than our best
-measure and costs 0.309 ms. Our whole six-measure set costs 13× that and does
-not contain anything better.
+The ratio is between-group standard deviation over within-group standard
+deviation, and **every signal is put through the same normalisation and
+clipping** the fusion inputs go through. Without that, unbounded raw measures
+would be compared against fused scores clipped to `[0, 1]`, and clipping
+saturates on 18–22% of frames — which compresses between-group spread without
+compressing within-group noise, penalising the fused side by construction.
 
-Two of our measures sit near the bottom. `fourier` (13.1) and `edge_width` (9.8)
-carry an order of magnitude less positional information than TENV while costing
-3.7× and 6.1× more. On the evidence of this recording they earn their place in
-the ensemble only through *diversity* — they fail differently from the gradient
-measures, which is what the agreement stage exploits — and not through
-individual quality.
+| rank | signal | separability | kind |
+| --- | --- | --- | --- |
+| 1 | **VOL4** | **299.5** | published measure |
+| 2 | **TENV** | **164.6** | published measure |
+| 3 | tenengrad | 120.1 | our measure |
+| 4 | brenner | 112.9 | our measure |
+| 5 | SMD | 67.1 | published measure |
+| 6 | NVAR | 66.7 | published measure |
+| 7 | SML | 53.4 | published measure |
+| 8 | GLVA | 52.4 | published measure |
+| 9 | VOL5 | 50.6 | published measure |
+| 10 | entropy (fused) | 42.8 | fusion, offline |
+| 11 | pca1 (fused) | 41.5 | fusion, offline |
+| 12 | laplacian | 39.4 | our measure |
+| 13 | fixed_weighted (fused) | 38.9 | fusion |
+| 14 | wavelet | 38.5 | our measure |
+| 15 | mean (fused) | 35.2 | fusion |
+| 16 | **adaptive (fused)** | **33.1** | **our fusion** |
+| 17 | median (fused) | 32.1 | fusion |
+| 18 | LAPE | 29.6 | published measure |
+| 19 | inverse_variance (fused) | 29.0 | fusion, offline |
+| 20 | max (fused) | 19.6 | fusion |
+| 21 | fourier | 13.1 | our measure |
+| 22 | edge_width | 9.3 | our measure |
+| 23 | DCTR | 3.5 | published measure |
 
-The Laplacian's position (30.3, eighth) is worth noting against the synthetic
-study, where it had by far the highest discrimination figure. Its between-group
-spread is large, but so is its scatter at a fixed position, and a search cares
-about the ratio.
+Three findings, none comfortable.
+
+**Fusion destroys positional discriminability.** Every one of the eight fusion
+rules lands between 19.6 and 42.8, below **nine** individual measures. The best
+fusion (entropy, 42.8) is 7× worse than the best single measure. This is not a
+property of our rule — the arithmetic mean, the median, PCA and entropy
+weighting all do it too.
+
+The mechanism is straightforward: the measures disagree about where positions
+sit relative to one another, so averaging compresses the between-group spread
+faster than it reduces the within-group noise. Fusion buys robustness by
+throwing away resolution.
+
+**Our adaptive fusion (33.1) is beaten by four of our own six measures.**
+Feeding `tenengrad` alone to a search would separate positions 3.6× better than
+feeding it our fused score.
+
+**Two published baselines beat everything.** VOL4 (Vollath's autocorrelation,
+1987) at 299.5 and TENV (variance of the Sobel magnitude) at 164.6. VOL4 costs
+0.152 ms, TENV 0.309 ms; our full six-measure set costs 3.99 ms.
+
+### This does not contradict Section D
+
+Separability and peak-finding are different jobs, and they rank the methods
+differently:
+
+| job | winner |
+| --- | --- |
+| resolving nearby focus positions | a single gradient measure (VOL4, TENV, tenengrad) |
+| finding the peak under heavy degradation | fusion, and ours specifically on low-texture noisy frames |
+
+A search that hill-climbs on fine differences wants the first. A search that has
+to not be fooled by a noisy dark frame wants the second. This project optimised
+for the second without ever measuring the first, which is why the result is a
+surprise.
 
 **Caveat:** only 6 held-position groups contained saved frames, because frames
-were sampled every tenth. This ranking is indicative, not settled. Recording
-with `--save-every 1` would give a proper sample.
-
----
+were sampled every tenth. This ranking is indicative, not settled. A tripod
+recording with `--save-every 1` would give a proper sample, and is the single
+most valuable measurement still outstanding.
 
 ## C. Accuracy on a known ladder
 
@@ -221,9 +260,15 @@ from 3.99 ms to 0.96 ms. Whether the ensemble loses accuracy is testable and has
 not been tested — their value is supposed to be diversity, and that claim now
 has a specific price attached to it.
 
-**TENV belongs in the set.** It is cheaper than three of ours and separates
-better than all six. There is no argument for excluding it other than that it
-was not part of the original design.
+**VOL4 and TENV belong in the set.** Both are cheaper than three of ours and
+separate better than all six. There is no argument for excluding them other than
+that they were not part of the original design.
+
+**The fusion stage needs a stated purpose.** It costs resolution to buy
+robustness, and that trade is only worth making if the application is
+robustness-limited. A system that hill-climbs on small differences near focus
+would be better served by a single gradient measure, and the library should say
+so rather than presenting the ensemble as unconditionally better.
 
 **The adaptive fusion has a narrow but real advantage.** It is never worse than
 the alternatives, ties them in every easy condition, and wins on low-texture

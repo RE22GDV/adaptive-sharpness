@@ -196,40 +196,92 @@ def low_texture_frames(
 # Part B - separability on real held-position groups
 # ---------------------------------------------------------------------------
 
+def fusion_series(
+    matrix: np.ndarray,
+    stats: list[Any],
+    degradations: list[dict[str, float]],
+    config: SharpnessConfig,
+) -> dict[str, np.ndarray]:
+    """Every fusion rule's output for a sequence, including this project's."""
+    priors = np.array([config.metrics.priors[n] for n in OWN])
+    out = {
+        name: np.asarray(function(matrix, priors), dtype=np.float64)
+        for name, function in COMBINERS.items()
+    }
+    ensemble = AdaptiveEnsemble(tuple(OWN), config.ensemble, config.metrics.priors)
+    out["adaptive"] = np.array([
+        ensemble.combine(
+            {name: float(matrix[i, j]) for j, name in enumerate(OWN)},
+            stats[i], degradations[i],
+        ).score
+        for i in range(matrix.shape[0])
+    ])
+    return out
+
+
 def part_b_separability(
     recording: Recording,
     images: list[tuple[dict[str, str], np.ndarray]],
     config: SharpnessConfig,
 ) -> dict[str, Any]:
+    """Separability of real focus positions, for measures AND fusion rules.
+
+    The ratio is between-group standard deviation over within-group standard
+    deviation, both in the signal's own units.  That is invariant to scale and
+    to offset, which matters because the comparison mixes unbounded raw metrics
+    with fusion outputs bounded to [0, 1]: an earlier version divided each
+    standard deviation by its mean, which is scale-free but not shift-free, and
+    therefore favoured the unbounded signals.
+    """
     groups = segment_held_groups(recording.column("raw_tenengrad"))
     if not groups:
         return {"groups": 0}
 
-    # The CSV only holds this project's measures, so the baselines are computed
-    # on the saved frames and mapped onto the same groups by frame index.
     preprocessor = Preprocessor(config.pipeline)
+    analyzer = ImageAnalyzer(config.analysis)
     measures = all_measures(config)
-    index_by_row = {id(row): i for i, (row, _) in enumerate(images)}
-    row_positions = []
-    for row, _ in images:
-        try:
-            row_positions.append(int(row["frame_index"]))
-        except (KeyError, ValueError):
-            row_positions.append(-1)
+    own_metrics = build_metrics(config.metrics)
 
     values: dict[str, list[float]] = {name: [] for name in measures}
+    stats, degradations = [], []
+    own_raw: dict[str, list[float]] = {m.name: [] for m in own_metrics}
     for _, image in images:
         gray = preprocessor.prepare(image).gray
+        image_stats = analyzer.analyze(gray)
+        stats.append(image_stats)
+        degradations.append(analyzer.degradations(image_stats))
         for name, function in measures.items():
             values[name].append(function(gray))
+        for metric in own_metrics:
+            own_raw[metric.name].append(values[metric.name][-1])
 
-    # Which saved frames fall in which held group, by position in the CSV.
+    # Fusion rules operate on normalised metric values, so build that matrix
+    # once and score every rule from it.
+    matrix = normalise_columns(
+        np.column_stack([own_raw[n] for n in OWN]).astype(np.float64)
+    )
+    for name, series in fusion_series(matrix, stats, degradations, config).items():
+        values[f"fusion:{name}"] = list(series)
+
+    # Fusion outputs are normalised and clipped to [0, 1]; raw measures are
+    # neither. Clipping saturates - measured at 18-22% of frames - which
+    # compresses between-group spread without compressing within-group noise,
+    # so comparing raw measures against fused ones penalises the fused side by
+    # construction. Every individual measure therefore also gets a normalised
+    # twin, put through exactly the same transform the fusion inputs went
+    # through, and that is the column the two sides are compared on.
+    measure_names_list = list(measures)
+    normalised_measures = normalise_columns(
+        np.column_stack([values[n] for n in measure_names_list]).astype(np.float64)
+    )
+    for column, name in enumerate(measure_names_list):
+        values[f"norm:{name}"] = list(normalised_measures[:, column])
+
     csv_positions = [i for i, row in enumerate(recording.rows) if row.get("image_file")]
     group_of = {}
-    for group_index, (start, end) in enumerate(groups):
-        for position in range(start, end):
+    for group_index, (start, stop) in enumerate(groups):
+        for position in range(start, stop):
             group_of[position] = group_index
-
     membership: dict[int, list[int]] = {}
     for saved_index, csv_index in enumerate(csv_positions):
         group = group_of.get(csv_index)
@@ -245,21 +297,21 @@ def part_b_separability(
     if not usable:
         return out
 
-    for name in measures:
-        series = np.array(values[name], dtype=np.float64)
+    for name, series_list in values.items():
+        series = np.array(series_list, dtype=np.float64)
+        if not np.all(np.isfinite(series)):
+            continue
         within, means = [], []
         for indices in usable.values():
             segment = series[indices]
-            scale = max(abs(float(segment.mean())), 1e-12)
-            within.append(float(segment.std()) / scale)
+            within.append(float(segment.std()))
             means.append(float(segment.mean()))
-        means_arr = np.array(means)
-        between = float(means_arr.std()) / max(abs(float(means_arr.mean())), 1e-12)
-        within_median = max(float(np.median(within)), 1e-12)
+        between = float(np.array(means).std())
+        within_pooled = max(float(np.median(within)), 1e-12)
         out["per_measure"][name] = {
-            "within": within_median,
+            "within": within_pooled,
             "between": between,
-            "separability": between / within_median,
+            "separability": between / within_pooled,
         }
     return out
 
@@ -442,9 +494,41 @@ def print_report(results: dict[str, Any]) -> None:
         print("   " + "-" * 62)
         ranked = sorted(b["per_measure"].items(), key=lambda kv: -kv[1]["separability"])
         for name, values in ranked:
-            origin = "this project" if name in OWN else "baseline"
-            print(f"   {name:14s} {values['within']:8.4f} {values['between']:9.4f} "
+            if name.startswith("norm:"):
+                continue  # shown in the like-for-like table below
+            if name.startswith("fusion:"):
+                rule = name.split(":", 1)[1]
+                origin = ("FUSION, this project" if rule == "adaptive"
+                          else "fusion, baseline")
+                shown = rule + " (fused)"
+            else:
+                origin = "this project" if name in OWN else "baseline"
+                shown = name
+            print(f"   {shown:20s} {values['within']:8.4f} {values['between']:9.4f} "
                   f"{values['separability']:13.1f}  {origin}")
+
+
+        # Like-for-like: every signal put through the same normalisation and
+        # clipping the fusion inputs went through, so the bounded fused
+        # scores are not compared against unbounded raw measures.
+        print("")
+        print("   like for like - all signals normalised and clipped alike:")
+        print(f"   {'signal':24s} {'separability':>13}  source")
+        print("   " + "-" * 52)
+        fair = {}
+        for name, entry in b["per_measure"].items():
+            if name.startswith("norm:"):
+                fair[name[5:]] = (entry["separability"], "measure")
+            elif name.startswith("fusion:"):
+                fair[name[7:] + " (fused)"] = (entry["separability"], "fusion")
+        for name, (value, kind) in sorted(fair.items(), key=lambda kv: -kv[1][0]):
+            base = name.replace(" (fused)", "")
+            if kind == "fusion":
+                origin = ("FUSION, this project" if base == "adaptive"
+                          else "fusion, baseline")
+            else:
+                origin = "this project" if base in OWN else "baseline"
+            print(f"   {name:24s} {value:13.1f}  {origin}")
 
     c = results["C_accuracy"]
     print(f"\nC  ACCURACY ON A KNOWN LADDER FROM REAL FRAMES  "
@@ -531,16 +615,40 @@ def make_figures(results: dict[str, Any], out_dir: Path) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     b = results["B_separability"].get("per_measure", {})
     if b:
-        ranked = sorted(b.items(), key=lambda kv: -kv[1]["separability"])
+        # Like-for-like only: every signal normalised and clipped alike, so the
+        # bounded fused scores are not plotted against unbounded raw measures.
+        fair = {}
+        for name, entry in b.items():
+            if name.startswith("norm:"):
+                fair[name[5:]] = (entry["separability"], "measure")
+            elif name.startswith("fusion:"):
+                fair[name[7:] + " (fused)"] = (entry["separability"], "fusion")
+        ranked = sorted(fair.items(), key=lambda kv: -kv[1][0])
         names = [n for n, _ in ranked]
-        values = [v["separability"] for _, v in ranked]
-        colours = [own_colour if n in OWN else base_colour for n in names]
+        values = [v[0] for _, v in ranked]
+        colours = []
+        for name, (_, kind) in ranked:
+            base = name.replace(" (fused)", "")
+            if kind == "fusion":
+                colours.append("#d1495b" if base == "adaptive" else "#edae49")
+            else:
+                colours.append(own_colour if base in OWN else base_colour)
         ax = axes[0]
         ax.barh(names, values, color=colours)
         ax.invert_yaxis()
-        ax.set_xlabel("between-group / within-group spread")
-        ax.set_title("Separability of real focus positions")
+        ax.set_xlabel("between-group / within-group standard deviation")
+        ax.set_title("Separability of real focus positions"
+                     "\n(all signals normalised alike)")
         ax.grid(axis="x", color="#e6e8eb")
+        legend = [
+            plt.Rectangle((0, 0), 1, 1, color=own_colour),
+            plt.Rectangle((0, 0), 1, 1, color=base_colour),
+            plt.Rectangle((0, 0), 1, 1, color="#edae49"),
+            plt.Rectangle((0, 0), 1, 1, color="#d1495b"),
+        ]
+        ax.legend(legend,
+                  ["our measure", "published measure", "fusion rule",
+                   "our adaptive fusion"], fontsize=7, loc="lower right")
 
     ax = axes[1]
     c = results["C_accuracy"]["conditions"]

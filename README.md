@@ -560,20 +560,29 @@ adaptive scheme has none.
 Nine published focus measures and seven standard fusion rules, on real frames
 ([docs/COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md)):
 
-- **A published baseline wins on individual measure quality.** TENV (variance of
-  the Sobel magnitude, Pertuz et al. 2013) separates real focus positions 1.7×
-  better than our best measure, at 1/13 the cost of our whole set.
+- **Fusing the measures costs resolution.** Ranked by how well they separate
+  nearby real focus positions, **all eight fusion rules — ours included — fall
+  below nine individual measures**. The arithmetic mean, the median, PCA and
+  entropy weighting all do this; it is not specific to our rule. Averaging
+  compresses the between-position spread faster than it reduces the noise.
+- **Our adaptive fusion is beaten by four of our own six measures** on that
+  criterion. Feeding `tenengrad` alone to a search separates positions 3.6×
+  better than feeding it our fused score.
+- **Two published baselines beat everything**: VOL4 (299.5) and TENV (164.6)
+  against our best measure at 120.1.
+- **But fusion wins the other job.** Under heavy degradation the ranking
+  inverts: on low-texture noisy frames the adaptive rule locates the peak better
+  than every alternative, including three offline rules that see the whole
+  sequence in advance.
 - **Our two most expensive measures are our two weakest.** `fourier` and
-  `edge_width` are 76% of the measure cost and last in separability; their value
-  is supposed to be diversity, and that claim now has a price attached.
-- **The adaptive fusion ties every simpler rule in easy conditions** and costs
-  2500× an arithmetic mean to do so.
-- **It wins where it was designed to** — low-texture frames with heavy noise —
-  beating the arithmetic mean, the fixed weighting and all three offline rules
-  that see the whole sequence in advance.
-- **And it has a plain limit**: on low-texture frames that are dark *and* noisy,
-  every rule including ours lands 4.5–5.5 steps from the peak of a 13-step
-  ladder. That is not a working signal.
+  `edge_width` are 76% of the measure cost and rank 21st and 22nd of 23.
+- **And there is a plain limit**: on low-texture frames that are dark *and*
+  noisy, every rule including ours lands 4.5–5.5 steps from the peak of a
+  13-step ladder. That is not a working signal.
+
+The two jobs rank the methods differently — resolving nearby positions favours a
+single gradient measure, surviving degradation favours fusion. This project
+optimised for the second without measuring the first.
 
 Speed on the reference hardware: six measures 3.99 ms, adaptive fusion 1.51 ms,
 against a 40 ms frame interval.
