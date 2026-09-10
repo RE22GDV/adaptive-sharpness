@@ -555,6 +555,29 @@ The adaptive scheme is the only one at 1.0 in every condition. On `low_texture`
 the plain and fixed means additionally pick up **2 false peaks** each, where the
 adaptive scheme has none.
 
+### Compared against published methods
+
+Nine published focus measures and seven standard fusion rules, on real frames
+([docs/COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md)):
+
+- **A published baseline wins on individual measure quality.** TENV (variance of
+  the Sobel magnitude, Pertuz et al. 2013) separates real focus positions 1.7×
+  better than our best measure, at 1/13 the cost of our whole set.
+- **Our two most expensive measures are our two weakest.** `fourier` and
+  `edge_width` are 76% of the measure cost and last in separability; their value
+  is supposed to be diversity, and that claim now has a price attached.
+- **The adaptive fusion ties every simpler rule in easy conditions** and costs
+  2500× an arithmetic mean to do so.
+- **It wins where it was designed to** — low-texture frames with heavy noise —
+  beating the arithmetic mean, the fixed weighting and all three offline rules
+  that see the whole sequence in advance.
+- **And it has a plain limit**: on low-texture frames that are dark *and* noisy,
+  every rule including ours lands 4.5–5.5 steps from the peak of a 13-step
+  ladder. That is not a working signal.
+
+Speed on the reference hardware: six measures 3.99 ms, adaptive fusion 1.51 ms,
+against a 40 ms frame interval.
+
 ### Validation on real frames
 
 Five experiments on a recorded session rather than generated scenes, none of
@@ -621,9 +644,12 @@ regression test:
 ## Limitations
 
 - **No claim of scientific novelty.** The six measures derive from classical
-  operators. What is proposed is the combination scheme; validating that as
-  novel would require re-implementing published schemes and running them on the
-  same data, which has **not** been done.
+  operators. What is proposed is the combination scheme. Nine published measures
+  and seven standard fusion rules have now been re-implemented and run on the
+  same real data ([COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md)); the result
+  is that a published baseline beats our best individual measure, and the
+  adaptive fusion's advantage is confined to low-texture, heavily degraded
+  frames. That is a measured position, not a claim of novelty.
 - **All comparisons use simulated defocus.** A disc PSF models the circle of
   confusion, but a real lens adds aberration, vignetting, focus breathing and
   subject motion. **No real recorded focus sweep has been analysed.**
@@ -655,6 +681,8 @@ Not part of the installed library; run them from a checkout.
 | `tools/make_figures.py` | regenerate every figure in this README |
 | `tools/analyze_recording.py` | eleven automated checks on a recording |
 | `tools/study_real_frames.py` | the five real-frame experiments |
+| `tools/comprehensive_study.py` | speed and quality against published baselines |
+| `tools/baselines.py` | nine published focus measures, seven fusion rules |
 
 Known gaps in the tooling, listed so nobody mistakes them for finished work: the
 recording analyser reads an image directory and ignores the collector's CSV, so
@@ -690,6 +718,7 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) | protocol for a real focus sweep |
 | [docs/FIELD_TEST.md](docs/FIELD_TEST.md) | first real recording, and the defects it found |
 | [docs/REAL_FRAME_STUDY.md](docs/REAL_FRAME_STUDY.md) | five experiments on recorded frames |
+| [docs/COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md) | comparison against nine published measures and seven fusion rules |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |
 
