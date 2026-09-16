@@ -139,10 +139,14 @@ class NormalizationConfig:
     # anchors do not span the working range.  Measured on the point-source
     # recordings, a frozen linear map pins 41% of frames at 0 or 1.
     #
-    # "logistic" maps the same anchors through 1/(1+exp(-gain*(x-mid)/span)),
-    # which is strictly monotone everywhere and therefore never ties two
-    # different frames.  Same recordings: 0.3% pinned, and rank correlation
-    # with the physical spot size rises from 0.88 to 0.94 and from 0.84 to 0.97.
+    # "logistic" maps the same anchors through 1/(1+exp(-gain*(x-mid)/span)).
+    # The function is strictly monotone, so it introduces no ties of its own -
+    # but the implementation is float64 and saturates numerically: past roughly
+    # 9 spans from the midpoint the result rounds to exactly 1.0, so two very
+    # different frames out in that tail still collide.  In practice the tails
+    # are far outside the working range; the claim is "no ties over the range
+    # the anchors describe", not "no ties ever".  Measured on the same
+    # recordings: 0.3% of frames pinned against 40.7% for a frozen linear map.
     mapping: str = "logistic"
     # Logistic steepness.  At 4.0 the two anchors land on 0.12 and 0.88, so the
     # configured percentiles still occupy most of the output range while the
@@ -179,8 +183,11 @@ class NormalizationConfig:
     # Freeze the scaling anchors once the observed range has stopped growing.
     #
     # A rolling window makes the score relative to recent history, which breaks
-    # the only property a focus search needs: that a higher score means a
-    # sharper frame.  Measured against the point-source ground truth, the raw
+    # the property a focus search needs: that within one stream a higher score
+    # means a sharper frame.  Freezing does not *guarantee* that - the fused
+    # score is a weighted sum of six metrics that need not agree, and the
+    # weights themselves move - it removes the one cause that was provably
+    # breaking it.  Measured against the point-source reference, the raw
     # metric tracks true focus at rank correlation 0.97-0.98, the rolling
     # window at 120 frames scores -0.24 and -0.38 - worse than useless - and a
     # frozen scale recovers 0.92 and 0.88.  On a slow approach to focus the

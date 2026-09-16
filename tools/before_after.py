@@ -24,7 +24,8 @@ for _entry in (_ROOT / "src", _ROOT):
         sys.path.insert(0, str(_entry))
 
 from adaptive_sharpness import load_default_config  # noqa: E402
-from tools.ablation import _shipped_before, spearman  # noqa: E402
+from tools.ablation import HISTORIC, REPAIRED, ground_truth_scores, spearman  # noqa: E402
+from tools.evaluation import provenance, select_frames  # noqa: E402
 from tools.protocol_study import step_profile  # noqa: E402
 from tools.replay_configs import load_frames, load_labels, replay  # noqa: E402
 
@@ -42,29 +43,41 @@ def collect(directory: Path) -> dict[str, Any] | None:
     files, step, hold = load_labels(directory)
     radius = loaded["spot_radius"]
     offset = loaded["spot_offset"]
-    selected = hold & (step > 0) & np.isfinite(radius) & (offset <= 20.0)
-    if selected.sum() < 20:
+    # The same selection every other tool uses, so that a number here can be
+    # compared with a number there.
+    selection = select_frames(
+        step=step, hold=hold, spot_radius=radius, spot_offset=offset,
+        require_reference=True,
+    )
+    if selection.count < 20:
         return None
+    selected = selection.mask
     labels = step[selected]
 
     config = load_default_config()
     images = load_frames(directory, files)
-    out: dict[str, Any] = {"name": directory.name}
+    out: dict[str, Any] = {"name": directory.name, "selection": selection.summary()}
 
     steps, spot_medians, _ = step_profile(radius[selected], labels)
     out["steps"] = steps.tolist()
     out["spot_radius"] = spot_medians.tolist()
     out["best_step"] = float(steps[int(np.argmin(spot_medians))])
 
-    for label, cfg in (("before", _shipped_before(config)), ("after", config)):
+    for label, spec in (("before", HISTORIC), ("after", REPAIRED)):
         logger.info("%s: %s", directory.name, label)
+        cfg = spec.build(config)
         result = replay(images, cfg, cfg.metrics.enabled)
         series = result["filtered"][selected]
         _, medians, _ = step_profile(series, labels)
+        scores = ground_truth_scores(series, radius[selected], labels)
         out[label] = {
             "profile": medians.tolist(),
-            "spearman": spearman(series, -radius[selected]),
-            "peak_step": float(steps[int(np.argmax(medians))]),
+            "spearman": scores["spearman_gt"],
+            "inversion": scores["inversion"],
+            "peak_step": float(steps[int(np.nanargmax(medians))]),
+            "peak_err": scores["peak_err"],
+            "spec": {k: (list(v) if isinstance(v, tuple) else v)
+                     for k, v in spec.__dict__.items()},
         }
     del images
     return out
@@ -148,7 +161,13 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.json:
-        args.json.write_text(json.dumps(runs, indent=2, default=float))
+        payload = {
+            "runs": runs,
+            "provenance": provenance(
+                load_default_config(), recordings=[r["name"] for r in runs]
+            ),
+        }
+        args.json.write_text(json.dumps(payload, indent=2, default=float))
         print(f"\nwrote {args.json}")
     if args.figures:
         make_figure(runs, args.figures)

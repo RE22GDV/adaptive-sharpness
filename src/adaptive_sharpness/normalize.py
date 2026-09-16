@@ -64,8 +64,10 @@ class RunningNormalizer:
         )
         self._frozen_anchors: tuple[float, float] | None = None
         self._auto_frozen = False
-        self._widest_span = 0.0
+        self._stability_reference = 0.0
         self._stable_for = 0
+        #: Why and when the scale froze, for diagnostics; None while rolling.
+        self._freeze_record: dict[str, object] | None = None
         # Total samples ever seen.  Not len(self._history): that deque is
         # capped at `window`, so comparing it against a larger threshold can
         # never be satisfied.
@@ -104,8 +106,9 @@ class RunningNormalizer:
                 logger.debug("normalizer %s thawed: %.0f%% outside", self.name, 100 * outside)
                 self._frozen_anchors = None
                 self._auto_frozen = False
-                self._widest_span = 0.0
+                self._stability_reference = 0.0
                 self._stable_for = 0
+                self._freeze_record = None
             return
 
         if self._seen < config.auto_freeze_min_samples:
@@ -116,16 +119,33 @@ class RunningNormalizer:
             return
         low, high = anchors
         span = high - low
-        if span > self._widest_span * (1.0 + config.auto_freeze_stability):
-            self._widest_span = span
+
+        # The stability test compares against a reference fixed at the start of
+        # the interval, not against a maximum that is updated every sample.
+        # With a running maximum, growth slower than the threshold is never
+        # caught: at 1% per sample against a 5% threshold the scale froze after
+        # 119 samples while the span had grown 3.3x.
+        if self._stable_for == 0:
+            self._stability_reference = span
+        if span > self._stability_reference * (1.0 + config.auto_freeze_stability):
+            self._stability_reference = span
             self._stable_for = 0
             return
-        self._widest_span = max(self._widest_span, span)
         self._stable_for += 1
         if self._stable_for >= config.auto_freeze_patience:
             self._frozen_anchors = anchors
             self._auto_frozen = True
-            logger.debug("normalizer %s auto-froze at %s", self.name, anchors)
+            self._freeze_record = {
+                "sample": self._seen,
+                "anchors": (float(low), float(high)),
+                "span": float(span),
+                "stable_for": self._stable_for,
+                "reference_span": float(self._stability_reference),
+            }
+            logger.info(
+                "normalizer %s froze after %d samples at [%.6g, %.6g]",
+                self.name, self._seen, low, high,
+            )
 
     def _compress(self, value: float) -> float:
         if not self.config.log_compress:
@@ -253,8 +273,9 @@ class RunningNormalizer:
     def unfreeze(self) -> None:
         self._frozen_anchors = None
         self._auto_frozen = False
-        self._widest_span = 0.0
+        self._stability_reference = 0.0
         self._stable_for = 0
+        self._freeze_record = None
 
     @property
     def frozen(self) -> bool:
@@ -297,8 +318,9 @@ class RunningNormalizer:
             self._long_history.clear()
         self._frozen_anchors = None
         self._auto_frozen = False
-        self._widest_span = 0.0
+        self._stability_reference = 0.0
         self._stable_for = 0
+        self._freeze_record = None
         self._seen = 0
 
 

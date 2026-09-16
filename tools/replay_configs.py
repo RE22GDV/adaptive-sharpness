@@ -25,7 +25,7 @@ import json
 import logging
 import sys
 import time
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -39,6 +39,7 @@ for _entry in (_ROOT / "src", _ROOT):
 import cv2  # noqa: E402
 
 from adaptive_sharpness import SharpnessConfig, SharpnessEvaluator, load_default_config  # noqa: E402
+from adaptive_sharpness.types import ROI  # noqa: E402
 from tools.protocol_study import (  # noqa: E402
     adjacent_discrimination,
     count_peaks,
@@ -63,16 +64,77 @@ CONFIGS: dict[str, tuple[str, ...]] = {
 }
 
 
-def load_labels(directory: Path) -> tuple[list[str], np.ndarray, np.ndarray]:
-    """Frame file names plus the protocol step and phase recorded with them."""
+@dataclass(frozen=True)
+class RunContext:
+    """What a recording says about itself, beyond the pixels.
+
+    A replay that ignores this is not reproducing the run, it is running the
+    same frames through a fresh evaluator - which is a different experiment and
+    has to be labelled as one.
+    """
+
+    files: list[str]
+    step: np.ndarray
+    hold: np.ndarray
+    rois: list[ROI | None]
+    timestamps: np.ndarray
+    live_instantaneous: np.ndarray
+    live_filtered: np.ndarray
+
+    @property
+    def has_roi(self) -> bool:
+        return any(roi is not None for roi in self.rois)
+
+    def summary(self) -> dict[str, object]:
+        gaps = np.diff(self.timestamps[np.isfinite(self.timestamps)])
+        return {
+            "frames": len(self.files),
+            "roi_recorded": self.has_roi,
+            "median_interval_s": float(np.median(gaps)) if gaps.size else float("nan"),
+            "max_interval_s": float(np.max(gaps)) if gaps.size else float("nan"),
+            "monotone_timestamps": bool(gaps.size == 0 or np.all(gaps > 0)),
+        }
+
+
+def _maybe_float(row: dict[str, str], key: str) -> float:
+    value = row.get(key, "")
+    try:
+        return float(value) if value not in ("", None) else float("nan")
+    except ValueError:
+        return float("nan")
+
+
+def load_context(directory: Path) -> RunContext:
+    """Frame names, protocol labels, ROI, timestamps and the live scores."""
     rows = [
         r for r in csv.DictReader((directory / "frames.csv").open(newline=""))
         if r.get("image_file")
     ]
-    files = [str(r["image_file"]) for r in rows]
-    step = np.array([int(r.get("step_index") or 0) for r in rows], dtype=np.int32)
-    hold = np.array([r.get("step_phase") == "hold" for r in rows], dtype=bool)
-    return files, step, hold
+    rois: list[ROI | None] = []
+    for row in rows:
+        values = [_maybe_float(row, f"roi_{k}") for k in ("x", "y", "w", "h")]
+        rois.append(
+            ROI(int(values[0]), int(values[1]), int(values[2]), int(values[3]))
+            if all(np.isfinite(values)) and values[2] > 0 and values[3] > 0
+            else None
+        )
+    return RunContext(
+        files=[str(r["image_file"]) for r in rows],
+        step=np.array([int(r.get("step_index") or 0) for r in rows], dtype=np.int32),
+        hold=np.array([r.get("step_phase") == "hold" for r in rows], dtype=bool),
+        rois=rois,
+        timestamps=np.array([_maybe_float(r, "timestamp") for r in rows]),
+        live_instantaneous=np.array([
+            _maybe_float(r, "instantaneous_score") for r in rows
+        ]),
+        live_filtered=np.array([_maybe_float(r, "filtered_score") for r in rows]),
+    )
+
+
+def load_labels(directory: Path) -> tuple[list[str], np.ndarray, np.ndarray]:
+    """Backwards-compatible view of :func:`load_context`."""
+    context = load_context(directory)
+    return context.files, context.step, context.hold
 
 
 def load_frames(directory: Path, files: Sequence[str]) -> list[np.ndarray]:
@@ -88,9 +150,18 @@ def load_frames(directory: Path, files: Sequence[str]) -> list[np.ndarray]:
 
 
 def replay(
-    images: Sequence[np.ndarray], config: SharpnessConfig, names: Sequence[str]
+    images: Sequence[np.ndarray],
+    config: SharpnessConfig,
+    names: Sequence[str],
+    rois: Sequence[ROI | None] | None = None,
 ) -> dict[str, np.ndarray]:
-    """Run one recording through a freshly initialised evaluator."""
+    """Run one recording through a freshly initialised evaluator.
+
+    This is a **recomputation**, not the live result: the evaluator starts with
+    no history, so warm-up and the scale calibration happen again.  The live
+    scores are carried separately in :class:`RunContext`, and the two must not
+    be conflated in a report.
+    """
     evaluator = SharpnessEvaluator(
         replace(config, metrics=replace(config.metrics, enabled=tuple(names)))
     )
@@ -101,8 +172,9 @@ def replay(
     out = {field: np.empty(len(images)) for field in fields}
 
     for index, image in enumerate(images):
+        roi = rois[index] if rois is not None else None
         started = time.perf_counter()
-        result = evaluator.evaluate(image)
+        result = evaluator.evaluate(image, roi)
         out["elapsed"][index] = time.perf_counter() - started
         out["instantaneous"][index] = result.instantaneous_score
         out["filtered"][index] = result.filtered_score

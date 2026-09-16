@@ -1,31 +1,13 @@
-"""Ablation: measure each proposed fix separately, on the real recordings.
+"""Ablation: measure each mechanism separately, on the real recordings.
 
-Every variant here runs the *same code* and differs only in configuration, so
-a difference between two rows is caused by the setting and not by a code
-version.  The baseline variant reproduces the behaviour this project shipped
-before the protocol study, which is why each defect it targets is reachable
-from configuration at all.
+Every variant runs the same code and differs only in configuration.  Each one
+states **every** switch that can change a measurement, rather than inheriting
+whatever the shipped defaults happen to be: when `use_agreement` moved to
+`false`, inherited variants silently collapsed onto each other and `adaptive`
+became a duplicate of `no_agreement` with nothing in the output to show it.
 
-The defects being tested, all of them measured rather than supposed:
-
-range      The degenerate-range guard used floor = ratio * max(|hi|, |lo|, 1.0).
-           The 1.0 made it absolute at 1e-3, while the entire value of
-           `brenner` at defocus is 2.9e-4, so four metrics of six returned the
-           0.5 sentinel on every defocused frame.
-horizon    A held focus position has no range of its own.  Falling back to a
-           longer history scales the frame against the sweep instead of
-           refusing to answer with a mid-range 0.5 that outranks genuine low
-           scores.
-noise      58-74% of the Haar HH coefficients of this stream are exactly zero,
-           so the median is zero and the noise estimate is zero on 100% of real
-           frames - which disabled the noise branch of the weighting model
-           entirely.
-edges      edge_ref_density was 0.03; no recording reaches it at defocus and
-           four of eight never reach it at all, so edge sufficiency - a
-           necessary confidence factor - was zero on 28-78% of frames.
-ready      `ready` required one informative metric out of six.
-
-    python3 tools/ablation.py data --json data/ablation.json
+    python3 tools/ablation.py data --group fixes --json data/ablation_fixes.json
+    python3 tools/ablation.py data --group factorial --json data/factorial.json
 """
 from __future__ import annotations
 
@@ -33,9 +15,9 @@ import argparse
 import json
 import logging
 import sys
-from dataclasses import replace
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -46,7 +28,14 @@ for _entry in (_ROOT / "src", _ROOT):
 
 from adaptive_sharpness import SharpnessConfig, load_default_config  # noqa: E402
 from adaptive_sharpness.config import METRIC_NAMES  # noqa: E402
+from tools.evaluation import (  # noqa: E402
+    ordering_against_truth,
+    peak_interval,
+    provenance,
+    select_frames,
+)
 from tools.protocol_study import (  # noqa: E402
+    SPOT_PARAMETERS,
     _average_ranks,
     adjacent_discrimination,
     count_peaks,
@@ -54,190 +43,215 @@ from tools.protocol_study import (  # noqa: E402
     saturated_fraction,
     step_profile,
 )
-from tools.replay_configs import load_frames, load_labels, replay  # noqa: E402
+from tools.replay_configs import load_context, load_frames, replay  # noqa: E402
 
 logger = logging.getLogger("ablation")
 
 
 # ---------------------------------------------------------------------------
-# Variants
+# Variants, stated in full
 # ---------------------------------------------------------------------------
 
-def _shipped_before(config: SharpnessConfig) -> SharpnessConfig:
-    """Exactly the behaviour that shipped before this study."""
-    return replace(
-        config,
-        normalization=replace(
-            config.normalization,
-            window=120,
-            min_range_absolute=1.0,
-            long_window_multiple=0,
-            ready_informative_fraction=0.0,
-            mapping="linear",
-            auto_freeze=False,
-        ),
-        analysis=replace(config.analysis, noise_quantile=50.0, edge_ref_density=0.03),
-    )
+@dataclass(frozen=True)
+class VariantSpec:
+    """Every switch a variant sets.
+
+    Nothing here is inherited from the shipped configuration, so a change of
+    default cannot silently turn two variants into the same experiment.  The
+    spec is written into the report next to the numbers it produced.
+    """
+
+    # normalisation
+    window: int
+    min_range_absolute: float
+    long_window_multiple: int
+    mapping: str
+    auto_freeze: bool
+    ready_informative_fraction: float
+    # analysis
+    noise_quantile: float
+    edge_ref_density: float
+    # ensemble
+    use_agreement: bool
+    use_reliability: bool
+    equal_priors: bool
+    # temporal
+    temporal_enabled: bool
+    confidence_coupling: bool
+    # pipeline / metrics
+    analysis_width: int
+    enabled: tuple[str, ...]
+
+    def build(self, base: SharpnessConfig) -> SharpnessConfig:
+        sensitivity = base.ensemble.sensitivity
+        if not self.use_reliability:
+            sensitivity = {
+                name: {key: 0.0 for key in row}
+                for name, row in sensitivity.items()
+            }
+        priors = base.metrics.priors
+        if self.equal_priors:
+            priors = {name: 1.0 for name in priors}
+        return replace(
+            base,
+            pipeline=replace(base.pipeline, analysis_width=self.analysis_width),
+            metrics=replace(base.metrics, enabled=self.enabled, priors=priors),
+            normalization=replace(
+                base.normalization,
+                window=self.window,
+                min_range_absolute=self.min_range_absolute,
+                long_window_multiple=self.long_window_multiple,
+                mapping=self.mapping,
+                auto_freeze=self.auto_freeze,
+                auto_thaw=False,
+                ready_informative_fraction=self.ready_informative_fraction,
+            ),
+            analysis=replace(
+                base.analysis,
+                noise_quantile=self.noise_quantile,
+                edge_ref_density=self.edge_ref_density,
+            ),
+            ensemble=replace(
+                base.ensemble,
+                sensitivity=sensitivity,
+                use_agreement=self.use_agreement,
+            ),
+            temporal=replace(
+                base.temporal,
+                enabled=self.temporal_enabled,
+                confidence_coupling=self.confidence_coupling,
+            ),
+        )
 
 
-_SECTIONS = ("normalization", "analysis", "pipeline", "metrics")
+#: The behaviour that shipped before the protocol study.
+HISTORIC = VariantSpec(
+    window=120,
+    min_range_absolute=1.0,
+    long_window_multiple=0,
+    mapping="linear",
+    auto_freeze=False,
+    ready_informative_fraction=0.0,
+    noise_quantile=50.0,
+    edge_ref_density=0.03,
+    use_agreement=True,
+    use_reliability=True,
+    equal_priors=False,
+    temporal_enabled=True,
+    confidence_coupling=True,
+    analysis_width=320,
+    enabled=METRIC_NAMES,
+)
 
-
-def _with(config: SharpnessConfig, **changes: Any) -> SharpnessConfig:
-    """Set fields by name, routed to whichever config section owns them."""
-    routed: dict[str, dict[str, Any]] = {name: {} for name in _SECTIONS}
-    for key, value in changes.items():
-        owners = [s for s in _SECTIONS if hasattr(getattr(config, s), key)]
-        if not owners:
-            raise KeyError(f"unknown setting: {key}")
-        if len(owners) > 1:
-            raise KeyError(f"ambiguous setting {key}: owned by {', '.join(owners)}")
-        routed[owners[0]][key] = value
-    return replace(config, **{
-        section: replace(getattr(config, section), **values)
-        for section, values in routed.items() if values
-    })
-
-
-Builder = Callable[[SharpnessConfig], SharpnessConfig]
-
-_ALL_FIXES = dict(
+#: The pipeline after the repairs, with the weighting model left as it was, so
+#: that the normalisation question and the adaptivity question stay separate.
+REPAIRED = replace(
+    HISTORIC,
     window=960,
     min_range_absolute=1e-6,
     long_window_multiple=2,
-    noise_quantile=75.0,
-    edge_ref_density=0.006,
-    ready_informative_fraction=0.5,
     mapping="logistic",
     auto_freeze=True,
+    ready_informative_fraction=0.5,
+    noise_quantile=75.0,
+    edge_ref_density=0.006,
 )
 
+_SEVEN = METRIC_NAMES + ("gradient_variance",)
 
-def _fixed(config: SharpnessConfig, **overrides: Any) -> SharpnessConfig:
-    """The repaired pipeline, optionally with one more setting changed."""
-    return _with(_shipped_before(config), **{**_ALL_FIXES, **overrides})
-
-
-#: One setting at a time, against the behaviour that shipped before the study.
-FIX_VARIANTS: dict[str, Builder] = {
-    "baseline": _shipped_before,
-    "range": lambda c: _with(_shipped_before(c), min_range_absolute=1e-6),
-    "horizon": lambda c: _with(_shipped_before(c), long_window_multiple=8),
-    "range+horizon": lambda c: _with(
-        _shipped_before(c), min_range_absolute=1e-6, long_window_multiple=8
+FIX_VARIANTS: dict[str, VariantSpec] = {
+    "baseline": HISTORIC,
+    "range": replace(HISTORIC, min_range_absolute=1e-6),
+    "horizon": replace(HISTORIC, long_window_multiple=8),
+    "noise": replace(HISTORIC, noise_quantile=75.0),
+    "edges": replace(HISTORIC, edge_ref_density=0.006),
+    "ready": replace(HISTORIC, ready_informative_fraction=0.5),
+    "window": replace(HISTORIC, window=960),
+    "freeze": replace(HISTORIC, window=960, auto_freeze=True),
+    "logistic": replace(HISTORIC, mapping="logistic"),
+    "freeze+logistic": replace(
+        HISTORIC, window=960, auto_freeze=True, mapping="logistic"
     ),
-    "noise": lambda c: _with(_shipped_before(c), noise_quantile=75.0),
-    "edges": lambda c: _with(_shipped_before(c), edge_ref_density=0.006),
-    "ready": lambda c: _with(_shipped_before(c), ready_informative_fraction=0.5),
-    "window": lambda c: _with(_shipped_before(c), window=960),
-    "freeze": lambda c: _with(_shipped_before(c), window=960, auto_freeze=True),
-    "logistic": lambda c: _with(_shipped_before(c), mapping="logistic"),
-    "freeze+logistic": lambda c: _with(
-        _shipped_before(c), auto_freeze=True, mapping="logistic"
-    ),
-    "all": _fixed,
+    "all": REPAIRED,
 }
 
-#: Where to read the noise estimator, on top of the repaired pipeline.  The
-#: median is the classical choice and reports exactly zero on this stream; the
-#: higher quantiles trade that blindness for a floor set by image structure.
-NOISE_VARIANTS: dict[str, Builder] = {
-    f"q{int(q)}": (lambda q: lambda c: _fixed(c, noise_quantile=q))(q)
+NORMALISATION_VARIANTS: dict[str, VariantSpec] = {
+    "rolling+linear": replace(REPAIRED, auto_freeze=False, mapping="linear"),
+    "rolling+logistic": replace(REPAIRED, auto_freeze=False, mapping="logistic"),
+    "frozen+linear": replace(REPAIRED, auto_freeze=True, mapping="linear"),
+    "frozen+logistic": REPAIRED,
+    "short+rolling+linear": replace(
+        REPAIRED, window=120, auto_freeze=False, mapping="linear"
+    ),
+    "short+frozen+logistic": replace(REPAIRED, window=120),
+}
+
+NOISE_VARIANTS: dict[str, VariantSpec] = {
+    f"q{int(q)}": replace(REPAIRED, noise_quantile=q)
     for q in (50.0, 60.0, 75.0, 90.0, 95.0)
 }
 
-#: The edge-sufficiency reference, which gates a necessary confidence factor.
-EDGE_VARIANTS: dict[str, Builder] = {
-    f"edge{value:g}": (lambda v: lambda c: _fixed(c, edge_ref_density=v))(value)
-    for value in (0.003, 0.006, 0.012, 0.02, 0.03)
+EDGE_VARIANTS: dict[str, VariantSpec] = {
+    f"edge{v:g}": replace(REPAIRED, edge_ref_density=v)
+    for v in (0.003, 0.006, 0.012, 0.02, 0.03)
 }
 
-
-def _ensemble(config: SharpnessConfig, **changes: Any) -> SharpnessConfig:
-    return replace(config, ensemble=replace(config.ensemble, **changes))
-
-
-def _flat_sensitivity(config: SharpnessConfig) -> SharpnessConfig:
-    """Zero every kappa, which turns the reliability stage into a constant."""
-    flat = {
-        name: {key: 0.0 for key in row}
-        for name, row in config.ensemble.sensitivity.items()
-    }
-    return _ensemble(config, sensitivity=flat)
-
-
-def _equal_priors(config: SharpnessConfig) -> SharpnessConfig:
-    return replace(
-        config,
-        metrics=replace(
-            config.metrics,
-            priors={name: 1.0 for name in config.metrics.priors},
-        ),
+METRIC_VARIANTS: dict[str, VariantSpec] = {
+    "six": REPAIRED,
+    "seven": replace(REPAIRED, enabled=_SEVEN),
+    "w240": replace(REPAIRED, analysis_width=240),
+    "w480": replace(REPAIRED, analysis_width=480),
+    "w640": replace(REPAIRED, analysis_width=640),
+}
+#: Leave-one-out over the shipped six, to test each metric's contribution on
+#: the repaired pipeline rather than on the broken one.
+METRIC_VARIANTS.update({
+    f"without_{name}": replace(
+        REPAIRED, enabled=tuple(n for n in METRIC_NAMES if n != name)
     )
+    for name in METRIC_NAMES
+})
 
-
-#: Does the adaptivity earn its keep?  Each variant removes one mechanism the
-#: project claims as its contribution, leaving everything else repaired.
-FUSION_VARIANTS: dict[str, Builder] = {
-    "adaptive": _fixed,
-    "no_agreement": lambda c: _ensemble(_fixed(c), use_agreement=False),
-    "no_reliability": lambda c: _flat_sensitivity(_fixed(c)),
-    "fixed_weights": lambda c: _flat_sensitivity(
-        _ensemble(_fixed(c), use_agreement=False)
-    ),
-    "plain_mean": lambda c: _equal_priors(
-        _flat_sensitivity(_ensemble(_fixed(c), use_agreement=False))
-    ),
-    "no_filter": lambda c: replace(
-        _fixed(c), temporal=replace(_fixed(c).temporal, enabled=False)
-    ),
-    "no_confidence_gate": lambda c: replace(
-        _fixed(c), temporal=replace(_fixed(c).temporal, confidence_coupling=False)
-    ),
+#: All eight combinations of the three mechanisms, so interactions are visible
+#: rather than inferred from three one-at-a-time rows.
+FACTORIAL_VARIANTS: dict[str, VariantSpec] = {
+    f"{'R' if reliability else '-'}{'A' if agreement else '-'}{'F' if filt else '-'}":
+        replace(
+            REPAIRED,
+            use_reliability=reliability,
+            use_agreement=agreement,
+            temporal_enabled=filt,
+        )
+    for reliability in (True, False)
+    for agreement in (True, False)
+    for filt in (True, False)
 }
+FACTORIAL_VARIANTS["RAF+nogate"] = replace(REPAIRED, confidence_coupling=False)
+FACTORIAL_VARIANTS["plain_mean"] = replace(
+    REPAIRED, use_reliability=False, use_agreement=False, equal_priors=True
+)
 
-#: Does a seventh metric help, and does a larger analysis image?  Both cost
-#: time, so both have to earn it.  gradient_variance (TENV) separated adjacent
-#: focus steps better than any of the project's own six in the offline study.
-_SEVEN = METRIC_NAMES + ("gradient_variance",)
-
-METRIC_VARIANTS: dict[str, Builder] = {
-    "six": _fixed,
-    "seven": lambda c: _with(_fixed(c), enabled=_SEVEN),
-    "seven_w480": lambda c: _with(_fixed(c), enabled=_SEVEN, analysis_width=480),
-    "six_w480": lambda c: _with(_fixed(c), analysis_width=480),
-    "six_w640": lambda c: _with(_fixed(c), analysis_width=640),
-    "six_w240": lambda c: _with(_fixed(c), analysis_width=240),
-}
-
-#: How long a memory should the normaliser have?
-#:
-#: The rolling window makes the score relative to recent history, so on a slow
-#: sweep the score answers "is this sharper than the last few seconds" rather
-#: than "how sharp is this".  Measured on the point-source runs: the score peaks
-#: two thirds of the way through the approach and then collapses to 0.006 at the
-#: step where the spot is physically smallest.  A longer memory should turn the
-#: score back into a fraction of the best sharpness seen this session, which is
-#: what a search actually needs.
-WINDOW_VARIANTS: dict[str, Builder] = {
-    f"w{int(n)}": (lambda n: lambda c: _fixed(c, window=n, long_window_multiple=0))(n)
-    for n in (120, 300, 600, 1200, 2400)
-}
-#: The same, keeping the fallback horizon on top of the longer window.
-WINDOW_VARIANTS["w120+horizon"] = lambda c: _fixed(c, window=120)
-WINDOW_VARIANTS["w600+horizon"] = lambda c: _fixed(c, window=600)
-
-VARIANT_GROUPS: dict[str, dict[str, Builder]] = {
-    "window": WINDOW_VARIANTS,
-    "metrics": METRIC_VARIANTS,
+VARIANT_GROUPS: dict[str, dict[str, VariantSpec]] = {
     "fixes": FIX_VARIANTS,
+    "normalisation": NORMALISATION_VARIANTS,
     "noise": NOISE_VARIANTS,
     "edges": EDGE_VARIANTS,
-    "fusion": FUSION_VARIANTS,
+    "metrics": METRIC_VARIANTS,
+    "factorial": FACTORIAL_VARIANTS,
 }
 
-#: Set by main() to the group under test; the report and aggregation read it.
-VARIANTS: dict[str, Builder] = FIX_VARIANTS
+
+def check_variants_differ(variants: dict[str, VariantSpec]) -> list[str]:
+    """Report any two variants that are the same experiment under two names."""
+    seen: dict[tuple, str] = {}
+    duplicates = []
+    for name, spec in variants.items():
+        key = tuple(sorted(asdict(spec).items(), key=lambda kv: kv[0]))
+        if key in seen:
+            duplicates.append(f"{name} is identical to {seen[key]}")
+        else:
+            seen[key] = name
+    return duplicates
 
 
 # ---------------------------------------------------------------------------
@@ -262,32 +276,25 @@ def spearman(a: np.ndarray, b: np.ndarray) -> float:
 def ground_truth_scores(
     series: np.ndarray, radius: np.ndarray, labels: np.ndarray
 ) -> dict[str, float]:
-    """Agreement with the physical spot size, which uses no focus measure.
-
-    ``inversion`` is the fraction of step pairs the model orders the wrong way
-    round against the spot: it is the direct measurement of the failure where a
-    fully defocused frame scores above a mildly defocused one.
-    """
+    """Agreement with the physical spot size, which uses no focus measure."""
     truth = -radius  # smaller spot = sharper
-    out = {"spearman_gt": spearman(series, truth)}
+    out: dict[str, float] = {"spearman_gt": spearman(series, truth)}
 
     steps, model_medians, _ = step_profile(series, labels)
     _, truth_medians, _ = step_profile(truth, labels)
-    wrong = total = 0
-    for i in range(steps.size):
-        for j in range(i + 1, steps.size):
-            if abs(truth_medians[i] - truth_medians[j]) < 1e-12:
-                continue
-            total += 1
-            sharper_is_i = truth_medians[i] > truth_medians[j]
-            model_says_i = model_medians[i] > model_medians[j]
-            if sharper_is_i != model_says_i:
-                wrong += 1
-    out["inversion"] = wrong / total if total else float("nan")
-    out["peak_err"] = abs(
-        float(steps[int(np.argmax(model_medians))])
-        - float(steps[int(np.argmax(truth_medians))])
-    )
+    out.update(ordering_against_truth(model_medians, truth_medians).to_dict())
+
+    model_first, model_last = peak_interval(model_medians)
+    truth_first, truth_last = peak_interval(truth_medians)
+    if model_first < 0 or truth_first < 0:
+        out["peak_err"] = float("nan")
+        out["peak_plateau"] = float("nan")
+        return out
+    model_centre = 0.5 * (steps[model_first] + steps[model_last])
+    truth_centre = 0.5 * (steps[truth_first] + steps[truth_last])
+    out["peak_err"] = abs(float(model_centre) - float(truth_centre))
+    out["peak_plateau"] = float(steps[model_last] - steps[model_first] + 1)
+    out["reference_plateau"] = float(steps[truth_last] - steps[truth_first] + 1)
     return out
 
 
@@ -299,110 +306,195 @@ def evaluate(
 ) -> dict[str, float]:
     filtered = output["filtered"][selected]
     steps, medians, scatters = step_profile(filtered, labels)
+    peak_first, peak_last = peak_interval(medians)
     row = {
         "adj": adjacent_discrimination(filtered, labels),
         "adj_instant": adjacent_discrimination(
             output["instantaneous"][selected], labels
         ),
         "sat": saturated_fraction(filtered),
-        "mono": monotonicity(medians, int(np.argmax(medians))),
+        "mono": monotonicity(medians, peak_first),
         "peaks": float(count_peaks(medians, scatters)),
+        "peak_plateau_steps": float(
+            steps[peak_last] - steps[peak_first] + 1 if peak_first >= 0 else np.nan
+        ),
         "sentinel": float(np.mean(output["informative"][selected] < 0.5)),
         "confidence_zero": float(np.mean(output["confidence"][selected] <= 1e-9)),
         "ready": float(np.mean(output["ready"][selected])),
         "noise_zero": float(np.mean(output["noise_sigma"][selected] <= 1e-9)),
         "ms": float(np.median(output["elapsed"]) * 1000.0),
+        "ms_p95": float(np.percentile(output["elapsed"], 95) * 1000.0),
+        "ms_p99": float(np.percentile(output["elapsed"], 99) * 1000.0),
     }
     if radius is not None:
         row.update(ground_truth_scores(filtered, radius[selected], labels))
+        instant = ground_truth_scores(
+            output["instantaneous"][selected], radius[selected], labels
+        )
+        row.update({f"{k}_instant": v for k, v in instant.items()})
     return row
 
 
-def run(directories: Sequence[Path], config: SharpnessConfig) -> dict[str, Any]:
-    results: dict[str, Any] = {"runs": {}, "variants": {}}
-    for directory in directories:
-        files, step, hold = load_labels(directory)
-        selected = hold & (step > 0)
-        if selected.sum() < 20:
-            continue
-        labels = step[selected]
+def run(
+    directories: Sequence[Path],
+    config: SharpnessConfig,
+    variants: dict[str, VariantSpec],
+) -> dict[str, Any]:
+    duplicates = check_variants_differ(variants)
+    if duplicates:
+        raise ValueError(
+            "variants must differ; " + "; ".join(duplicates)
+        )
 
-        radius = None
+    results: dict[str, Any] = {
+        "runs": {},
+        "variants": {name: asdict(spec) for name, spec in variants.items()},
+        "selection": {},
+    }
+    for directory in directories:
+        context = load_context(directory)
+        files, step, hold = context.files, context.step, context.hold
+
+        radius = offset = None
+        reference_note = "none"
         cache = directory / "measures_cache.npz"
         if cache.exists():
             loaded = np.load(cache)
             if "spot_radius" in loaded and loaded["spot_radius"].size == len(files):
-                radius = loaded["spot_radius"]
+                expected = json.dumps(SPOT_PARAMETERS, sort_keys=True)
+                stored = (
+                    str(loaded["spot_fingerprint"])
+                    if "spot_fingerprint" in loaded else None
+                )
+                if stored is None:
+                    reference_note = "cache predates fingerprinting; not used"
+                    logger.warning(
+                        "%s: spot cache has no fingerprint - rebuild it with "
+                        "tools/protocol_study.py --refresh", directory.name,
+                    )
+                elif stored != expected:
+                    reference_note = "cache was built with other spot parameters; not used"
+                    logger.warning("%s: spot cache is stale", directory.name)
+                else:
+                    radius = loaded["spot_radius"]
+                    offset = loaded["spot_offset"]
+                    reference_note = "spot size, fingerprint verified"
+
+        selection = select_frames(
+            step=step, hold=hold, spot_radius=radius, spot_offset=offset
+        )
+        if selection.count < 20:
+            logger.info("%s: too few measurable frames, skipped", directory.name)
+            continue
+        selected = selection.mask
+        labels = step[selected]
+        results["selection"][directory.name] = {
+            **selection.summary(),
+            "context": context.summary(),
+            # Every number below is recomputed from the frames by a fresh
+            # evaluator, not the score the recorder wrote at capture time.
+            "source": "recomputed",
+            "reference": reference_note,
+        }
 
         logger.info("%s: decoding %d frames", directory.name, len(files))
         images = load_frames(directory, files)
         entry: dict[str, Any] = {}
-        for name, build in VARIANTS.items():
+        for name, spec in variants.items():
             logger.info("%s: %s", directory.name, name)
-            variant_config = build(config)
+            variant_config = spec.build(config)
             output = replay(
-                images, variant_config, variant_config.metrics.enabled
+                images, variant_config, variant_config.metrics.enabled,
+                rois=context.rois if context.has_roi else None,
             )
             entry[name] = evaluate(output, selected, labels, radius)
         results["runs"][directory.name] = entry
         del images
 
-    results["aggregate"] = aggregate(results["runs"])
-    results["variants"] = list(VARIANTS)
+    results["aggregate"] = aggregate(results["runs"], variants)
     return results
 
 
-def aggregate(runs: dict[str, Any]) -> dict[str, Any]:
+def aggregate(
+    runs: dict[str, Any], variants: dict[str, VariantSpec]
+) -> dict[str, Any]:
     if not runs:
         return {}
     fields = sorted({f for entry in runs.values() for row in entry.values() for f in row})
     summary: dict[str, Any] = {}
-    for variant in VARIANTS:
+    for variant in variants:
         summary[variant] = {}
-        for field in fields:
+        for field_name in fields:
             values = [
-                runs[r][variant][field] for r in runs
-                if field in runs[r][variant] and np.isfinite(runs[r][variant][field])
+                runs[r][variant][field_name] for r in runs
+                if field_name in runs[r][variant]
+                and np.isfinite(runs[r][variant][field_name])
             ]
-            summary[variant][field] = float(np.mean(values)) if values else float("nan")
+            summary[variant][field_name] = (
+                float(np.mean(values)) if values else float("nan")
+            )
+            # Spread across recordings, so a mean is never read as a constant.
+            summary[variant][f"{field_name}_spread"] = (
+                float(np.max(values) - np.min(values)) if len(values) > 1 else 0.0
+            )
+            summary[variant][f"{field_name}_n"] = len(values)
     return summary
 
 
+# ---------------------------------------------------------------------------
+# Report
+# ---------------------------------------------------------------------------
+
 def print_report(results: dict[str, Any]) -> None:
     summary = results["aggregate"]
-    print("=" * 96)
-    print(f"ABLATION [{results.get('group', 'fixes')}] - one code path, "
-          "one setting changed at a time")
-    print("=" * 96)
-    print(f"\n{len(results['runs'])} recordings\n")
+    meta = results.get("provenance", {})
+    print("=" * 100)
+    print(f"ABLATION [{results.get('group', '?')}] - one code path, "
+          "every switch stated per variant")
+    print("=" * 100)
+    print(f"\ncommit {meta.get('commit', '?')[:12]}"
+          f"{' (dirty)' if meta.get('working_tree_dirty') else ''}   "
+          f"numpy {meta.get('numpy', '?')}   opencv {meta.get('opencv', '?')}")
+    print(f"{len(results['runs'])} recordings\n")
+
+    for name, info in results.get("selection", {}).items():
+        excluded = ", ".join(f"{k} {v}" for k, v in info["excluded"].items()) or "none"
+        print(f"  {name:<32} {info['selected']:>5} of {info['total_frames']:>5}"
+              f"   excluded: {excluded}")
 
     header = (
-        f"{'variant':<16}{'adj':>7}{'sat':>7}{'mono':>7}{'sentinel':>10}"
-        f"{'conf=0':>8}{'ready':>7}{'noise=0':>9}{'ms':>7}"
+        f"\n{'variant':<22}{'adj':>7}{'sat':>7}{'mono':>7}{'sentinel':>10}"
+        f"{'conf=0':>8}{'ready':>7}{'noise=0':>9}{'ms':>7}{'p95':>7}"
     )
     print(header)
-    print("-" * len(header))
+    print("-" * (len(header) - 1))
     for name, row in summary.items():
         print(
-            f"{name:<16}{row['adj']:>7.3f}{row['sat']:>7.3f}{row['mono']:>7.3f}"
+            f"{name:<22}{row['adj']:>7.3f}{row['sat']:>7.3f}{row['mono']:>7.3f}"
             f"{row['sentinel']:>10.3f}{row['confidence_zero']:>8.3f}"
             f"{row['ready']:>7.3f}{row['noise_zero']:>9.3f}{row['ms']:>7.2f}"
+            f"{row['ms_p95']:>7.2f}"
         )
 
-    print("\n--- Against the physical spot-size ground truth (point-source runs) ---\n")
-    header = f"{'variant':<16}{'spearman':>10}{'inversion':>11}{'peak_err':>10}"
-    print(header)
-    print("-" * len(header))
-    for name, row in summary.items():
-        if not np.isfinite(row.get("spearman_gt", float("nan"))):
-            continue
-        print(
-            f"{name:<16}{row['spearman_gt']:>10.3f}{row['inversion']:>11.3f}"
-            f"{row['peak_err']:>10.2f}"
+    if any(np.isfinite(r.get("spearman_gt", np.nan)) for r in summary.values()):
+        header = (
+            f"\n{'variant':<22}{'spearman':>10}{'±spread':>9}{'inversion':>11}"
+            f"{'strict':>8}{'resolved':>10}{'peak err':>10}{'plateau':>9}"
         )
+        print(header)
+        print("-" * (len(header) - 1))
+        for name, row in summary.items():
+            if not np.isfinite(row.get("spearman_gt", float("nan"))):
+                continue
+            print(
+                f"{name:<22}{row['spearman_gt']:>10.3f}"
+                f"{row['spearman_gt_spread']:>9.3f}{row['inversion']:>11.3f}"
+                f"{row['inversion_strict']:>8.3f}{row['resolved']:>10.3f}"
+                f"{row['peak_err']:>10.2f}{row['peak_plateau']:>9.1f}"
+            )
 
-    print("\n--- Adjacent-step discrimination per recording (filtered score) ---\n")
-    variants = list(VARIANTS)
+    print(f"\n--- Adjacent-step discrimination per recording ---\n")
+    variants = list(results["variants"])
     header = f"{'recording':<32}" + "".join(f"{v[:11]:>12}" for v in variants)
     print(header)
     print("-" * len(header))
@@ -424,9 +516,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args(argv)
 
-    global VARIANTS
-    VARIANTS = VARIANT_GROUPS[args.group]
-
     logging.basicConfig(
         level=logging.INFO if args.verbose else logging.WARNING,
         format="%(levelname)s %(message)s",
@@ -440,8 +529,15 @@ def main(argv: list[str] | None = None) -> int:
     if not directories:
         parser.error(f"no recordings found under {args.root}")
 
-    results = run(directories, load_default_config())
+    config = load_default_config()
+    variants = VARIANT_GROUPS[args.group]
+    results = run(directories, config, variants)
     results["group"] = args.group
+    results["provenance"] = provenance(
+        config,
+        group=args.group,
+        recordings=[d.name for d in directories],
+    )
     print_report(results)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)

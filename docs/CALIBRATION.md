@@ -29,10 +29,16 @@ python3 tools/ablation.py data --group fixes --json data/ablation_fixes.json
 | independent ground truth | none | point-source spot size |
 
 The point source is the part that matters most. A point imaged through a
-defocused lens spreads into a disc, and the radius holding half the spot's
-energy can be measured directly in pixels. That gives a reference which uses
-**no focus measure at all**, so for the first time a claim about accuracy can be
-checked rather than argued.
+defocused lens spreads into a disc, and the radius enclosing half of the spot's
+background-subtracted pixel sum can be measured directly in pixels. That gives
+a reference which uses **no focus measure at all**, so for the first time a
+claim about accuracy can be checked rather than argued.
+
+It is a reference *ordering*, not a calibrated optical measurement: the input is
+an 8-bit JPEG preview with an unknown tone curve, so the pixel sum is a proxy
+for energy rather than energy. Ordering is all it is used for. Its own
+sensitivity — to r25/r50/r75, to the window size, and to excluding saturated
+frames — is measured in §7.
 
 ---
 
@@ -82,8 +88,11 @@ minimum where the image is sharpest.
 
 Two changes, both needed.
 
-**A fixed scale.** Any time-varying map breaks the one property a focus search
-depends on — that a higher score means a sharper frame. The normaliser now
+**A fixed scale.** A time-varying map cannot preserve the property a focus
+search depends on — that within one stream a higher score means a sharper
+frame. Freezing does not *guarantee* that property either: the fused score is a
+weighted sum of six metrics that need not agree, and the weights move too. It
+removes the one cause that was demonstrably breaking it. The normaliser now
 waits until the observed range stops growing and then freezes its anchors
 (`auto_freeze`). A host that runs its own coarse sweep should call
 `NormalizerBank.freeze()` itself instead.
@@ -91,7 +100,10 @@ waits until the observed range stops growing and then freezes its anchors
 **A logistic map instead of linear-with-clipping.** A clipped linear map gives
 every frame beyond an anchor exactly the same score, so wherever the anchors do
 not span the working range the ordering is destroyed outright. The logistic map
-`1/(1+exp(-gain·(x−mid)/span))` is strictly monotone everywhere.
+`1/(1+exp(-gain·(x−mid)/span))` is strictly monotone, so it adds no ties of its
+own over the range the anchors describe. It is not tie-free in the abstract:
+the float64 implementation saturates past roughly nine spans from the midpoint,
+where two very different values both round to 1.0.
 
 | configuration | run 1 | run 2 | frames pinned at 0 or 1 |
 | --- | --- | --- | --- |

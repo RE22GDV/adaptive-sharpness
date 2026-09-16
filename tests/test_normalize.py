@@ -328,6 +328,24 @@ class TestAutoFreeze:
         self._sweep(normalizer)
         assert not normalizer.frozen
 
+    def test_does_not_freeze_while_the_range_keeps_growing(self) -> None:
+        """Slow sustained growth must not read as stability.
+
+        The test used to compare each span against a maximum updated on every
+        sample, so growth below the threshold was never accumulated: at 1% a
+        sample against a 5% threshold the scale froze after 119 samples with
+        the span 3.3x larger than when the interval began.
+        """
+        normalizer = RunningNormalizer("tenengrad", NormalizationConfig())
+        high = 1.0
+        for _ in range(400):
+            high *= 1.01
+            for value in np.linspace(0.0, high, 3):
+                normalizer.observe(float(value))
+            if normalizer.frozen:
+                break
+        assert not normalizer.frozen
+
     def test_does_not_freeze_before_enough_samples(self) -> None:
         normalizer = RunningNormalizer("tenengrad", NormalizationConfig())
         for value in np.linspace(0.0, 1.0, 100):
@@ -419,7 +437,11 @@ class TestExplicitFreeze:
 
     def test_fit_after_an_automatic_freeze_still_uses_the_batch(self) -> None:
         normalizer = RunningNormalizer("m", NormalizationConfig())
-        for value in np.linspace(0.0, 1.0, 900):
+        # A sweep out and back, so the observed range settles and the automatic
+        # rule fires.  A one-way ramp never settles and never freezes, which is
+        # the point of the stability test.
+        ramp = np.concatenate([np.linspace(0.01, 1.0, 450), np.linspace(1.0, 0.01, 450)])
+        for value in ramp:
             normalizer.observe(float(value))
         assert normalizer.frozen
         normalizer.fit(np.linspace(0.0, 10.0, 1500))

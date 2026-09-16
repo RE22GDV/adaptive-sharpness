@@ -77,8 +77,12 @@ from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
 from adaptive_sharpness.types import ImageStats  # noqa: E402
 from tools.baselines import COMBINERS, FOCUS_MEASURES, OFFLINE_COMBINERS  # noqa: E402
 from tools.comprehensive_study import all_measures, normalise_columns  # noqa: E402
+from tools.evaluation import config_fingerprint, file_fingerprint  # noqa: E402
 
 logger = logging.getLogger("protocol_study")
+
+#: Bump when the measurement code changes in a way that alters cached values.
+_CACHE_VERSION = "2"
 
 OWN: tuple[str, ...] = (
     "laplacian", "tenengrad", "brenner", "wavelet", "fourier", "edge_width",
@@ -160,21 +164,36 @@ def _float(row: dict[str, str], key: str, default: float = float("nan")) -> floa
         return default
 
 
-def spot_radius(image: np.ndarray, half: int = 80, fraction: float = 0.5) -> tuple[float, tuple[int, int]]:
-    """Encircled-energy radius of the brightest spot, in full-resolution pixels.
+#: Parameters the spot measurement depends on.  Stored with the cache, because
+#: changing any of them changes the reference and must invalidate it.
+SPOT_PARAMETERS: dict[str, float] = {"half": 80, "fraction": 0.5, "blur": 9}
 
-    This is the point-source ground truth.  It uses no focus measure: a point
+
+def spot_radius(image: np.ndarray, half: int = 80, fraction: float = 0.5) -> tuple[float, tuple[int, int]]:
+    """Radius enclosing half of the spot's background-subtracted pixel sum.
+
+    This is the point-source reference.  It uses no focus measure: a point
     imaged through a defocused lens spreads into a disc, and the radius holding
-    half the spot's energy is the radius of that disc.  The minimum over a
-    sweep is best focus by construction.
+    half the spot's signal tracks the radius of that disc.
+
+    **Not an optical energy radius.**  The input is an 8-bit JPEG preview from
+    the camera, with unknown tone curve and no radiometric calibration, so the
+    pixel sum is a monotone-ish proxy for energy rather than energy.  For a
+    *reference ordering* - which frame is more defocused - that is enough, and
+    ordering is all this is used for.
 
     Background is taken from the border of the window rather than the frame, so
     that the dim room behind the source does not enter the integral.
 
-    Caveat: the source saturates near focus (measured: peak 251-253 of 255).
-    Saturation removes energy from the core, which inflates the radius slightly
-    at exactly the positions where it is smallest.  It biases against fine
-    resolution near the peak; it does not move the minimum.
+    Caveats, neither of them established as harmless:
+
+    * The source saturates near focus (measured peak 251-253 of 255).  Clipped
+      core samples are missing from the sum, which inflates the radius where it
+      is smallest.  Whether that displaces the minimum has not been shown; the
+      sensitivity of the result to r25/r50/r75 and to the window size is the
+      way to find out.
+    * The window is fixed at +/-80 px.  A disc larger than that is truncated,
+      which compresses the radius at heavy defocus.
     """
     blurred = cv2.GaussianBlur(image, (9, 9), 0)
     _, _, _, peak = cv2.minMaxLoc(blurred)
@@ -225,9 +244,36 @@ def extract(
 
     cache_path = directory / "measures_cache.npz"
     names = tuple(all_measures(config))
+
+    # A cache is only usable when the frames, the processing configuration and
+    # the measurement code are all the same as when it was written.  Keying it
+    # on the frame count and metric names alone - as it was - let a changed
+    # analysis_width or noise_quantile silently reuse stale statistics.
+    fingerprint = "|".join((
+        _CACHE_VERSION,
+        file_fingerprint([directory / "frames" / str(r["image_file"]) for r in rows]),
+        config_fingerprint(config.pipeline),
+        config_fingerprint(config.metrics),
+        config_fingerprint(config.analysis),
+        ",".join(names),
+    ))
+    spot_fingerprint = json.dumps(SPOT_PARAMETERS, sort_keys=True)
+
     if cache_path.exists() and not refresh:
         cached = np.load(cache_path, allow_pickle=False)
-        if int(cached["n"]) == len(rows) and list(cached["names"]) == list(names):
+        same = (
+            int(cached["n"]) == len(rows)
+            and "fingerprint" in cached
+            and str(cached["fingerprint"]) == fingerprint
+            and (
+                not point_source
+                or ("spot_fingerprint" in cached
+                    and str(cached["spot_fingerprint"]) == spot_fingerprint)
+            )
+        )
+        if not same:
+            logger.info("%s: cache is stale, recomputing", directory.name)
+        if same:
             logger.info("%s: using cached measures", directory.name)
             raw = {name: cached[f"raw_{name}"] for name in names}
             stats = [
@@ -289,6 +335,8 @@ def extract(
     payload: dict[str, Any] = {
         "n": len(rows),
         "names": np.array(names),
+        "fingerprint": np.array(fingerprint),
+        "spot_fingerprint": np.array(spot_fingerprint),
         "spot_radius": radius_array if radius_array is not None else np.zeros(0),
         "spot_offset": offset if offset is not None else np.zeros(0),
     }
