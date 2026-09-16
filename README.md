@@ -728,7 +728,8 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/FIELD_TEST.md](docs/FIELD_TEST.md) | first real recording, and the defects it found |
 | [docs/REAL_FRAME_STUDY.md](docs/REAL_FRAME_STUDY.md) | five experiments on recorded frames |
 | [docs/COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md) | comparison against nine published measures and seven fusion rules |
-| [docs/CALIBRATION.md](docs/CALIBRATION.md) | what eight labelled recordings changed, and which defaults moved |
+| [docs/CALIBRATION.md](docs/CALIBRATION.md) | what eight labelled recordings changed, which defaults moved, and what the data cannot support |
+| [docs/RESULTS.md](docs/RESULTS.md) | every results table, generated from the stored reports |
 | [docs/STUDY_UA.md](docs/STUDY_UA.md) | the same study, in Ukrainian |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |

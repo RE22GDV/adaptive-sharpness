@@ -26,6 +26,8 @@ for _entry in (_ROOT / "src", _ROOT):
     if str(_entry) not in sys.path:
         sys.path.insert(0, str(_entry))
 
+import cv2  # noqa: E402
+
 from adaptive_sharpness import SharpnessConfig, load_default_config  # noqa: E402
 from adaptive_sharpness.config import METRIC_NAMES  # noqa: E402
 from tools.evaluation import (  # noqa: E402
@@ -73,6 +75,7 @@ class VariantSpec:
     edge_ref_density: float
     # ensemble
     use_agreement: bool
+    agreement_scale: float
     use_reliability: bool
     equal_priors: bool
     # temporal
@@ -115,6 +118,7 @@ class VariantSpec:
                 base.ensemble,
                 sensitivity=sensitivity,
                 use_agreement=self.use_agreement,
+                agreement_scale=self.agreement_scale,
             ),
             temporal=replace(
                 base.temporal,
@@ -135,6 +139,7 @@ HISTORIC = VariantSpec(
     noise_quantile=50.0,
     edge_ref_density=0.03,
     use_agreement=True,
+    agreement_scale=1.5,
     use_reliability=True,
     equal_priors=False,
     temporal_enabled=True,
@@ -143,8 +148,14 @@ HISTORIC = VariantSpec(
     enabled=METRIC_NAMES,
 )
 
-#: The pipeline after the repairs, with the weighting model left as it was, so
-#: that the normalisation question and the adaptivity question stay separate.
+#: The pipeline after the repairs, with the weighting model left exactly as it
+#: was - agreement kernel included - so that the normalisation question and the
+#: adaptivity question stay separate.
+#:
+#: This is deliberately NOT the shipped configuration, which also has the
+#: agreement kernel off.  "all repairs" answers "what did fixing the
+#: normalisation buy", and the factorial answers the rest; conflating them
+#: would credit the repairs with a change the factorial made.
 REPAIRED = replace(
     HISTORIC,
     window=960,
@@ -231,7 +242,19 @@ FACTORIAL_VARIANTS["plain_mean"] = replace(
     REPAIRED, use_reliability=False, use_agreement=False, equal_priors=True
 )
 
+#: How aggressive the consensus kernel is.  If the kernel is merely mistuned,
+#: widening it should find a better setting than "off"; if it is the wrong idea
+#: on this data, the result should approach "off" monotonically.
+AGREEMENT_VARIANTS: dict[str, VariantSpec] = {
+    "off": replace(REPAIRED, use_agreement=False),
+    **{
+        f"scale{scale:g}": replace(REPAIRED, use_agreement=True, agreement_scale=scale)
+        for scale in (1.0, 1.5, 2.5, 4.0, 8.0)
+    },
+}
+
 VARIANT_GROUPS: dict[str, dict[str, VariantSpec]] = {
+    "agreement": AGREEMENT_VARIANTS,
     "fixes": FIX_VARIANTS,
     "normalisation": NORMALISATION_VARIANTS,
     "noise": NOISE_VARIANTS,
@@ -335,10 +358,43 @@ def evaluate(
     return row
 
 
+def alternative_reference(
+    directory: Path, files: Sequence[str], variant_name: str
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Recompute the spot reference with a different measurement recipe.
+
+    The reference has free parameters, and the variants split into two groups
+    that are *anti*-correlated with each other (see
+    tools/reference_sensitivity.py).  A comparison between two models is only
+    meaningful if it survives changing which member of the coherent group is
+    used, so the choice is exposed rather than hard-coded.
+    """
+    from tools.reference_sensitivity import SpotVariant, measure
+
+    fraction, half, background = variant_name.split("_")
+    spot = SpotVariant(
+        fraction=int(fraction[1:]) / 100.0, half=int(half[1:]), background=background
+    )
+    radii, centres = [], []
+    for name in files:
+        image = cv2.imread(str(directory / "frames" / name), cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            return None
+        radius, _, _ = measure(image, spot)
+        radii.append(radius)
+        blurred = cv2.GaussianBlur(image, (9, 9), 0)
+        _, _, _, peak = cv2.minMaxLoc(blurred)
+        centres.append(peak)
+    centre_array = np.asarray(centres, dtype=float)
+    offset = np.linalg.norm(centre_array - np.median(centre_array, axis=0), axis=1)
+    return np.asarray(radii, dtype=float), offset
+
+
 def run(
     directories: Sequence[Path],
     config: SharpnessConfig,
     variants: dict[str, VariantSpec],
+    reference_variant: str = "r50_w80_median",
 ) -> dict[str, Any]:
     duplicates = check_variants_differ(variants)
     if duplicates:
@@ -379,6 +435,17 @@ def run(
                     radius = loaded["spot_radius"]
                     offset = loaded["spot_offset"]
                     reference_note = "spot size, fingerprint verified"
+
+        if radius is not None and reference_variant != "r50_w80_median":
+            logger.info("%s: recomputing reference as %s",
+                        directory.name, reference_variant)
+            alternative = alternative_reference(directory, files, reference_variant)
+            if alternative is None:
+                radius = offset = None
+                reference_note = "alternative reference could not be computed"
+            else:
+                radius, offset = alternative
+                reference_note = f"spot size, recipe {reference_variant}"
 
         selection = select_frames(
             step=step, hold=hold, spot_radius=radius, spot_offset=offset
@@ -513,6 +580,10 @@ def main(argv: list[str] | None = None) -> int:
         "--group", choices=sorted(VARIANT_GROUPS), default="fixes",
         help="which set of variants to compare",
     )
+    parser.add_argument(
+        "--reference", default="r50_w80_median",
+        help="how to measure the point-source reference, e.g. r25_w50_median",
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -531,11 +602,13 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_default_config()
     variants = VARIANT_GROUPS[args.group]
-    results = run(directories, config, variants)
+    results = run(directories, config, variants, reference_variant=args.reference)
     results["group"] = args.group
+    results["reference_variant"] = args.reference
     results["provenance"] = provenance(
         config,
         group=args.group,
+        reference_variant=args.reference,
         recordings=[d.name for d in directories],
     )
     # Write the result before rendering it.  Printing a table is the cheapest

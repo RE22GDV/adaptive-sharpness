@@ -36,6 +36,18 @@ from tools.replay_configs import load_context  # noqa: E402
 
 logger = logging.getLogger("reference_sensitivity")
 
+
+def _spearman(a: np.ndarray, b: np.ndarray) -> float:
+    def ranks(x: np.ndarray) -> np.ndarray:
+        order = np.argsort(x, kind="mergesort")
+        out = np.empty(x.size)
+        out[order] = np.arange(1, x.size + 1)
+        return out
+
+    ra, rb = ranks(a) - (a.size + 1) / 2, ranks(b) - (b.size + 1) / 2
+    denominator = float(np.sqrt((ra ** 2).sum() * (rb ** 2).sum()))
+    return float((ra * rb).sum() / denominator) if denominator > 0 else float("nan")
+
 _EPS = 1e-12
 
 
@@ -62,11 +74,17 @@ VARIANTS: tuple[SpotVariant, ...] = tuple(
 )
 
 
-def measure(image: np.ndarray, variant: SpotVariant) -> tuple[float, float]:
-    """Spot radius, and the fraction of the window at or above 250.
+def measure(image: np.ndarray, variant: SpotVariant) -> tuple[float, float, float]:
+    """Spot radius, clipped-core fraction, and how concentrated the window is.
 
-    The second number says how much of the core is clipped, so that frames
-    where saturation could matter can be excluded and the result re-checked.
+    The third number is what says whether the measurement is about the source
+    at all.  For a compact spot almost all of the window's signal lies within a
+    couple of radii of the centroid; when the window is large enough to include
+    other structure - the edge of the screen the source sits on - the signal
+    spreads out, the "radius" describes the window rather than the optics, and
+    it can move the *wrong way* with focus because that other structure sharpens
+    too.  Measured: a 120 px window never falls below 20 px here and its
+    ordering is anti-correlated with the smaller windows at -0.79.
     """
     blurred = cv2.GaussianBlur(image, (9, 9), 0)
     _, _, _, peak = cv2.minMaxLoc(blurred)
@@ -87,7 +105,7 @@ def measure(image: np.ndarray, variant: SpotVariant) -> tuple[float, float]:
     total = float(signal.sum())
     saturated = float(np.mean(window >= 250.0))
     if total <= _EPS:
-        return float("nan"), saturated
+        return float("nan"), saturated, 0.0
 
     grid_y, grid_x = np.mgrid[0:window.shape[0], 0:window.shape[1]]
     centre_y = float((signal * grid_y).sum() / total)
@@ -100,11 +118,18 @@ def measure(image: np.ndarray, variant: SpotVariant) -> tuple[float, float]:
     index = min(index, order.size - 1)
     radius = float(distance.ravel()[order][index])
 
-    # A disc wider than the window is truncated, and the radius then says more
-    # about the window than the optics.  Flag it by checking the border share.
+    # Signal reaching the window border means the window is not isolating the
+    # source: either the disc is truncated, or something else bright is inside
+    # it.  Either way the number describes the window, not the optics, so it is
+    # not a radius and must not be reported as one.  Measured: a 120 px window
+    # on these recordings never falls below 20 px and its ordering is
+    # *anti*-correlated with the smaller windows at -0.79.
     border_share = float(signal[0, :].sum() + signal[-1, :].sum()
                          + signal[:, 0].sum() + signal[:, -1].sum()) / total
-    return radius, max(saturated, 0.0) if border_share < 0.02 else float("nan")
+    concentration = float(signal[distance <= 2.0 * radius].sum() / total) if radius > 0 else 0.0
+    if border_share >= 0.02:
+        return float("nan"), saturated, concentration
+    return radius, saturated, concentration
 
 
 def analyse(directory: Path) -> dict[str, Any] | None:
@@ -116,22 +141,39 @@ def analyse(directory: Path) -> dict[str, Any] | None:
     chosen = [f for f, keep in zip(context.files, selection.mask) if keep]
 
     values: dict[str, list[float]] = {v.name: [] for v in VARIANTS}
+    concentrations: dict[str, list[float]] = {v.name: [] for v in VARIANTS}
     saturation: list[float] = []
     for index, name in enumerate(chosen):
         image = cv2.imread(str(directory / "frames" / name), cv2.IMREAD_GRAYSCALE)
         if image is None:
             raise ValueError(f"unreadable frame: {name}")
         for variant in VARIANTS:
-            radius, saturated = measure(image, variant)
+            radius, saturated, concentration = measure(image, variant)
             values[variant.name].append(radius)
+            concentrations[variant.name].append(concentration)
             if variant.fraction == 0.5 and variant.half == 80 and variant.background == "median":
                 saturation.append(saturated)
         if index and index % 250 == 0:
             logger.info("%s: %d/%d", directory.name, index, len(chosen))
 
+    # How much the reference depends on its own parameters, measured rather
+    # than argued: the rank correlation between every pair of variants.  This
+    # is the ceiling on how finely any model can be scored against it.
+    cross: dict[str, dict[str, float]] = {}
+    for first in VARIANTS:
+        cross[first.name] = {}
+        a = np.asarray(values[first.name], dtype=float)
+        for second in VARIANTS:
+            b = np.asarray(values[second.name], dtype=float)
+            ok = np.isfinite(a) & np.isfinite(b)
+            cross[first.name][second.name] = (
+                _spearman(a[ok], b[ok]) if ok.sum() > 4 else float("nan")
+            )
+
     saturated_mask = np.asarray(saturation) > 0.0
     out: dict[str, Any] = {
         "frames": len(chosen),
+        "cross_correlation": cross,
         "frames_with_clipped_core": float(np.mean(saturated_mask)),
         "variants": {},
     }
@@ -140,7 +182,9 @@ def analyse(directory: Path) -> dict[str, Any] | None:
         series = np.asarray(values[variant.name], dtype=float)
         steps, medians, scatter = step_profile(-series, labels)  # -r: up is sharper
         first, last = peak_interval(medians)
+        usable = float(np.mean(np.isfinite(series)))
         entry = {
+            "usable_fraction": usable,
             "best_step_first": float(steps[first]) if first >= 0 else float("nan"),
             "best_step_last": float(steps[last]) if last >= 0 else float("nan"),
             "min_radius_px": float(-np.nanmax(medians)),
@@ -170,23 +214,44 @@ def print_report(results: dict[str, Any]) -> None:
         print(f"== {name}   {entry['frames']} frames, "
               f"{100 * entry['frames_with_clipped_core']:.1f}% with a clipped core")
         header = (f"{'variant':<20}{'best step':>11}{'plateau':>9}"
-                  f"{'r min':>8}{'r max':>8}{'scatter':>9}{'unclipped':>11}")
+                  f"{'r min':>8}{'r max':>8}{'unclipped':>11}")
         print(header)
         print("-" * len(header))
         for variant, row in entry["variants"].items():
             plateau = row["best_step_last"] - row["best_step_first"] + 1
             unclipped = row.get("best_step_unclipped", float("nan"))
             print(
-                f"{variant:<20}{row['best_step_first']:>11.0f}{plateau:>9.0f}"
+                f"{variant:<20}"
+                f"{row['best_step_first']:>11.0f}{plateau:>9.0f}"
                 f"{row['min_radius_px']:>8.1f}{row['max_radius_px']:>8.1f}"
-                f"{row['within_step_scatter_px']:>9.2f}"
                 + (f"{unclipped:>11.0f}" if np.isfinite(unclipped) else f"{'-':>11}")
             )
         steps = [r["best_step_first"] for r in entry["variants"].values()]
         finite = [s for s in steps if np.isfinite(s)]
         if finite:
             print(f"\n  best step across variants: {min(finite):.0f} - {max(finite):.0f}"
-                  f"   (spread {max(finite) - min(finite):.0f} steps)\n")
+                  f"   (spread {max(finite) - min(finite):.0f} steps)")
+
+        matrix = entry.get("cross_correlation") or {}
+        if matrix:
+            names = list(matrix)
+            print("\n  Rank correlation between reference variants.  This is the")
+            print("  ceiling: no model can be resolved against this reference more")
+            print("  finely than the reference agrees with itself.\n")
+            print("    " + " " * 20 + "".join(f"{n[:9]:>10}" for n in names))
+            for row_name in names:
+                cells = "".join(
+                    f"{matrix[row_name].get(col, float('nan')):>10.3f}" for col in names
+                )
+                print(f"    {row_name:<20}{cells}")
+            off_diagonal = [
+                matrix[a][b] for a in names for b in names
+                if a != b and np.isfinite(matrix[a].get(b, float("nan")))
+            ]
+            if off_diagonal:
+                print(f"\n    lowest agreement between two variants: "
+                      f"{min(off_diagonal):.3f}")
+        print()
 
 
 def main(argv: list[str] | None = None) -> int:
