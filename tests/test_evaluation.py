@@ -6,6 +6,8 @@ analysis tools each selected frames differently.  Each defect is pinned here.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -207,3 +209,41 @@ class TestProvenance:
         for key in ("commit", "python", "numpy", "opencv", "config_fingerprint"):
             assert key in record
         assert record["group"] == "test"
+
+
+class TestReportsSurviveANarrowTerminal:
+    """A table that will not encode must not be able to destroy a run.
+
+    An hour of replay was lost to a single "+/-" in a header: the report was
+    printed before the JSON was written, the print raised UnicodeEncodeError
+    under the Pi's ASCII stdout, and nothing was saved.
+    """
+
+    @staticmethod
+    def _sources() -> list[Path]:
+        root = Path(__file__).resolve().parents[1] / "tools"
+        return [
+            root / name for name in (
+                "ablation.py", "before_after.py", "evaluation.py",
+                "fair_comparison.py", "protocol_study.py",
+                "reference_sensitivity.py", "replay_configs.py",
+            )
+        ]
+
+    def test_tool_sources_are_ascii(self) -> None:
+        offenders = {}
+        for path in self._sources():
+            text = path.read_text(encoding="utf-8")
+            bad = sorted({c for c in text if ord(c) > 127})
+            if bad:
+                offenders[path.name] = bad
+        assert not offenders, f"non-ASCII in printing tools: {offenders}"
+
+    def test_the_result_is_saved_before_it_is_printed(self) -> None:
+        """Order matters: the expensive artefact must not depend on the cheap one."""
+        source = (Path(__file__).resolve().parents[1] / "tools" / "ablation.py").read_text(
+            encoding="utf-8"
+        )
+        write = source.index("args.json.write_text")
+        render = source.index("print_report(results)", source.index("def main"))
+        assert write < render

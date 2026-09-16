@@ -478,7 +478,7 @@ def print_report(results: dict[str, Any]) -> None:
 
     if any(np.isfinite(r.get("spearman_gt", np.nan)) for r in summary.values()):
         header = (
-            f"\n{'variant':<22}{'spearman':>10}{'±spread':>9}{'inversion':>11}"
+            f"\n{'variant':<22}{'spearman':>10}{'+/-spread':>9}{'inversion':>11}"
             f"{'strict':>8}{'resolved':>10}{'peak err':>10}{'plateau':>9}"
         )
         print(header)
@@ -538,11 +538,16 @@ def main(argv: list[str] | None = None) -> int:
         group=args.group,
         recordings=[d.name for d in directories],
     )
-    print_report(results)
+    # Write the result before rendering it.  Printing a table is the cheapest
+    # step and the only one that can fail on a terminal encoding - losing an
+    # hour of replay to a character that would not encode is not acceptable.
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
-        args.json.write_text(json.dumps(results, indent=2, default=float))
-        print(f"\nwrote {args.json}")
+        args.json.write_text(
+            json.dumps(results, indent=2, default=float), encoding="utf-8"
+        )
+        print(f"wrote {args.json}")
+    print_report(results)
     if args.figures:
         from tools.ablation_figures import make_figures
 
