@@ -151,9 +151,17 @@ class SharpnessEvaluator:
             motor_position=motor_position,
             # Carried on every result so a host application does not have to
             # poll the evaluator separately and keep the two in sync.
-            ready=warmed_up and informative > 0.0,
+            # A result is only ready when enough metrics are actually carrying
+            # information.  The original test was "more than none", which
+            # announced readiness while five metrics of six sat at the
+            # normaliser's neutral sentinel - measured at 33% of frames on the
+            # protocol recordings.
+            ready=warmed_up
+            and informative >= self.config.normalization.ready_informative_fraction
+            and informative > 0.0,
             informative_fraction=informative,
             warmup_samples=self._normalizers.sample_count,
+            scale_frozen=self._normalizers.scale_frozen,
         )
 
     def evaluate_raw_only(

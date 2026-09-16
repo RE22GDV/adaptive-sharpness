@@ -217,8 +217,27 @@ class TestRegistry:
         metrics = build_metrics(config)
         assert [m.name for m in metrics] == list(config.enabled)
 
-    def test_available_matches_defaults(self) -> None:
-        assert set(available_metrics()) == set(MetricsConfig().enabled)
+    def test_every_enabled_metric_is_available(self) -> None:
+        """The registry may hold more than the default set, but never less.
+
+        `gradient_variance` ships built but switched off: it earned its place
+        on measurement rather than on argument, so turning it on is a
+        configuration change the user makes deliberately.
+        """
+        assert set(MetricsConfig().enabled) <= set(available_metrics())
+
+    def test_every_available_metric_can_be_built(self) -> None:
+        for name in available_metrics():
+            assert build_metrics(MetricsConfig(enabled=(name,)))[0].name == name
+
+    def test_every_available_metric_has_a_prior_and_a_sensitivity(self) -> None:
+        """A metric that cannot be switched on from configuration is a trap."""
+        from adaptive_sharpness import load_default_config
+
+        config = load_default_config()
+        for name in available_metrics():
+            assert name in config.metrics.priors, f"{name} has no prior weight"
+            assert name in config.ensemble.sensitivity, f"{name} has no sensitivity"
 
     def test_unknown_metric_raises(self) -> None:
         with pytest.raises(KeyError, match="unknown metric"):

@@ -164,7 +164,9 @@ class TestRunningNormalizer:
         assert normalizer.normalize(50.0, observe=False) == pytest.approx(frozen)
 
     def test_unfreeze_restores_adaptation(self) -> None:
-        normalizer = RunningNormalizer("m", NormalizationConfig())
+        # A short window, so that "adapts to the new range" is observable
+        # within the test rather than after 960 frames.
+        normalizer = RunningNormalizer("m", NormalizationConfig(window=120))
         for value in np.linspace(0.0, 100.0, 60):
             normalizer.observe(float(value))
         normalizer.freeze()

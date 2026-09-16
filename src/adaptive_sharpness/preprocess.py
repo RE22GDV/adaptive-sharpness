@@ -169,7 +169,16 @@ class Preprocessor:
         return target_w, target_h
 
     def prepare(self, data: np.ndarray, roi: ROI | None = None) -> AnalysisImage:
-        """Prepare ``data`` (an H x W [x C] array) for metric computation."""
+        """Prepare ``data`` (an H x W [x C] array) for metric computation.
+
+        .. warning::
+           The returned ``gray`` array is a **scratch buffer owned by this
+           preprocessor**, and the next call to :meth:`prepare` overwrites it
+           in place.  Consume it before the next call, or take a copy.  Holding
+           on to it and comparing two "different" frames later silently
+           compares a frame with itself - the difference is exactly zero and
+           nothing raises.
+        """
         self.validate(data)
         source_shape = data.shape
 

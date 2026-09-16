@@ -273,21 +273,39 @@ test suite across every degradation combination.
 
 ### 6.1 Normalisation
 
-Raw metric values are incommensurable, so each is mapped to `[0, 1]` by robust
-percentiles of a rolling history (`window`, default 120 frames):
+Raw metric values are incommensurable, so each is mapped to `[0, 1]` against
+robust percentile anchors `q_low`, `q_high` of a history (`window`, default 960
+frames = 38 s at 25 fps):
 
 ```
-s_i = clip( ( log1p(x_i) - q_low ) / ( q_high - q_low ), 0, 1 )
+mid = (q_low + q_high) / 2          span = q_high - q_low
+s_i = 1 / ( 1 + exp( -gain * ( log1p(x_i) - mid ) / span ) )
 ```
 
 `log1p` is a monotone transform, so it cannot change which frame is judged
 sharpest; it makes the heavy-tailed energy metrics roughly symmetric, and
 percentile anchors on a symmetric distribution are far more stable.
 
-A rolling scale is right for a live loop and wrong for offline analysis, where
-it would give each method a different scale. `NormalizerBank.freeze()` locks the
-anchors; the method comparison uses it so that every method sees identical
-inputs.
+**The map is logistic, not clipped-linear, and the anchors are frozen once the
+observed range settles.** Both of those are corrections, and both were forced by
+measurement rather than preference — see [CALIBRATION.md](CALIBRATION.md) §1.
+
+A clipped linear map gives every frame beyond an anchor exactly the same score,
+so wherever the anchors do not span the working range the ordering a focus
+search depends on is destroyed outright; a frozen linear map pinned 41% of
+frames at 0 or 1 on the point-source recordings, against 0.3% for the logistic
+map. And a scale that keeps moving rescores the same frame differently
+depending on what preceded it: with a 120-frame window the score reached rank
+correlation **−0.24 and −0.38** against the physical size of a defocused point,
+while the raw metric reached **0.97 and 0.98**. Freezing plus the logistic map
+recovers **0.94 and 0.97**.
+
+`auto_freeze` performs the freeze once the range stops growing.
+`NormalizerBank.freeze()` and `fit()` do it explicitly, which is what a host
+running its own coarse sweep should use; an explicit freeze is never overridden
+by the automatic rule. Thawing (`auto_thaw`) is **off**: no threshold tested
+could distinguish a scene change from a focus change, and the rule fired
+mid-sweep. A host that knows the scene changed should call `unfreeze()`.
 
 ### 6.2 Confidence
 

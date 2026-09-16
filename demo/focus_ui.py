@@ -478,6 +478,15 @@ def draw_panel(
         y += 22
         bar(y, subject_result.score, colour, 5)
         y += 16
+        # Until the scale freezes the score is still relative to a moving
+        # history, so two readings minutes apart are not comparable.  Saying so
+        # is the difference between a number and a number you can act on.
+        if subject_result.scale_frozen:
+            text("scale fixed", y, GOOD, 0.38)
+        else:
+            text(f"scale learning  {subject_result.warmup_samples} frames",
+                 y, MUTED, 0.38)
+        y += 14
         if subject_result.score_change_detected:
             text("SCORE JUMPED", y, GOOD, 0.41)
             y += 14

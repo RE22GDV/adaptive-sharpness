@@ -86,6 +86,7 @@ class MetricsConfig:
             "wavelet": 1.0,
             "fourier": 0.8,
             "edge_width": 0.8,
+            "gradient_variance": 1.0,
         }
     )
     # Divide the energy-type metrics by mean(I)**2 so that a pure exposure
@@ -117,16 +118,106 @@ class NormalizationConfig:
     """Running normalisation that maps heterogeneous raw metrics to [0, 1]."""
 
     # Length of the rolling history used to estimate the observed range.
-    window: int = 120
+    #
+    # 38 seconds at 25 fps.  It used to be 120 frames, under five seconds,
+    # which made the score relative to the immediate past: on a slow approach
+    # to focus the window filled with high values and the sharpest frames of
+    # all were scored as no better than recent history.  Measured against the
+    # point-source ground truth, rank correlation rose monotonically with the
+    # window - 0.77, 0.83, 0.88 at 120, 480 and 960 frames on one run - before
+    # freezing was introduced on top.
+    window: int = 960
     # Number of frames before the normaliser is considered warmed up.
     warmup: int = 5
     # Compress heavy-tailed metrics with log1p before scaling.
     log_compress: bool = True
+    # How the compressed value is mapped onto [0, 1] between the anchors.
+    #
+    # "linear" is the textbook min-max map, clipped at both ends.  The clipping
+    # is the problem: every frame beyond an anchor gets exactly the same score,
+    # so the ordering that a focus search depends on is destroyed wherever the
+    # anchors do not span the working range.  Measured on the point-source
+    # recordings, a frozen linear map pins 41% of frames at 0 or 1.
+    #
+    # "logistic" maps the same anchors through 1/(1+exp(-gain*(x-mid)/span)),
+    # which is strictly monotone everywhere and therefore never ties two
+    # different frames.  Same recordings: 0.3% pinned, and rank correlation
+    # with the physical spot size rises from 0.88 to 0.94 and from 0.84 to 0.97.
+    mapping: str = "logistic"
+    # Logistic steepness.  At 4.0 the two anchors land on 0.12 and 0.88, so the
+    # configured percentiles still occupy most of the output range while the
+    # tails stay distinguishable.
+    logistic_gain: float = 4.0
     # Robust percentiles used as the scaling anchors.
     low_percentile: float = 5.0
     high_percentile: float = 95.0
     # Guard against a degenerate (near-zero) observed range.
     min_range_ratio: float = 1e-3
+    # Absolute term in the degenerate-range guard, which is
+    #     floor = min_range_ratio * max(|high|, |low|, min_range_absolute)
+    # This used to be a hard-coded 1.0, which made the guard absolute rather
+    # than relative for every metric whose values sit below 1.0 - which is all
+    # of them, because contrast normalisation divides by mean(I)**2.  Measured
+    # on the protocol recordings: the whole value of `brenner` at defocus is
+    # 0.00029 while the floor was 0.001, so the guard could never be satisfied
+    # and four metrics of six returned the 0.5 sentinel on every defocused
+    # frame.  See docs/CALIBRATION.md.
+    min_range_absolute: float = 1e-6
+    # When the rolling window's range is degenerate, fall back to a longer
+    # history that is this many windows deep before giving up and returning
+    # the neutral sentinel.  A held defocus position has no range of its own,
+    # but the sweep it belongs to does, and scaling against the sweep puts the
+    # frame near 0 instead of at a misleading mid-range 0.5.  Set to 0 to
+    # restore the previous sentinel-only behaviour.  Now that `window` is
+    # itself long, this is only a backstop for a scene held perfectly still
+    # for longer than the window.
+    long_window_multiple: int = 2
+    # Fraction of metrics that must be informative before a result is reported
+    # ready.  The original test was "more than none", so a result with five of
+    # six metrics pinned at the sentinel still announced itself as ready.
+    ready_informative_fraction: float = 0.5
+    # Freeze the scaling anchors once the observed range has stopped growing.
+    #
+    # A rolling window makes the score relative to recent history, which breaks
+    # the only property a focus search needs: that a higher score means a
+    # sharper frame.  Measured against the point-source ground truth, the raw
+    # metric tracks true focus at rank correlation 0.97-0.98, the rolling
+    # window at 120 frames scores -0.24 and -0.38 - worse than useless - and a
+    # frozen scale recovers 0.92 and 0.88.  On a slow approach to focus the
+    # window fills with high values, so the sharpest frames of all are scored
+    # as "no better than recent history" and the score collapses.
+    #
+    # Freezing waits for a representative range rather than freezing early on a
+    # narrow one, which would clip everything afterwards.  A host that performs
+    # its own coarse sweep should call NormalizerBank.freeze() itself instead.
+    auto_freeze: bool = True
+    # Samples required before freezing is even considered.
+    auto_freeze_min_samples: int = 240
+    # Freeze when the range has grown by less than this fraction ...
+    auto_freeze_stability: float = 0.05
+    # ... over this many consecutive samples.
+    auto_freeze_patience: int = 120
+    # Thaw a frozen scale again when the scene appears to have changed.
+    #
+    # OFF by default, because no threshold tested could tell a focus change
+    # from a scene change.  A sweep legitimately runs past the anchors - they
+    # are percentiles of an earlier window - so the rule fires mid-sweep and
+    # throws away the fixed scale exactly when it is doing its job.  Measured
+    # on the point-source runs, rank correlation with the physical spot size:
+    #
+    #     thawing off          0.940   0.967
+    #     margin 1 span        0.913   0.277
+    #     margin 3 spans       0.930   0.329
+    #     margin 5 spans       0.937   0.354
+    #
+    # A host that knows the scene changed - the camera was repointed, the lens
+    # swapped, the exposure altered - should call unfreeze() and say so, which
+    # is information no statistic in the stream can recover.
+    auto_thaw: bool = False
+    # Fraction of the recent window that must lie outside the frozen range,
+    # widened by auto_thaw_margin spans on each side, before thawing.
+    auto_thaw_outside: float = 0.5
+    auto_thaw_margin: float = 3.0
 
 
 @dataclass(frozen=True)
@@ -135,6 +226,16 @@ class AnalysisConfig:
 
     # Noise sigma (8-bit units) that maps to noise_level = 1.
     noise_ref_sigma: float = 6.0
+    # Quantile of |HH| used by the noise estimator, in percent.  The classical
+    # Donoho-Johnstone estimator uses the median (50).  Measured on the
+    # protocol recordings, 58-74% of the Haar HH coefficients of this camera's
+    # live-view stream are *exactly* zero after 8-bit quantisation, so the
+    # median is zero and the estimate is zero on 100% of real frames - which
+    # silently disabled the entire noise branch of the weighting model.  A
+    # higher quantile is the same estimator evaluated where the distribution is
+    # not degenerate; the scale factor is derived from the quantile, so the
+    # estimate remains unbiased for Gaussian noise.
+    noise_quantile: float = 75.0
     # Inter-frame displacement (pixels, at analysis scale) mapping to level 1.
     # Measured on a 1288-frame handheld GH6 recording while the focus ring was
     # being turned: median 1.4 px, p75 5.8, p90 17.9, p95 29.0. The original
@@ -146,7 +247,7 @@ class AnalysisConfig:
     # high-contrast synthetic scene reaches ~0.045 and a real GH6 live-view
     # frame of an ordinary indoor subject sits at 0.006-0.009, so the original
     # guess of 0.06 was unreachable and capped the confidence for every frame.
-    edge_ref_density: float = 0.03
+    edge_ref_density: float = 0.006
     # RMS contrast at/above which the scene is considered well textured.
     contrast_ref: float = 0.08
     # Intensities at/above (below) these bounds count as clipped.
@@ -254,10 +355,30 @@ class EnsembleConfig:
             "wavelet": {"noise": 1.6, "edge": 0.5, "clip": 0.5, "motion": 0.6, "contrast": 0.6},
             "fourier": {"noise": 1.9, "edge": 0.4, "clip": 0.7, "motion": 0.5, "contrast": 0.6},
             "edge_width": {"noise": 1.4, "edge": 2.2, "clip": 0.9, "motion": 1.0, "contrast": 1.0},
+            # Same family as tenengrad - a first-derivative operator - so it is
+            # given the same row.  Assumed by analogy like every other row
+            # here; see the class docstring for what that is worth.
+            "gradient_variance": {"noise": 1.3, "edge": 0.7, "clip": 0.6, "motion": 0.7, "contrast": 0.8},
         }
     )
     # Enable the consensus-agreement reweighting term a_i.
-    use_agreement: bool = True
+    #
+    # OFF by default.  It was one of the three mechanisms this project claimed
+    # as its contribution, and it is the one that did not survive measurement.
+    # On eight protocol recordings, against the physical point-source ground
+    # truth, switching it off improved every criterion: rank correlation
+    # 0.946 -> 0.964, wrongly ordered step pairs 0.057 -> 0.052, adjacent-step
+    # discrimination 0.816 -> 0.818, and 0.08 ms a frame cheaper.  Widening the
+    # kernel only walks the result back towards "off" (0.958 at scale 1.0,
+    # 0.963 at scale 8.0, 0.965 off), so this is not a tuning failure.
+    #
+    # What that does NOT establish: the term exists to protect the score when a
+    # single metric is fooled - a specular highlight, a blown region - and none
+    # of these recordings contains that failure.  It is switched off because it
+    # costs measurably and its benefit is untested, not because the idea is
+    # wrong.  The reliability stage, by contrast, clearly earns its place:
+    # zeroing kappa doubles the wrong orderings (0.057 -> 0.105).
+    use_agreement: bool = False
     # Scale of the agreement kernel, in units of the robust spread of the
     # normalised scores.  Smaller = more aggressive outlier suppression.
     agreement_scale: float = 1.5

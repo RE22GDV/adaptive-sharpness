@@ -188,3 +188,32 @@ class TestScoreSemantics:
         assert any(
             abs(x - y) > 1e-6 for x, y in zip(coupled, uncoupled)
         ), "confidence coupling had no effect on the filtered score"
+
+
+class TestScratchBufferOwnership:
+    """``prepare`` hands back a buffer it will overwrite on the next call.
+
+    This is documented, but it is the kind of contract that fails silently: a
+    caller who keeps the reference and later diffs two "different" frames gets
+    exactly zero and no error.  It cost a wrong measurement during the protocol
+    study, so it is pinned here.
+    """
+
+    def test_successive_calls_return_the_same_array_object(
+        self, pipeline: Preprocessor
+    ) -> None:
+        first = pipeline.prepare(np.full((360, 640, 3), 40, dtype=np.uint8)).gray
+        second = pipeline.prepare(np.full((360, 640, 3), 200, dtype=np.uint8)).gray
+        assert first is second
+
+    def test_the_earlier_view_is_overwritten_not_preserved(
+        self, pipeline: Preprocessor
+    ) -> None:
+        held = pipeline.prepare(np.full((360, 640, 3), 40, dtype=np.uint8)).gray
+        pipeline.prepare(np.full((360, 640, 3), 200, dtype=np.uint8))
+        assert float(held.mean()) > 150.0
+
+    def test_a_copy_survives_the_next_call(self, pipeline: Preprocessor) -> None:
+        held = pipeline.prepare(np.full((360, 640, 3), 40, dtype=np.uint8)).gray.copy()
+        pipeline.prepare(np.full((360, 640, 3), 200, dtype=np.uint8))
+        assert float(held.mean()) < 60.0

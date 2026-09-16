@@ -48,27 +48,56 @@ brenner = 1.0
 wavelet = 1.0
 fourier = 0.8
 edge_width = 0.8
+# Not in `enabled` by default; carried so the metric can be switched on from a
+# config file without also having to supply a prior and a sensitivity row.
+gradient_variance = 1.0
 
 [normalization]
-window = 120
+# 38 seconds at 25 fps. A short window makes the score relative to the
+# immediate past, so on a slow approach to focus the sharpest frames of all
+# read as "no better than recent history". See docs/CALIBRATION.md.
+window = 960
 warmup = 5
 log_compress = true
+# "logistic" is strictly monotone, so two frames of different sharpness are
+# never given the same score; "linear" clips and ties everything past an anchor.
+mapping = "logistic"
+logistic_gain = 4.0
 low_percentile = 5.0
 high_percentile = 95.0
 min_range_ratio = 0.001
+# Relative, not absolute: every contrast-normalised metric lives far below 1.0.
+min_range_absolute = 1e-6
+long_window_multiple = 2
+# Freeze the scale once the observed range settles, so that a higher score
+# always means a sharper frame. Thawing stays off: no threshold tested could
+# tell a focus change from a scene change. Call unfreeze() when you know.
+auto_freeze = true
+auto_freeze_min_samples = 240
+auto_freeze_stability = 0.05
+auto_freeze_patience = 120
+auto_thaw = false
+# A result is ready only when at least this fraction of metrics is informative.
+ready_informative_fraction = 0.5
 
 [analysis]
 # Noise sigma (8-bit units) that counts as fully degraded.
 # Note: the GH6 live-view JPEG is denoised in-camera and measures ~0 here, so
 # the noise adaptation stays inactive on that source. See docs/LIMITATIONS.md.
 noise_ref_sigma = 6.0
+# The median of |HH| is exactly zero on 58-74% of this camera's frames, which
+# reported no noise however much there was. A higher quantile reads the same
+# distribution where it is not degenerate.
+noise_quantile = 75.0
 # Measured on a 1288-frame handheld GH6 recording while the focus ring was
 # turned: median 1.4 px, p75 5.8, p90 17.9, p95 29.0. A reference of 3.0
 # saturated on 38% of frames.
 motion_ref_px = 15.0
 # Measured with tools/calibrate_stats.py: a rich synthetic scene reaches ~0.045
 # and a real GH6 frame of an ordinary indoor subject sits at 0.006-0.009.
-edge_ref_density = 0.03
+# Measured: no protocol recording reaches 0.03 at defocus, and four of eight
+# never reach it at all, which zeroed a necessary confidence factor.
+edge_ref_density = 0.006
 contrast_ref = 0.08
 clip_high_level = 250
 clip_low_level = 5
@@ -120,7 +149,8 @@ merge_iou = 0.45
 subject_iou_match = 0.30
 
 [ensemble]
-use_agreement = true
+# Measured off: see EnsembleConfig.use_agreement for the numbers.
+use_agreement = false
 agreement_scale = 1.5
 weight_floor = 0.02
 # Ablation switches used by tools/compare_methods.py.
@@ -179,6 +209,14 @@ edge = 2.2
 clip = 0.9
 motion = 1.0
 contrast = 1.0
+
+# Same family as tenengrad, a first-derivative operator, so the same row.
+[ensemble.sensitivity.gradient_variance]
+noise = 1.3
+edge = 0.7
+clip = 0.6
+motion = 0.7
+contrast = 0.8
 
 [temporal]
 enabled = true

@@ -102,3 +102,36 @@ class Brenner(SharpnessMetric):
         dv = gray[k:, :] - gray[:-k, :]
         value = 0.5 * (float(np.mean(dh * dh)) + float(np.mean(dv * dv)))
         return value / normalization_factor(gray, self.contrast_normalize)
+
+
+class GradientVariance(SharpnessMetric):
+    """Variance of the Sobel gradient magnitude (Pertuz et al. 2013, "TENV").
+
+    Closely related to :class:`Tenengrad`, which averages the *squared*
+    magnitude.  Subtracting the mean makes this one respond to the spread of
+    edge strengths rather than to their total energy, so a frame that is
+    uniformly textured scores lower than one carrying a few sharp edges of the
+    same total energy.
+
+    Added on the evidence of the protocol study rather than by analogy: over
+    eight tripod recordings with exact focus-step labels it separated adjacent
+    focus positions better than any of the project's own six measures, at
+    0.31 ms a frame.  See docs/CALIBRATION.md.
+
+    Unlike the baseline implementation in ``tools/baselines.py`` this one
+    carries the library's contrast normalisation, so that a pure exposure
+    change does not move it.
+    """
+
+    name = "gradient_variance"
+
+    def __init__(self, contrast_normalize: bool = True, ksize: int = 3) -> None:
+        super().__init__(contrast_normalize)
+        self.ksize = ksize
+
+    def _compute(self, gray: np.ndarray) -> float:
+        gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=self.ksize)
+        gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=self.ksize)
+        magnitude = cv2.magnitude(gx, gy)
+        value = float(magnitude.var())
+        return value / normalization_factor(gray, self.contrast_normalize)

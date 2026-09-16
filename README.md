@@ -57,7 +57,7 @@ that adapt to the measured conditions of each frame.
 | --- | --- |
 | Camera control | The library never opens a device. `adaptive_sharpness.capture` is an optional convenience with a `FrameSource` interface you can ignore or replace. |
 | Focus motor control | No search strategy, no actuator driver. `docs/INTEGRATION.md` shows how to write one on top. |
-| Absolute sharpness | The score is relative to a rolling history. There is no calibrated "this frame is 0.8 sharp" scale. |
+| Absolute sharpness | The scale is fitted to what the camera has seen, then frozen. Within one stream a higher score does mean a sharper frame; across streams or cameras the numbers are not comparable, and there is no calibrated "this frame is 0.8 sharp" unit. |
 | Object recognition | The optional scene map finds the *sharpest textured region*. It does not know which object matters. |
 | A calibrated probability | `confidence` is a heuristic indicator, not a statistically calibrated quantity. |
 
@@ -282,7 +282,7 @@ flowchart LR
     B[frame] --> P[Preprocessor<br/>validate, grey, ROI crop, downscale]
     P --> C[ImageAnalyzer<br/>noise, edges, motion,<br/>exposure, contrast]
     P --> D[six focus measures<br/>raw values]
-    D --> E[NormalizerBank<br/>robust rolling scale]
+    D --> E[NormalizerBank<br/>logistic scale, frozen once stable]
     C -->|degradations| F
     E -->|normalised| F[AdaptiveEnsemble<br/>weights + score + confidence]
     F --> G[TemporalFilter<br/>innovation-gated EMA]
@@ -393,7 +393,7 @@ config = load_config(default_config_path())
 | --- | --- |
 | `pipeline` | analysis resolution, colour order, input range, ROI default |
 | `metrics` | which measures, their priors, per-measure parameters |
-| `normalization` | rolling window, percentile anchors, log compression |
+| `normalization` | history length, percentile anchors, logistic map, auto-freeze |
 | `analysis` | reference levels for noise, edges, contrast, motion, clipping |
 | `focus_map` | tile size, per-tile measure, validity threshold |
 | `regions` | detectors, face cascade parameters, merging |
@@ -426,8 +426,8 @@ threshold are therefore marked *invalid* rather than reported as blurred, and
 `FocusMap.valid_fraction` says how much of the frame was measurable.
 
 Ranking uses the map, not the ensemble: the ensemble score is normalised against
-a rolling history, which is the wrong basis for comparing regions *within* one
-frame.
+a history of whole frames, which is the wrong basis for comparing regions
+*within* one frame.
 
 Per-tile measure, chosen by measurement:
 
@@ -728,6 +728,8 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/FIELD_TEST.md](docs/FIELD_TEST.md) | first real recording, and the defects it found |
 | [docs/REAL_FRAME_STUDY.md](docs/REAL_FRAME_STUDY.md) | five experiments on recorded frames |
 | [docs/COMPARATIVE_STUDY.md](docs/COMPARATIVE_STUDY.md) | comparison against nine published measures and seven fusion rules |
+| [docs/CALIBRATION.md](docs/CALIBRATION.md) | what eight labelled recordings changed, and which defaults moved |
+| [docs/STUDY_UA.md](docs/STUDY_UA.md) | the same study, in Ukrainian |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |
 

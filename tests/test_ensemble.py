@@ -90,21 +90,50 @@ class TestAdaptiveBehaviour:
                 assert current <= previous + 1e-12
             previous = current
 
-    def test_an_outlier_metric_is_down_weighted(self) -> None:
-        """One metric fooled by a highlight must not drag the score with it."""
+    def test_an_outlier_metric_is_down_weighted_when_enabled(self) -> None:
+        """One metric fooled by a highlight must not drag the score with it.
+
+        This is what the consensus stage is *for*.  It is off by default
+        because it cost measurably on eight real recordings and none of them
+        contained this failure - see EnsembleConfig.use_agreement - so the
+        mechanism is tested here with it switched on deliberately.
+        """
         scores = {name: 0.5 for name in NAMES}
         scores["fourier"] = 0.05
-        out = make().combine(scores, GOOD_STATS, IDEAL)
+        out = make(EnsembleConfig(use_agreement=True)).combine(
+            scores, GOOD_STATS, IDEAL
+        )
         others = [out.weights[n] for n in NAMES if n != "fourier"]
         assert out.weights["fourier"] < min(others)
         # The consensus value must dominate the outlier.
         assert out.score > 0.4
 
-    def test_agreement_can_be_disabled(self) -> None:
+    def test_agreement_is_off_by_default(self) -> None:
         scores = {name: 0.5 for name in NAMES}
         scores["fourier"] = 0.05
-        out = make(EnsembleConfig(use_agreement=False)).combine(scores, GOOD_STATS, IDEAL)
+        out = make().combine(scores, GOOD_STATS, IDEAL)
         assert all(a == pytest.approx(1.0) for a in out.agreements.values())
+
+    def test_disabling_agreement_does_not_blind_the_confidence(self) -> None:
+        """Two mechanisms share one calculation; only one of them is off.
+
+        The kernel reweights the metrics; the dispersion feeds the concordance
+        factor of the confidence.  Switching off the first must leave the
+        second reporting disagreement.
+        """
+        # Broad disagreement, not one outlier: the dispersion is a MAD and is
+        # deliberately unmoved by a single dissenting metric.
+        scores = dict(zip(NAMES, [0.1, 0.9, 0.2, 0.8, 0.15, 0.85]))
+        disagreeing = make().combine(scores, GOOD_STATS, IDEAL)
+        agreeing = make().combine(uniform_scores(0.5), GOOD_STATS, IDEAL)
+        assert disagreeing.dispersion > agreeing.dispersion
+        assert disagreeing.confidence < agreeing.confidence
+
+    def test_a_single_outlier_does_not_move_the_dispersion(self) -> None:
+        """Documents the limit of the MAD: one dissenter is invisible to it."""
+        scores = {name: 0.5 for name in NAMES}
+        scores["fourier"] = 0.05
+        assert make().combine(scores, GOOD_STATS, IDEAL).dispersion == 0.0
 
     def test_dispersion_reports_disagreement(self) -> None:
         agree = make().combine(uniform_scores(), GOOD_STATS, IDEAL)

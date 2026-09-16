@@ -79,7 +79,7 @@ collector and the demo both read the same object.
 | `preprocess.py` | colour, ROI, scale | scratch buffers |
 | `metrics/` | the six metrics behind one interface | FFT window cache only |
 | `analysis.py` | image conditions | previous frame, phase-correlation bias |
-| `normalize.py` | mapping raw values to `[0,1]` | rolling histories |
+| `normalize.py` | mapping raw values to `[0,1]` | histories, frozen anchors |
 | `ensemble.py` | weighting and confidence | none |
 | `temporal.py` | smoothing | filtered value, innovation history |
 | `evaluator.py` | wiring | owns the stateful pieces above |

@@ -169,8 +169,15 @@ class AdaptiveEnsemble:
         return np.exp(-(self._kappa @ d))
 
     def agreements(self, scores: np.ndarray, reliabilities: np.ndarray) -> tuple[np.ndarray, float]:
-        """Stage 2: consensus kernel. Returns ``(a_i, dispersion)``."""
-        if scores.size == 1 or not self.config.use_agreement:
+        """Stage 2: consensus kernel. Returns ``(a_i, dispersion)``.
+
+        The dispersion is measured whatever ``use_agreement`` says, because it
+        is two different mechanisms sharing one calculation: the kernel
+        reweights the metrics, while the dispersion feeds the *concordance*
+        factor of the confidence.  Switching off the reweighting must not also
+        blind the confidence to metrics that disagree.
+        """
+        if scores.size == 1:
             return np.ones_like(scores), 0.0
         median = _weighted_median(scores, reliabilities)
         deviations = np.abs(scores - median)
@@ -179,6 +186,8 @@ class AdaptiveEnsemble:
         dispersion = sigma
         # Floor: with perfect agreement sigma -> 0 and the kernel would divide
         # by zero; the floor also stops trivial noise from looking like dissent.
+        if not self.config.use_agreement:
+            return np.ones_like(scores), dispersion
         sigma = max(sigma, 0.02)
         scale = max(self.config.agreement_scale, 1e-6) * sigma
         return np.exp(-0.5 * np.square(deviations / scale)), dispersion

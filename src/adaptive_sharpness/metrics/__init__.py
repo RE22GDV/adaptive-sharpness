@@ -13,7 +13,7 @@ from ..config import MetricsConfig
 from .base import EPS, MetricError, SharpnessMetric, normalization_factor
 from .edge import EdgeWidth
 from .frequency import FourierHighFrequency, WaveletEnergy, haar_decompose
-from .gradient import Brenner, LaplacianVariance, Tenengrad
+from .gradient import Brenner, GradientVariance, LaplacianVariance, Tenengrad
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ __all__ = [
     "haar_decompose",
     "LaplacianVariance",
     "Tenengrad",
+    "GradientVariance",
     "Brenner",
     "WaveletEnergy",
     "FourierHighFrequency",
@@ -53,6 +54,9 @@ METRIC_BUILDERS: Mapping[str, Callable[[MetricsConfig], SharpnessMetric]] = {
     "fourier": lambda c: FourierHighFrequency(
         contrast_normalize=c.contrast_normalize,
         high_cutoff=c.fourier_high_cutoff,
+    ),
+    "gradient_variance": lambda c: GradientVariance(
+        contrast_normalize=c.contrast_normalize,
     ),
     "edge_width": lambda c: EdgeWidth(
         contrast_normalize=c.contrast_normalize,

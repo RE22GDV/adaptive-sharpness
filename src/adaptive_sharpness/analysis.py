@@ -35,6 +35,8 @@ import logging
 import cv2
 import numpy as np
 
+from statistics import NormalDist
+
 from .config import AnalysisConfig
 from .metrics.frequency import haar_decompose
 from .types import ImageStats
@@ -48,6 +50,19 @@ DEGRADATION_KEYS = ("noise", "edge", "clip", "motion", "contrast")
 
 # MAD-to-sigma conversion factor for Gaussian data.
 _MAD_SCALE = 1.0 / 0.6744897501960817
+
+
+def _half_normal_scale(percent: float) -> float:
+    """Divisor turning the p-th quantile of |X| into sigma, for X ~ N(0, sigma).
+
+    The quantile of the folded normal at probability p is sigma * Phi^-1((1+p)/2),
+    so dividing by that factor recovers sigma whatever quantile is used.  At
+    p = 50 this reproduces the classical Donoho-Johnstone MAD constant, which
+    is asserted in the tests.
+    """
+    if not 0.0 < percent < 100.0:
+        raise ValueError("noise_quantile must lie strictly between 0 and 100")
+    return NormalDist().inv_cdf((1.0 + percent / 100.0) / 2.0)
 
 
 class ImageAnalyzer:
@@ -66,6 +81,7 @@ class ImageAnalyzer:
         self._hann: np.ndarray | None = None
         self._hann_shape: tuple[int, int] | None = None
         self._bias: tuple[float, float] = (0.0, 0.0)
+        self._noise_scale = _half_normal_scale(config.noise_quantile)
 
     def reset(self) -> None:
         """Forget the previous frame (used when the stream restarts)."""
@@ -80,8 +96,16 @@ class ImageAnalyzer:
         _, _, _, hh = haar_decompose(gray)
         if hh.size == 0:
             return 0.0
-        # median(|HH|) / 0.6745, the Donoho-Johnstone estimator.
-        return float(np.median(np.abs(hh))) * _MAD_SCALE
+        # The Donoho-Johnstone estimator, evaluated at a configurable quantile
+        # rather than always at the median.  On an 8-bit stream the majority of
+        # HH coefficients can be exactly zero, which pins the median at zero and
+        # reports no noise however much there is; a higher quantile reads the
+        # same distribution where it is not degenerate.  See
+        # AnalysisConfig.noise_quantile.
+        quantile = float(
+            np.percentile(np.abs(hh), self.config.noise_quantile)
+        )
+        return quantile / self._noise_scale
 
     def estimate_edges(self, gray: np.ndarray) -> float:
         """Fraction of pixels that Canny marks as an edge."""

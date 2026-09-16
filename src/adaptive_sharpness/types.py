@@ -238,6 +238,10 @@ class SharpnessResult:
     informative_fraction: float = 0.0
     # How many frames the normalisers have observed.
     warmup_samples: int = 0
+    #: True once every metric is on a frozen scale.  While it is False the
+    #: score is still relative to a history that keeps moving, so readings
+    #: taken far apart are not strictly comparable.
+    scale_frozen: bool = False
 
     @property
     def score(self) -> float:
@@ -286,6 +290,7 @@ class SharpnessResult:
             "ready": int(self.ready),
             "informative_fraction": self.informative_fraction,
             "warmup_samples": self.warmup_samples,
+            "scale_frozen": int(self.scale_frozen),
             "processing_time_s": self.processing_time_s,
             "capture_latency_s": self.capture_latency_s,
             "score_change_detected": int(self.score_change_detected),
@@ -319,6 +324,7 @@ class SharpnessResult:
                 "ready": self.ready,
                 "informative_fraction": self.informative_fraction,
                 "warmup_samples": self.warmup_samples,
+                "scale_frozen": self.scale_frozen,
                 "score_change_detected": self.score_change_detected,
             },
             "timing": {
