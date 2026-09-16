@@ -11,36 +11,64 @@ regenerated since the measurement code was last corrected.
 
 ---
 
+## The dataset
+
+<sub>commit `unknown` &middot; config `?` &middot; numpy ? &middot; opencv ?</sub>
+
+The recordings are photographs of the operator's room and are not
+published. Everything that characterises them as *data* is below:
+what was in front of the camera, how many frames, how many labelled
+focus steps, and the scene statistics that decide whether a recording
+can answer a question at all.
+
+| recording | protocol | subject | frames | held | steps | brightness | edge density | motion p95 px |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `cond_20260916_110502` | cond | condition stratum - change ISO/EV between runs | 618 | 435 | 8 | 0.154 | 0.0000 | 0.83 |
+| `cond_20260916_110600` | cond | condition stratum - change ISO/EV between runs | 558 | 390 | 8 | 0.504 | 0.0000 | 0.86 |
+| `cond_20260916_110656` | cond | condition stratum - change ISO/EV between runs | 565 | 394 | 8 | 0.762 | 0.0011 | 0.50 |
+| `cond_20260916_110746` | cond | condition stratum - change ISO/EV between runs | 586 | 410 | 8 | 0.238 | 0.0000 | 0.69 |
+| `point_source_20260916_111545` | point_source | point source, dark room, stepped sweep | 1781 | 1245 | 15 | 0.104 | 0.0011 | 0.63 |
+| `point_source_20260916_111724` | point_source | point source, dark room, stepped sweep | 1690 | 1191 | 15 | 0.104 | 0.0012 | 0.53 |
+| `sweep_plain_20260916_110955` | sweep_plain | tripod, stepped sweep, low texture | 1656 | 1181 | 16 | 0.551 | 0.0077 | 0.46 |
+| `sweep_texture_20260916_110108` | sweep_texture | tripod, stepped sweep, rich texture | 1563 | 1092 | 15 | 0.663 | 0.0174 | 0.51 |
+
+`held` counts frames recorded while the operator was prompted to hold
+the focus ring still; those are the frames every comparison uses.
+Brightness, edge density and motion are medians over the recording,
+except motion which is the 95th percentile.
+
+---
+
 ## Each repair on its own
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
 | recording | measured | of | excluded | reference |
 | --- | --- | --- | --- | --- |
-| `cond_20260916_110502` | 435 | 618 | moving 183 | none |
-| `cond_20260916_110600` | 390 | 558 | moving 168 | none |
-| `cond_20260916_110656` | 394 | 565 | moving 171 | none |
-| `cond_20260916_110746` | 410 | 586 | moving 176 | none |
-| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | spot size, fingerprint verified |
-| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | spot size, fingerprint verified |
-| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | none |
-| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | none |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `baseline` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.78 |
-| `range` | 0.747 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 9.83 |
-| `horizon` | 0.755 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 10.97 |
-| `noise` | 0.756 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 9.79 |
-| `edges` | 0.750 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.77 |
-| `ready` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.79 |
-| `window` | 0.851 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.45 |
-| `freeze` | 0.822 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.18 |
-| `logistic` | 0.707 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 9.78 |
-| `freeze+logistic` | 0.829 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.19 |
-| `all` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.08 |
+| `baseline` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.98 |
+| `range` | 0.747 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 10.02 |
+| `horizon` | 0.755 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 11.20 |
+| `noise` | 0.756 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 10.02 |
+| `edges` | 0.750 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.99 |
+| `ready` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 10.01 |
+| `window` | 0.851 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.74 |
+| `freeze` | 0.822 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.43 |
+| `logistic` | 0.707 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 10.04 |
+| `freeze+logistic` | 0.829 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.44 |
+| `all` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.31 |
 
 <details><summary>What each variant set</summary>
 
@@ -93,29 +121,29 @@ regenerated since the measurement code was last corrected.
 
 ## Normalisation: moving or frozen, linear or logistic
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
 | recording | measured | of | excluded | reference |
 | --- | --- | --- | --- | --- |
-| `cond_20260916_110502` | 435 | 618 | moving 183 | none |
-| `cond_20260916_110600` | 390 | 558 | moving 168 | none |
-| `cond_20260916_110656` | 394 | 565 | moving 171 | none |
-| `cond_20260916_110746` | 410 | 586 | moving 176 | none |
-| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | spot size, fingerprint verified |
-| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | spot size, fingerprint verified |
-| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | none |
-| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | none |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `rolling+linear` | 0.860 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.94 |
-| `rolling+logistic` | 0.785 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.97 |
-| `frozen+linear` | 0.821 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.45 |
-| `frozen+logistic` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.43 |
-| `short+rolling+linear` | 0.740 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 10.21 |
-| `short+frozen+logistic` | 0.750 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.95 |
+| `rolling+linear` | 0.860 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.62 |
+| `rolling+logistic` | 0.785 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.66 |
+| `frozen+linear` | 0.821 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.21 |
+| `frozen+logistic` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.20 |
+| `short+rolling+linear` | 0.740 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 9.94 |
+| `short+frozen+logistic` | 0.750 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.76 |
 
 <details><summary>What each variant set</summary>
 
@@ -158,33 +186,33 @@ regenerated since the measurement code was last corrected.
 
 ## Adaptivity: all combinations of the three mechanisms
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
 | recording | measured | of | excluded | reference |
 | --- | --- | --- | --- | --- |
-| `cond_20260916_110502` | 435 | 618 | moving 183 | none |
-| `cond_20260916_110600` | 390 | 558 | moving 168 | none |
-| `cond_20260916_110656` | 394 | 565 | moving 171 | none |
-| `cond_20260916_110746` | 410 | 586 | moving 176 | none |
-| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | spot size, fingerprint verified |
-| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | spot size, fingerprint verified |
-| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | none |
-| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | none |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `RAF` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.17 |
-| `RA-` | 0.767 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
-| `R-F` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.16 |
-| `R--` | 0.774 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.12 |
-| `-AF` | 0.789 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
-| `-A-` | 0.741 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `--F` | 0.827 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `RAF` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `RA-` | 0.767 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `R-F` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.18 |
+| `R--` | 0.774 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `-AF` | 0.789 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.18 |
+| `-A-` | 0.741 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.14 |
+| `--F` | 0.827 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.17 |
 | `---` | 0.785 | 0.853 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
 | `RAF+nogate` | 0.787 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.17 |
-| `plain_mean` | 0.825 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `plain_mean` | 0.825 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.18 |
 
 <details><summary>What each variant set</summary>
 
@@ -235,34 +263,34 @@ regenerated since the measurement code was last corrected.
 
 ## Metric set and analysis resolution
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
 | recording | measured | of | excluded | reference |
 | --- | --- | --- | --- | --- |
-| `cond_20260916_110502` | 435 | 618 | moving 183 | none |
-| `cond_20260916_110600` | 390 | 558 | moving 168 | none |
-| `cond_20260916_110656` | 394 | 565 | moving 171 | none |
-| `cond_20260916_110746` | 410 | 586 | moving 176 | none |
-| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | spot size, fingerprint verified |
-| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | spot size, fingerprint verified |
-| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | none |
-| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | none |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `six` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.02 |
-| `seven` | 0.774 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.92 |
-| `w240` | 0.754 | 0.831 | 0.004 | 0.002 | 0.434 | 0.000 | 7.81 |
-| `w480` | 0.814 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.51 |
-| `w640` | 0.806 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 26.70 |
-| `without_laplacian` | 0.774 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.44 |
-| `without_tenengrad` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.26 |
-| `without_brenner` | 0.804 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.34 |
-| `without_wavelet` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.08 |
-| `without_fourier` | 0.772 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.36 |
-| `without_edge_width` | 0.774 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.76 |
+| `six` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 8.96 |
+| `seven` | 0.774 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.85 |
+| `w240` | 0.754 | 0.831 | 0.004 | 0.002 | 0.434 | 0.000 | 7.72 |
+| `w480` | 0.814 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.39 |
+| `w640` | 0.806 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 27.03 |
+| `without_laplacian` | 0.774 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.39 |
+| `without_tenengrad` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.21 |
+| `without_brenner` | 0.804 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.33 |
+| `without_wavelet` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.02 |
+| `without_fourier` | 0.772 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.30 |
+| `without_edge_width` | 0.774 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.71 |
 
 <details><summary>What each variant set</summary>
 
@@ -315,29 +343,29 @@ regenerated since the measurement code was last corrected.
 
 ## Consensus kernel width
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
 | recording | measured | of | excluded | reference |
 | --- | --- | --- | --- | --- |
-| `cond_20260916_110502` | 435 | 618 | moving 183 | none |
-| `cond_20260916_110600` | 390 | 558 | moving 168 | none |
-| `cond_20260916_110656` | 394 | 565 | moving 171 | none |
-| `cond_20260916_110746` | 410 | 586 | moving 176 | none |
-| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | spot size, fingerprint verified |
-| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | spot size, fingerprint verified |
-| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | none |
-| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | none |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `off` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
-| `scale1` | 0.794 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `off` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `scale1` | 0.794 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
 | `scale1.5` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale2.5` | 0.809 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
+| `scale2.5` | 0.809 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
 | `scale4` | 0.795 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale8` | 0.804 | 0.867 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `scale8` | 0.804 | 0.867 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
 
 <details><summary>What each variant set</summary>
 
@@ -380,12 +408,12 @@ regenerated since the measurement code was last corrected.
 
 ## Does the ranking survive a different reference recipe?
 
-The same factorial, scored against `default` and against `r25_w50_median`.
+The same factorial, scored against `r50_w80_median` and against `r25_w50_median`.
 The two recipes agree with each other at rank correlation 0.98 on these
 recordings; the 120 px window variants, which are anti-correlated with
 both, are excluded on the grounds given in the sensitivity section.
 
-| variant | spearman (default) | spearman (r25_w50_median) | difference | inversion (default) | inversion (r25_w50_median) |
+| variant | spearman (r50_w80_median) | spearman (r25_w50_median) | difference | inversion (r50_w80_median) | inversion (r25_w50_median) |
 | --- | --- | --- | --- | --- | --- |
 | `RAF` | 0.949 | 0.942 | 0.007 | 0.052 | 0.070 |
 | `RA-` | 0.952 | 0.945 | 0.007 | 0.057 | 0.070 |
@@ -402,8 +430,8 @@ both, are excluded on the grounds given in the sensitivity section.
 
 | recording | reference | R-F | plain_mean | difference |
 | --- | --- | --- | --- | --- |
-| `point_source_20260916_111545` | `default` | 0.952 | 0.934 | +0.018 |
-| `point_source_20260916_111724` | `default` | 0.979 | 0.965 | +0.013 |
+| `point_source_20260916_111545` | `r50_w80_median` | 0.952 | 0.934 | +0.018 |
+| `point_source_20260916_111724` | `r50_w80_median` | 0.979 | 0.965 | +0.013 |
 | `point_source_20260916_111545` | `r25_w50_median` | 0.935 | 0.927 | +0.008 |
 | `point_source_20260916_111724` | `r25_w50_median` | 0.977 | 0.964 | +0.013 |
 
@@ -415,18 +443,18 @@ this is a consistent direction rather than an established effect.
 
 ## Before and after, against the spot reference
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `ba902de786f7` &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 | recording | spearman before | after | inversion before | after | true best step | peak err before | after |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `point_source_20260916_111545` | -0.072 | 0.924 | 0.486 | 0.067 | 12 | 1.0 | 1.0 |
-| `point_source_20260916_111724` | -0.237 | 0.975 | 0.571 | 0.038 | 10 | 3.0 | 1.0 |
+| `point_source_20260916_111545` | -0.072 | 0.952 | 0.486 | 0.057 | 12 | 1.0 | 1.0 |
+| `point_source_20260916_111724` | -0.237 | 0.979 | 0.571 | 0.038 | 10 | 3.0 | 1.0 |
 
 ---
 
 ## Signals and pipelines, compared separately
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 A ranking of *measures* and a ranking of *systems* answer
 different questions. Raw signals carry no normalisation, no
@@ -456,18 +484,21 @@ history and no filter; pipelines all carry the same ones.
 
 | name | spearman | inversion | strict | resolved | adj | peak err | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `six:shipped` | 0.965 | 0.048 | 0.048 | 1.000 | 0.881 | 1.00 | 6.88 |
 | `six:fixed_weights` | 0.951 | 0.062 | 0.062 | 1.000 | 0.862 | 1.00 | 6.87 |
 | `six:plain_mean` | 0.950 | 0.062 | 0.062 | 1.000 | 0.869 | 1.00 | 6.87 |
-| `six:adaptive` | 0.949 | 0.052 | 0.052 | 1.000 | 0.848 | 1.00 | 6.86 |
-| `single:tenengrad` | 0.931 | 0.071 | 0.048 | 0.952 | 0.842 | 1.50 | 2.37 |
-| `single:brenner` | 0.930 | 0.098 | 0.049 | 0.900 | 0.841 | 1.50 | 2.21 |
-| `single:gradient_variance` | 0.929 | 0.076 | 0.053 | 0.952 | 0.813 | 1.50 | 2.48 |
+| `six:with_kernel` | 0.949 | 0.052 | 0.052 | 1.000 | 0.848 | 1.00 | 6.87 |
+| `single:wavelet` | 0.937 | 0.088 | 0.039 | 0.900 | 0.856 | 0.75 | 2.45 |
+| `single:tenengrad` | 0.931 | 0.071 | 0.048 | 0.952 | 0.842 | 1.50 | 2.38 |
+| `single:brenner` | 0.930 | 0.098 | 0.049 | 0.900 | 0.841 | 1.50 | 2.23 |
+| `single:gradient_variance` | 0.929 | 0.076 | 0.053 | 0.952 | 0.813 | 1.50 | 2.51 |
+| `single:laplacian` | 0.905 | 0.112 | 0.020 | 0.814 | 0.714 | 0.50 | 2.25 |
 
 ---
 
 ## How much the reference itself depends on its parameters
 
-<sub>commit `7d71891689d1` (working tree dirty) &middot; config `?` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `?` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 ### `point_source_20260916_111545`
 

@@ -64,12 +64,18 @@ def _table(headers: Sequence[str], rows: Iterable[Sequence[Any]]) -> list[str]:
 
 
 def _provenance_line(report: dict[str, Any]) -> str:
-    meta = report.get("provenance", {})
+    meta = report.get("provenance") or {}
+    if not meta:
+        return (
+            "<sub>**No provenance recorded.** Regenerate this report before "
+            "citing it.</sub>"
+        )
     commit = str(meta.get("commit", "unknown"))[:12]
-    dirty = " (working tree dirty)" if meta.get("working_tree_dirty") else ""
+    modified = meta.get("tracked_files_modified", meta.get("working_tree_dirty"))
+    state = " with local modifications" if modified else ", clean"
     fingerprint = meta.get("config_fingerprint", "?")
     return (
-        f"<sub>commit `{commit}`{dirty} &middot; config `{fingerprint}` &middot; "
+        f"<sub>commit `{commit}`{state} &middot; config `{fingerprint}` &middot; "
         f"numpy {meta.get('numpy', '?')} &middot; opencv {meta.get('opencv', '?')}</sub>"
     )
 

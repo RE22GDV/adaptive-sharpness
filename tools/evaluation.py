@@ -384,15 +384,28 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def _git_dirty() -> bool:
+def _git_state() -> tuple[bool, int]:
+    """Whether tracked files differ from the commit, and how many are untracked.
+
+    Untracked files are counted, not treated as dirt.  A tool writes its own
+    report while it runs, and that report is untracked until it is committed -
+    so counting it made every run flag itself as dirty and the flag stopped
+    meaning anything.  What matters for reproducing a number is whether the
+    *tracked* source differed from the commit.
+    """
+    root = Path(__file__).resolve().parents[1]
     try:
-        return bool(subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True, text=True, check=True,
-            cwd=Path(__file__).resolve().parents[1],
-        ).stdout.strip())
+        tracked = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True, text=True, check=True, cwd=root,
+        ).stdout.strip()
+        untracked = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            capture_output=True, text=True, check=True, cwd=root,
+        ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
-        return False
+        return False, 0
+    return bool(tracked), len([line for line in untracked.splitlines() if line])
 
 
 def provenance(config: Any = None, **extra: Any) -> dict[str, Any]:
@@ -404,9 +417,13 @@ def provenance(config: Any = None, **extra: Any) -> dict[str, Any]:
     """
     import cv2
 
+    tracked_modified, untracked = _git_state()
     record: dict[str, Any] = {
         "commit": _git_commit(),
-        "working_tree_dirty": _git_dirty(),
+        "tracked_files_modified": tracked_modified,
+        "untracked_files": untracked,
+        # Kept under its old name so that older reports stay readable.
+        "working_tree_dirty": tracked_modified,
         "python": sys.version.split()[0],
         "numpy": np.__version__,
         "opencv": cv2.__version__,

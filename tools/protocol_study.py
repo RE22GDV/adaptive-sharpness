@@ -82,6 +82,7 @@ from tools.evaluation import (  # noqa: E402
     config_fingerprint,
     file_fingerprint,
     load_measure_cache,
+    provenance,
 )
 
 logger = logging.getLogger("protocol_study")
@@ -827,6 +828,9 @@ def study(
         "ground_truth": truth,
         "aggregate": aggregate(per_run),
         "cost": cost,
+        "provenance": provenance(
+            config, recordings=[d.name for d in directories]
+        ),
     }
 
 
