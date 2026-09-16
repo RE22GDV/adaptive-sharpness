@@ -77,7 +77,12 @@ from adaptive_sharpness.preprocess import Preprocessor  # noqa: E402
 from adaptive_sharpness.types import ImageStats  # noqa: E402
 from tools.baselines import COMBINERS, FOCUS_MEASURES, OFFLINE_COMBINERS  # noqa: E402
 from tools.comprehensive_study import all_measures, normalise_columns  # noqa: E402
-from tools.evaluation import config_fingerprint, file_fingerprint  # noqa: E402
+from tools.evaluation import (  # noqa: E402
+    SPOT_PARAMETERS,
+    config_fingerprint,
+    file_fingerprint,
+    load_measure_cache,
+)
 
 logger = logging.getLogger("protocol_study")
 
@@ -164,11 +169,6 @@ def _float(row: dict[str, str], key: str, default: float = float("nan")) -> floa
         return default
 
 
-#: Parameters the spot measurement depends on.  Stored with the cache, because
-#: changing any of them changes the reference and must invalidate it.
-SPOT_PARAMETERS: dict[str, float] = {"half": 80, "fraction": 0.5, "blur": 9}
-
-
 def spot_radius(image: np.ndarray, half: int = 80, fraction: float = 0.5) -> tuple[float, tuple[int, int]]:
     """Radius enclosing half of the spot's background-subtracted pixel sum.
 
@@ -246,12 +246,11 @@ def extract(
     names = tuple(all_measures(config))
 
     # A cache is only usable when the frames, the processing configuration and
-    # the measurement code are all the same as when it was written.  Keying it
-    # on the frame count and metric names alone - as it was - let a changed
-    # analysis_width or noise_quantile silently reuse stale statistics.
-    fingerprint = "|".join((
+    # the measurement code are all the same as when it was written.  The check
+    # lives in tools/evaluation.py so that every reader applies the same one.
+    files = [directory / "frames" / str(r["image_file"]) for r in rows]
+    processing_fingerprint = "|".join((
         _CACHE_VERSION,
-        file_fingerprint([directory / "frames" / str(r["image_file"]) for r in rows]),
         config_fingerprint(config.pipeline),
         config_fingerprint(config.metrics),
         config_fingerprint(config.analysis),
@@ -259,22 +258,17 @@ def extract(
     ))
     spot_fingerprint = json.dumps(SPOT_PARAMETERS, sort_keys=True)
 
-    if cache_path.exists() and not refresh:
-        cached = np.load(cache_path, allow_pickle=False)
-        same = (
-            int(cached["n"]) == len(rows)
-            and "fingerprint" in cached
-            and str(cached["fingerprint"]) == fingerprint
-            and (
-                not point_source
-                or ("spot_fingerprint" in cached
-                    and str(cached["spot_fingerprint"]) == spot_fingerprint)
-            )
+    if not refresh:
+        cached_entry = load_measure_cache(
+            directory, [str(r["image_file"]) for r in rows],
+            processing_fingerprint=processing_fingerprint,
         )
-        if not same:
-            logger.info("%s: cache is stale, recomputing", directory.name)
-        if same:
-            logger.info("%s: using cached measures", directory.name)
+        usable = cached_entry.raw is not None and (
+            not point_source or cached_entry.has_reference
+        )
+        logger.info("%s: cache - %s", directory.name, cached_entry.note)
+        if usable:
+            cached = np.load(cache_path, allow_pickle=False)
             raw = {name: cached[f"raw_{name}"] for name in names}
             stats = [
                 ImageStats(**{k: float(cached[f"stat_{k}"][i]) for k in _STAT_FIELDS})
@@ -335,7 +329,8 @@ def extract(
     payload: dict[str, Any] = {
         "n": len(rows),
         "names": np.array(names),
-        "fingerprint": np.array(fingerprint),
+        "file_fingerprint": np.array(file_fingerprint(files)),
+        "processing_fingerprint": np.array(processing_fingerprint),
         "spot_fingerprint": np.array(spot_fingerprint),
         "spot_radius": radius_array if radius_array is not None else np.zeros(0),
         "spot_offset": offset if offset is not None else np.zeros(0),

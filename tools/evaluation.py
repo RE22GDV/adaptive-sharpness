@@ -24,6 +24,9 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 __all__ = [
+    "SPOT_PARAMETERS",
+    "CachedMeasures",
+    "load_measure_cache",
     "FrameSelection",
     "select_frames",
     "OrderingResult",
@@ -32,6 +35,121 @@ __all__ = [
     "config_fingerprint",
     "file_fingerprint",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Cache loading
+# ---------------------------------------------------------------------------
+
+#: Parameters the point-source measurement depends on.  Stored with the cache,
+#: because changing any of them changes the reference.
+SPOT_PARAMETERS: dict[str, float] = {"half": 80, "fraction": 0.5, "blur": 9}
+
+
+@dataclass(frozen=True)
+class CachedMeasures:
+    """A verified measure cache, or a reason it could not be used."""
+
+    path: Path
+    frames: int
+    raw: Mapping[str, Any] | None
+    spot_radius: Any | None
+    spot_offset: Any | None
+    note: str
+
+    @property
+    def has_reference(self) -> bool:
+        return self.spot_radius is not None
+
+
+def load_measure_cache(
+    directory: Path,
+    files: Sequence[str],
+    *,
+    processing_fingerprint: str | None = None,
+    require_raw: bool = False,
+) -> CachedMeasures:
+    """Load a measure cache only if it describes these frames and this code.
+
+    Three scripts used to do this themselves and check different things: one
+    verified the frame count and the spot parameters, another only the frame
+    count.  A cache written before a change to `analysis_width` or
+    `noise_quantile` therefore passed one reader and failed another, and the
+    numbers from the two could not be compared.
+
+    ``processing_fingerprint`` is required to trust the *raw metric* arrays,
+    which depend on the whole processing configuration.  The *spot* reference
+    does not: it is measured from the source frames directly, so it needs only
+    the frames and its own parameters.  Keeping the two separate means a change
+    to the metrics does not needlessly invalidate the reference.
+    """
+    import numpy as np
+
+    path = directory / "measures_cache.npz"
+    if not path.exists():
+        return CachedMeasures(path, len(files), None, None, None, "no cache")
+
+    loaded = np.load(path, allow_pickle=False)
+    if int(loaded["n"]) != len(files):
+        return CachedMeasures(
+            path, len(files), None, None, None,
+            f"cache holds {int(loaded['n'])} frames, recording has {len(files)}",
+        )
+
+    expected_files = file_fingerprint([directory / "frames" / name for name in files])
+    stored = str(loaded["file_fingerprint"]) if "file_fingerprint" in loaded else None
+    if stored is None:
+        return CachedMeasures(
+            path, len(files), None, None, None,
+            "cache predates input fingerprinting; rebuild with --refresh",
+        )
+    if stored != expected_files:
+        return CachedMeasures(
+            path, len(files), None, None, None,
+            "cache was built from different frames or a different order",
+        )
+
+    spot_expected = json.dumps(SPOT_PARAMETERS, sort_keys=True)
+    spot_stored = (
+        str(loaded["spot_fingerprint"]) if "spot_fingerprint" in loaded else None
+    )
+    spot_ok = (
+        "spot_radius" in loaded
+        and loaded["spot_radius"].size == len(files)
+        and spot_stored == spot_expected
+    )
+
+    raw = None
+    note_parts = []
+    if processing_fingerprint is not None:
+        stored_processing = (
+            str(loaded["processing_fingerprint"])
+            if "processing_fingerprint" in loaded else None
+        )
+        if stored_processing == processing_fingerprint:
+            raw = {
+                key[4:]: loaded[key] for key in loaded.files if key.startswith("raw_")
+            }
+            note_parts.append("raw metrics verified")
+        else:
+            note_parts.append("raw metrics stale, not used")
+    if require_raw and raw is None:
+        return CachedMeasures(
+            path, len(files), None, None, None,
+            "raw metrics required but stale or absent",
+        )
+
+    note_parts.append(
+        "reference verified" if spot_ok else "reference stale or absent"
+    )
+    return CachedMeasures(
+        path=path,
+        frames=len(files),
+        raw=raw,
+        spot_radius=loaded["spot_radius"] if spot_ok else None,
+        spot_offset=loaded["spot_offset"] if spot_ok else None,
+        note="; ".join(note_parts),
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -31,13 +31,14 @@ import cv2  # noqa: E402
 from adaptive_sharpness import SharpnessConfig, load_default_config  # noqa: E402
 from adaptive_sharpness.config import METRIC_NAMES  # noqa: E402
 from tools.evaluation import (  # noqa: E402
+    SPOT_PARAMETERS,
+    load_measure_cache,
     ordering_against_truth,
     peak_interval,
     provenance,
     select_frames,
 )
 from tools.protocol_study import (  # noqa: E402
-    SPOT_PARAMETERS,
     _average_ranks,
     adjacent_discrimination,
     count_peaks,
@@ -45,7 +46,11 @@ from tools.protocol_study import (  # noqa: E402
     saturated_fraction,
     step_profile,
 )
-from tools.replay_configs import load_context, load_frames, replay  # noqa: E402
+from tools.replay_configs import (  # noqa: E402
+    load_context,
+    load_frames,
+    replay_in_context,
+)
 
 logger = logging.getLogger("ablation")
 
@@ -126,6 +131,38 @@ class VariantSpec:
                 confidence_coupling=self.confidence_coupling,
             ),
         )
+
+
+def spec_from_config(config: SharpnessConfig) -> VariantSpec:
+    """Read a VariantSpec back out of a configuration.
+
+    So that "what ships" is taken from the library rather than restated in a
+    second place.  A hand-written copy drifts: `fair_comparison` compared a
+    "shipped" pipeline that still had the agreement kernel on, months after the
+    default turned it off.
+    """
+    return VariantSpec(
+        window=config.normalization.window,
+        min_range_absolute=config.normalization.min_range_absolute,
+        long_window_multiple=config.normalization.long_window_multiple,
+        mapping=config.normalization.mapping,
+        auto_freeze=config.normalization.auto_freeze,
+        ready_informative_fraction=config.normalization.ready_informative_fraction,
+        noise_quantile=config.analysis.noise_quantile,
+        edge_ref_density=config.analysis.edge_ref_density,
+        use_agreement=config.ensemble.use_agreement,
+        agreement_scale=config.ensemble.agreement_scale,
+        use_reliability=any(
+            value
+            for row in config.ensemble.sensitivity.values()
+            for value in row.values()
+        ),
+        equal_priors=len(set(config.metrics.priors.values())) == 1,
+        temporal_enabled=config.temporal.enabled,
+        confidence_coupling=config.temporal.confidence_coupling,
+        analysis_width=config.pipeline.analysis_width,
+        enabled=tuple(config.metrics.enabled),
+    )
 
 
 #: The behaviour that shipped before the protocol study.
@@ -411,30 +448,11 @@ def run(
         context = load_context(directory)
         files, step, hold = context.files, context.step, context.hold
 
-        radius = offset = None
-        reference_note = "none"
-        cache = directory / "measures_cache.npz"
-        if cache.exists():
-            loaded = np.load(cache)
-            if "spot_radius" in loaded and loaded["spot_radius"].size == len(files):
-                expected = json.dumps(SPOT_PARAMETERS, sort_keys=True)
-                stored = (
-                    str(loaded["spot_fingerprint"])
-                    if "spot_fingerprint" in loaded else None
-                )
-                if stored is None:
-                    reference_note = "cache predates fingerprinting; not used"
-                    logger.warning(
-                        "%s: spot cache has no fingerprint - rebuild it with "
-                        "tools/protocol_study.py --refresh", directory.name,
-                    )
-                elif stored != expected:
-                    reference_note = "cache was built with other spot parameters; not used"
-                    logger.warning("%s: spot cache is stale", directory.name)
-                else:
-                    radius = loaded["spot_radius"]
-                    offset = loaded["spot_offset"]
-                    reference_note = "spot size, fingerprint verified"
+        cached = load_measure_cache(directory, files)
+        radius, offset = cached.spot_radius, cached.spot_offset
+        reference_note = cached.note
+        if radius is None:
+            logger.info("%s: no usable reference - %s", directory.name, cached.note)
 
         if radius is not None and reference_variant != "r50_w80_median":
             logger.info("%s: recomputing reference as %s",
@@ -470,10 +488,7 @@ def run(
         for name, spec in variants.items():
             logger.info("%s: %s", directory.name, name)
             variant_config = spec.build(config)
-            output = replay(
-                images, variant_config, variant_config.metrics.enabled,
-                rois=context.rois if context.has_roi else None,
-            )
+            output = replay_in_context(images, context, variant_config)
             entry[name] = evaluate(output, selected, labels, radius)
         results["runs"][directory.name] = entry
         del images

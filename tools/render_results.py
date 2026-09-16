@@ -342,6 +342,44 @@ def _reference_robustness(
     return lines
 
 
+def _dataset(report: dict[str, Any]) -> list[str]:
+    """Describe the recordings without publishing any of their pixels."""
+    runs = report.get("runs") or {}
+    if not runs:
+        return []
+    lines = [
+        "## The dataset", "", _provenance_line(report), "",
+        "The recordings are photographs of the operator's room and are not",
+        "published. Everything that characterises them as *data* is below:",
+        "what was in front of the camera, how many frames, how many labelled",
+        "focus steps, and the scene statistics that decide whether a recording",
+        "can answer a question at all.", "",
+    ]
+    rows = []
+    for name, entry in runs.items():
+        rows.append([
+            f"`{name}`", entry.get("preset", "?"), entry.get("note", ""),
+            entry.get("frames", "?"), entry.get("held", "?"),
+            entry.get("steps", "?"),
+            _cell(entry.get("brightness"), 3),
+            _cell(entry.get("edge_density"), 4),
+            _cell(entry.get("motion_px_p95"), 2),
+        ])
+    lines += _table(
+        ["recording", "protocol", "subject", "frames", "held", "steps",
+         "brightness", "edge density", "motion p95 px"],
+        rows,
+    )
+    lines += [
+        "`held` counts frames recorded while the operator was prompted to hold",
+        "the focus ring still; those are the frames every comparison uses.",
+        "Brightness, edge density and motion are medians over the recording,",
+        "except motion which is the 95th percentile.",
+        "",
+    ]
+    return lines
+
+
 def build(data: Path) -> str:
     lines = [
         "# Results",
@@ -358,6 +396,11 @@ def build(data: Path) -> str:
         "---",
         "",
     ]
+
+    protocol = _load(data / "protocol_study.json")
+    if protocol:
+        lines += _dataset(protocol)
+        lines += ["---", ""]
 
     groups = [
         ("fixes", "Each repair on its own"),

@@ -247,3 +247,117 @@ class TestReportsSurviveANarrowTerminal:
         write = source.index("args.json.write_text")
         render = source.index("print_report(results)", source.index("def main"))
         assert write < render
+
+
+class TestCacheValidation:
+    """One check, shared, or the readers disagree about what is stale.
+
+    Three scripts each wrote their own: one verified the frame count and the
+    spot parameters, another only the frame count.  A cache written before a
+    configuration change therefore passed one reader and failed another, and
+    numbers from the two could not be compared.
+    """
+
+    @staticmethod
+    def _write(tmp_path, *, files, file_fp, processing_fp=None, spot_fp=None,
+               n=None):
+        import numpy as np
+
+        frames = tmp_path / "frames"
+        frames.mkdir(exist_ok=True)
+        for name in files:
+            (frames / name).write_bytes(name.encode())
+        payload = {
+            "n": n if n is not None else len(files),
+            "file_fingerprint": np.array(file_fp),
+            "raw_tenengrad": np.zeros(len(files)),
+            "spot_radius": np.ones(len(files)),
+            "spot_offset": np.zeros(len(files)),
+        }
+        if processing_fp is not None:
+            payload["processing_fingerprint"] = np.array(processing_fp)
+        if spot_fp is not None:
+            payload["spot_fingerprint"] = np.array(spot_fp)
+        np.savez_compressed(tmp_path / "measures_cache.npz", **payload)
+
+    @staticmethod
+    def _current(tmp_path, files):
+        return file_fingerprint([tmp_path / "frames" / n for n in files])
+
+    def test_a_matching_cache_is_accepted(self, tmp_path) -> None:
+        import json
+
+        from tools.evaluation import SPOT_PARAMETERS, load_measure_cache
+
+        files = ["a.png", "b.png", "c.png"]
+        self._write(
+            tmp_path, files=files, file_fp="placeholder",
+            processing_fp="proc", spot_fp=json.dumps(SPOT_PARAMETERS, sort_keys=True),
+        )
+        self._write(
+            tmp_path, files=files, file_fp=self._current(tmp_path, files),
+            processing_fp="proc", spot_fp=json.dumps(SPOT_PARAMETERS, sort_keys=True),
+        )
+        cached = load_measure_cache(tmp_path, files, processing_fingerprint="proc")
+        assert cached.has_reference
+        assert cached.raw is not None
+
+    def test_a_changed_frame_invalidates_it(self, tmp_path) -> None:
+        import json
+
+        from tools.evaluation import SPOT_PARAMETERS, load_measure_cache
+
+        files = ["a.png", "b.png"]
+        self._write(tmp_path, files=files, file_fp="x")
+        self._write(
+            tmp_path, files=files, file_fp=self._current(tmp_path, files),
+            processing_fp="proc", spot_fp=json.dumps(SPOT_PARAMETERS, sort_keys=True),
+        )
+        (tmp_path / "frames" / "a.png").write_bytes(b"different")
+        cached = load_measure_cache(tmp_path, files, processing_fingerprint="proc")
+        assert not cached.has_reference
+        assert cached.raw is None
+
+    def test_stale_processing_invalidates_the_raw_metrics_only(self, tmp_path) -> None:
+        """The reference is measured from the frames, so a metric change does
+        not invalidate it - but it must not silently validate the metrics."""
+        import json
+
+        from tools.evaluation import SPOT_PARAMETERS, load_measure_cache
+
+        files = ["a.png", "b.png"]
+        self._write(tmp_path, files=files, file_fp="x")
+        self._write(
+            tmp_path, files=files, file_fp=self._current(tmp_path, files),
+            processing_fp="old", spot_fp=json.dumps(SPOT_PARAMETERS, sort_keys=True),
+        )
+        cached = load_measure_cache(tmp_path, files, processing_fingerprint="new")
+        assert cached.raw is None
+        assert cached.has_reference
+        assert "stale" in cached.note
+
+    def test_a_cache_without_fingerprints_is_refused(self, tmp_path) -> None:
+        import numpy as np
+
+        from tools.evaluation import load_measure_cache
+
+        frames = tmp_path / "frames"
+        frames.mkdir()
+        for name in ("a.png", "b.png"):
+            (frames / name).write_bytes(b"x")
+        np.savez_compressed(
+            tmp_path / "measures_cache.npz", n=2,
+            spot_radius=np.ones(2), spot_offset=np.zeros(2),
+        )
+        cached = load_measure_cache(tmp_path, ["a.png", "b.png"])
+        assert not cached.has_reference
+        assert "predates" in cached.note
+
+    def test_a_wrong_frame_count_is_refused(self, tmp_path) -> None:
+        from tools.evaluation import load_measure_cache
+
+        files = ["a.png", "b.png"]
+        self._write(tmp_path, files=files, file_fp="x", n=99)
+        cached = load_measure_cache(tmp_path, files)
+        assert not cached.has_reference
+        assert "frames" in cached.note

@@ -25,24 +25,29 @@ for _entry in (_ROOT / "src", _ROOT):
 
 from adaptive_sharpness import load_default_config  # noqa: E402
 from tools.ablation import HISTORIC, REPAIRED, ground_truth_scores, spearman  # noqa: E402
-from tools.evaluation import provenance, select_frames  # noqa: E402
+from tools.evaluation import (  # noqa: E402
+    load_measure_cache,
+    provenance,
+    select_frames,
+)
 from tools.protocol_study import step_profile  # noqa: E402
-from tools.replay_configs import load_frames, load_labels, replay  # noqa: E402
+from tools.replay_configs import (  # noqa: E402
+    load_context,
+    load_frames,
+    replay_in_context,
+)
 
 logger = logging.getLogger("before_after")
 
 
 def collect(directory: Path) -> dict[str, Any] | None:
-    cache = directory / "measures_cache.npz"
-    if not cache.exists():
+    context = load_context(directory)
+    cached = load_measure_cache(directory, context.files)
+    if not cached.has_reference:
+        logger.info("%s: no usable reference - %s", directory.name, cached.note)
         return None
-    loaded = np.load(cache)
-    if "spot_radius" not in loaded or loaded["spot_radius"].size == 0:
-        return None
-
-    files, step, hold = load_labels(directory)
-    radius = loaded["spot_radius"]
-    offset = loaded["spot_offset"]
+    files, step, hold = context.files, context.step, context.hold
+    radius, offset = cached.spot_radius, cached.spot_offset
     # The same selection every other tool uses, so that a number here can be
     # compared with a number there.
     selection = select_frames(
@@ -56,7 +61,12 @@ def collect(directory: Path) -> dict[str, Any] | None:
 
     config = load_default_config()
     images = load_frames(directory, files)
-    out: dict[str, Any] = {"name": directory.name, "selection": selection.summary()}
+    out: dict[str, Any] = {
+        "name": directory.name,
+        "selection": selection.summary(),
+        "context": context.summary(),
+        "cache": cached.note,
+    }
 
     steps, spot_medians, _ = step_profile(radius[selected], labels)
     out["steps"] = steps.tolist()
@@ -66,7 +76,7 @@ def collect(directory: Path) -> dict[str, Any] | None:
     for label, spec in (("before", HISTORIC), ("after", REPAIRED)):
         logger.info("%s: %s", directory.name, label)
         cfg = spec.build(config)
-        result = replay(images, cfg, cfg.metrics.enabled)
+        result = replay_in_context(images, context, cfg)
         series = result["filtered"][selected]
         _, medians, _ = step_profile(series, labels)
         scores = ground_truth_scores(series, radius[selected], labels)

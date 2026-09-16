@@ -57,7 +57,7 @@ that adapt to the measured conditions of each frame.
 | --- | --- |
 | Camera control | The library never opens a device. `adaptive_sharpness.capture` is an optional convenience with a `FrameSource` interface you can ignore or replace. |
 | Focus motor control | No search strategy, no actuator driver. `docs/INTEGRATION.md` shows how to write one on top. |
-| Absolute sharpness | The scale is fitted to what the camera has seen, then frozen. Within one stream a higher score does mean a sharper frame; across streams or cameras the numbers are not comparable, and there is no calibrated "this frame is 0.8 sharp" unit. |
+| Absolute sharpness | The scale is fitted to what the camera has seen, then frozen, which removes the one cause that was provably breaking the ordering. It is not a guarantee: the score is a weighted sum of six measures that need not agree. Across streams or cameras the numbers are not comparable, and there is no calibrated "this frame is 0.8 sharp" unit. |
 | Object recognition | The optional scene map finds the *sharpest textured region*. It does not know which object matters. |
 | A calibrated probability | `confidence` is a heuristic indicator, not a statistically calibrated quantity. |
 
@@ -623,9 +623,15 @@ which needs an external ground truth
   every time (std 0.000 steps) while the adaptive scheme moved between adjacent
   frames (std 0.800). Mean accuracy is unchanged — this is variance, not bias,
   because the weights are themselves computed from noisy measurements.
-- **The noise adaptation never engages on the reference camera.** The GH6
-  live-view JPEG is denoised in-camera: measured noise σ = 0.0000 across 90
-  frames. Every noise result here is synthetic.
+- **The noise adaptation did not engage on the reference camera, for a reason
+  that turned out to be the estimator.** `noise_sigma` read exactly 0.0000 on
+  100% of frames in six of eight protocol recordings — not because the stream
+  is noiseless but because 58–74% of its Haar HH coefficients are exactly zero
+  after 8-bit quantisation, which pins the median at zero. Reading the same
+  band at a higher quantile brings the channel back to life (zero-noise rate
+  0.976 → 0.002). It is a *relative* noise signal with a structure-dependent
+  floor, not an absolute measurement, and every noise-*level* result here is
+  still synthetic. See [CALIBRATION.md](docs/CALIBRATION.md).
 
 ### Robustness
 
@@ -659,10 +665,23 @@ regression test:
   is that a published baseline beats our best individual measure, and the
   adaptive fusion's advantage is confined to low-texture, heavily degraded
   frames. That is a measured position, not a claim of novelty.
-- **All comparisons use simulated defocus.** A disc PSF models the circle of
-  confusion, but a real lens adds aberration, vignetting, focus breathing and
-  subject motion. **No real recorded focus sweep has been analysed.**
-- **The κ coefficients are reasoned, not fitted.**
+- **Synthetic defocus is still used for the robustness sweeps below**, where a
+  disc PSF models the circle of confusion and a real lens adds aberration,
+  vignetting, focus breathing and subject motion that it does not. The main
+  results are no longer of that kind: eight tripod recordings with exact
+  focus-step labels, and two of them carrying a point-source reference that
+  uses no focus measure, are analysed in
+  [CALIBRATION.md](docs/CALIBRATION.md) and [RESULTS.md](docs/RESULTS.md).
+- **The point-source reference has its own uncertainty.** It locates best focus
+  to about one protocol step, so any reported peak error of one step or less
+  cannot separate two models. Only two recordings carry it, so differences
+  below about 0.02 in rank correlation are a direction, not a result.
+- **The κ coefficients are reasoned, not fitted.** The factorial ablation shows
+  the reliability model they parametrise does earn its place, and that the
+  consensus kernel beside it does not — it is off by default.
+- **A protocol step is a manual step number, not a calibrated lens position**,
+  and the steps are not equally spaced in defocus. Nothing here measures a
+  closed autofocus loop or its latency: the lens position was never recorded.
 - **One scene family, one camera, one lighting setup**; five noise seeds is
   enough to notice a difference, not to bound it.
 - **Sharpness is not focus.** Motion blur, a dirty lens, haze and heavy

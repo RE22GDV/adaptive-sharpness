@@ -186,6 +186,27 @@ def replay(
     return out
 
 
+def replay_in_context(
+    images: Sequence[np.ndarray],
+    context: RunContext,
+    config: SharpnessConfig,
+    names: Sequence[str] | None = None,
+) -> dict[str, np.ndarray]:
+    """The single way every study replays a recording.
+
+    Three scripts used to call :func:`replay` with different arguments - only
+    one passed the recorded ROI - so two of them silently analysed a different
+    region from the third whenever a recording carried one.  Going through here
+    makes that impossible to get wrong by omission.
+    """
+    return replay(
+        images,
+        config,
+        names if names is not None else config.metrics.enabled,
+        rois=context.rois if context.has_roi else None,
+    )
+
+
 def score(series: np.ndarray, labels: np.ndarray) -> dict[str, float]:
     steps, medians, scatters = step_profile(series, labels)
     peak = int(np.argmax(medians))
