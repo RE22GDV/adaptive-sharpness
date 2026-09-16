@@ -24,7 +24,12 @@ for _entry in (_ROOT / "src", _ROOT):
         sys.path.insert(0, str(_entry))
 
 from adaptive_sharpness import load_default_config  # noqa: E402
-from tools.ablation import HISTORIC, REPAIRED, ground_truth_scores, spearman  # noqa: E402
+from tools.ablation import (  # noqa: E402
+    HISTORIC,
+    ground_truth_scores,
+    spearman,
+    spec_from_config,
+)
 from tools.evaluation import (  # noqa: E402
     load_measure_cache,
     provenance,
@@ -73,7 +78,10 @@ def collect(directory: Path) -> dict[str, Any] | None:
     out["spot_radius"] = spot_medians.tolist()
     out["best_step"] = float(steps[int(np.argmin(spot_medians))])
 
-    for label, spec in (("before", HISTORIC), ("after", REPAIRED)):
+    # "after" must be what the library ships, not an intermediate stage of the
+    # repairs: a reader takes this table as "what it does now".  REPAIRED keeps
+    # the consensus kernel on and is 0.016 worse, which would understate it.
+    for label, spec in (("before", HISTORIC), ("after", spec_from_config(config))):
         logger.info("%s: %s", directory.name, label)
         cfg = spec.build(config)
         result = replay_in_context(images, context, cfg)
