@@ -49,6 +49,12 @@ point-source runs:
 
 The metrics were never the problem. The normalisation was.
 
+![Before and after](figures/before_after_ground_truth.png)
+
+The radius axis is inverted, so up is sharper on both scales. The red trace is
+what the system reported: it rises, then collapses at exactly the steps where
+the image is sharpest.
+
 ### Why
 
 The normaliser scaled each metric against the 5th and 95th percentiles of a
@@ -275,6 +281,8 @@ tests in `tests/test_input_contract.py`.
 Every variant below runs the same code on the same 9 017 frames and differs
 only in configuration, so a difference between two rows is caused by the
 setting. `baseline` reproduces what shipped before.
+
+![Ablation](figures/ablation_fixes_truth.png)
 
 | variant | rank corr. with spot size | inversions | adj | mono | sentinel | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
