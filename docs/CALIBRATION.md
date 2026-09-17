@@ -18,15 +18,21 @@ point-source runs. Hardware: Raspberry Pi 5, Panasonic GH6 live view at
 photographs of the operator's room.
 
 ```bash
-python3 tools/protocol_study.py data --refresh --json data/protocol_study.json
-python3 tools/ablation.py data --group fixes         --json data/ablation_fixes.json
-python3 tools/ablation.py data --group normalisation --json data/ablation_normalisation.json
-python3 tools/ablation.py data --group factorial     --json data/ablation_factorial.json
-python3 tools/ablation.py data --group metrics       --json data/ablation_metrics.json
-python3 tools/fair_comparison.py data        --json data/fair_comparison.json
-python3 tools/reference_sensitivity.py data  --json data/reference_sensitivity.json
-python3 tools/render_results.py data --out docs/RESULTS.md
+python3 tools/protocol_study.py data --refresh --json reports/protocol_study.json
+for g in fixes normalisation factorial metrics agreement; do
+  python3 tools/ablation.py data --group $g --json reports/ablation_$g.json
+done
+python3 tools/ablation.py data --group factorial --reference r25_w50_median     --json reports/ablation_factorial_altref.json
+python3 tools/before_after.py data           --json reports/before_after.json
+python3 tools/fair_comparison.py data        --json reports/fair_comparison.json
+python3 tools/reference_sensitivity.py data  --json reports/reference_sensitivity.json
+python3 tools/render_results.py reports --out docs/RESULTS.md --figures docs/figures
 ```
+
+The reports in `reports/` are committed. Each carries the commit it ran from,
+whether the source differed from it, the library versions, the full
+configuration and its fingerprint. `docs/RESULTS.md` and every figure are
+generated from those files and from nothing else.
 
 ---
 
@@ -275,25 +281,58 @@ direction, not a demonstrated effect, and it is reported that way.
 
 ---
 
-## The pipeline is worse than its own best input
+## What the pipeline costs, and whether that is the price of real time
 
 The [fair comparison](RESULTS.md#signals-and-pipelines-compared-separately)
-scores raw measures — no normalisation, no history, no filter — directly against
+scores raw measures - no normalisation, no history, no filter - directly against
 the reference, and separately scores whole streaming pipelines that all share
 the same normaliser, history and filter.
 
-The raw `wavelet` measure reaches 0.988. The best full pipeline reaches 0.951.
-**The normalisation, fusion and filtering together cost about 0.04 of agreement
-with the reference relative to simply using the best raw measure.**
+An earlier version of this section claimed the pipeline costs about 0.04 and
+called that the price of running in real time. **Both were wrong**, because the
+table compared a pipeline against a *different* measure: neither the shipped
+configuration nor a pipeline for `wavelet` was in it.
 
-That is not an argument for shipping a raw measure. A raw measure has no bounded
-scale, no cross-scene comparability, no confidence and nothing to fuse, and this
-comparison is offline on a recording whose whole range is known in advance. But
-it bounds what the apparatus is buying, and the honest framing is that the
-pipeline trades accuracy for the properties a live system needs rather than
-improving on its inputs.
+Like for like:
 
-Also worth recording: three published measures — NVAR, GLVA and VOL5 — score
+| | rank correlation | ms |
+| --- | --- | --- |
+| raw `wavelet` | **0.988** | - |
+| its own pipeline, `single:wavelet` | 0.937 | 2.39 |
+| `six:shipped` | **0.965** | 6.85 |
+| `six:plain_mean` | 0.950 | 6.80 |
+
+Two steps, each measured on its own:
+
+- **The streaming apparatus costs 0.051** on a single measure (0.988 to 0.937):
+  that is the normalisation plus the temporal filter.
+- **Fusing six recovers 0.028** (0.937 to 0.965), for 4.5 ms.
+
+**The net gap to the best raw measure is 0.023**, which sits at the level of the
+reference's own ambiguity - its coherent variants agree with each other at 0.98.
+The remainder is therefore below what this reference can resolve.
+
+So most of the loss comes not from running in real time but from using *one*
+measure; fusion recovers more than half of it; and what is left is not
+measurable here. "The price of real time" is not supported by this data.
+
+One difference that only became visible once single measures got pipelines of
+their own: a single measure through the pipeline **ties** protocol steps
+(`resolved` 0.814-0.952) while the six-measure pipelines do not (1.000). Fusion
+removes ties.
+
+### A raw measure is not an offline category
+
+`wavelet` is computed from one frame and needs no future ones. Its absence from
+the shipped system is not a matter of it being uncomputable online.
+
+What it lacks is a bounded scale, comparability between scenes, a confidence,
+and anything to fuse. For finding a maximum *within one stream* no scale is
+needed - only an ordering, and the raw measure gives a better one than the
+pipeline does. Whether those properties are worth 0.023 is a choice, not a
+consequence.
+
+Also worth recording: three published measures - NVAR, GLVA and VOL5 - score
 about 0.10 against this reference. They are variance-family measures and respond
 to contrast rather than to concentration, which is the wrong thing on a point
 source. A ranking of measures depends on the target.

@@ -438,8 +438,19 @@
     }
   },
   "provenance": {
-    "commit": "e85a59d471f05ac393a571f7fe29cc5c95b06e6f",
-    "working_tree_dirty": true,
+    "commit": "d0ff8c0c6b6f20ad1b44f718af0e838909ac17ec",
+    "source_modified": false,
+    "source_modified_files": [],
+    "source_paths_checked": [
+      "src",
+      "tools",
+      "tests",
+      "demo",
+      "config",
+      "pyproject.toml"
+    ],
+    "working_tree_dirty": false,
+    "tracked_files_modified": false,
     "python": "3.11.2",
     "numpy": "1.26.4",
     "opencv": "4.13.0",

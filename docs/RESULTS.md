@@ -13,7 +13,7 @@ regenerated since the measurement code was last corrected.
 
 ## The dataset
 
-<sub>commit `unknown` &middot; config `?` &middot; numpy ? &middot; opencv ?</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 The recordings are photographs of the operator's room and are not
 published. Everything that characterises them as *data* is below:
@@ -41,7 +41,7 @@ except motion which is the 95th percentile.
 
 ## Each repair on its own
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
@@ -58,17 +58,17 @@ except motion which is the 95th percentile.
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `baseline` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.98 |
-| `range` | 0.747 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 10.02 |
-| `horizon` | 0.755 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 11.20 |
-| `noise` | 0.756 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 10.02 |
-| `edges` | 0.750 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.99 |
-| `ready` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 10.01 |
-| `window` | 0.851 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.74 |
-| `freeze` | 0.822 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.43 |
-| `logistic` | 0.707 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 10.04 |
-| `freeze+logistic` | 0.829 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.44 |
-| `all` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.31 |
+| `baseline` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.94 |
+| `range` | 0.747 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 9.94 |
+| `horizon` | 0.755 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 11.14 |
+| `noise` | 0.756 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 9.94 |
+| `edges` | 0.750 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.95 |
+| `ready` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.95 |
+| `window` | 0.851 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.58 |
+| `freeze` | 0.822 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.32 |
+| `logistic` | 0.707 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 9.94 |
+| `freeze+logistic` | 0.829 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.33 |
+| `all` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.20 |
 
 <details><summary>What each variant set</summary>
 
@@ -121,7 +121,7 @@ except motion which is the 95th percentile.
 
 ## Normalisation: moving or frozen, linear or logistic
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
@@ -138,12 +138,12 @@ except motion which is the 95th percentile.
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `rolling+linear` | 0.860 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.62 |
-| `rolling+logistic` | 0.785 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.66 |
-| `frozen+linear` | 0.821 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.21 |
-| `frozen+logistic` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.20 |
-| `short+rolling+linear` | 0.740 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 9.94 |
-| `short+frozen+logistic` | 0.750 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.76 |
+| `rolling+linear` | 0.860 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.61 |
+| `rolling+logistic` | 0.785 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.60 |
+| `frozen+linear` | 0.821 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.24 |
+| `frozen+logistic` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.24 |
+| `short+rolling+linear` | 0.740 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 9.96 |
+| `short+frozen+logistic` | 0.750 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.79 |
 
 <details><summary>What each variant set</summary>
 
@@ -186,7 +186,7 @@ except motion which is the 95th percentile.
 
 ## Adaptivity: all combinations of the three mechanisms
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
@@ -203,16 +203,16 @@ except motion which is the 95th percentile.
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `RAF` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.16 |
-| `RA-` | 0.767 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.16 |
-| `R-F` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.18 |
-| `R--` | 0.774 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `-AF` | 0.789 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.18 |
-| `-A-` | 0.741 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.14 |
-| `--F` | 0.827 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.17 |
-| `---` | 0.785 | 0.853 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `RAF+nogate` | 0.787 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.17 |
-| `plain_mean` | 0.825 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.18 |
+| `RAF` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `RA-` | 0.767 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `R-F` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `R--` | 0.774 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `-AF` | 0.789 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `-A-` | 0.741 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `--F` | 0.827 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `---` | 0.785 | 0.853 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `RAF+nogate` | 0.787 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `plain_mean` | 0.825 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
 
 <details><summary>What each variant set</summary>
 
@@ -263,7 +263,7 @@ except motion which is the 95th percentile.
 
 ## Metric set and analysis resolution
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
@@ -280,17 +280,17 @@ except motion which is the 95th percentile.
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `six` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 8.96 |
-| `seven` | 0.774 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.85 |
+| `six` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.04 |
+| `seven` | 0.774 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.94 |
 | `w240` | 0.754 | 0.831 | 0.004 | 0.002 | 0.434 | 0.000 | 7.72 |
-| `w480` | 0.814 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.39 |
-| `w640` | 0.806 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 27.03 |
-| `without_laplacian` | 0.774 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.39 |
-| `without_tenengrad` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.21 |
-| `without_brenner` | 0.804 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.33 |
-| `without_wavelet` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.02 |
-| `without_fourier` | 0.772 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.30 |
-| `without_edge_width` | 0.774 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.71 |
+| `w480` | 0.814 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.54 |
+| `w640` | 0.806 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 27.10 |
+| `without_laplacian` | 0.774 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.46 |
+| `without_tenengrad` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.26 |
+| `without_brenner` | 0.804 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.34 |
+| `without_wavelet` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.07 |
+| `without_fourier` | 0.772 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.33 |
+| `without_edge_width` | 0.774 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.74 |
 
 <details><summary>What each variant set</summary>
 
@@ -343,7 +343,7 @@ except motion which is the 95th percentile.
 
 ## Consensus kernel width
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 **Frames measured**
 
@@ -360,10 +360,10 @@ except motion which is the 95th percentile.
 
 | variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `off` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale1` | 0.794 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
+| `off` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `scale1` | 0.794 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
 | `scale1.5` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale2.5` | 0.809 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `scale2.5` | 0.809 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
 | `scale4` | 0.795 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
 | `scale8` | 0.804 | 0.867 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
 
@@ -443,7 +443,7 @@ this is a consistent direction rather than an established effect.
 
 ## Before and after, against the spot reference
 
-<sub>commit `ba902de786f7` &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 | recording | spearman before | after | inversion before | after | true best step | peak err before | after |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -454,7 +454,7 @@ this is a consistent direction rather than an established effect.
 
 ## Signals and pipelines, compared separately
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 A ranking of *measures* and a ranking of *systems* answer
 different questions. Raw signals carry no normalisation, no
@@ -484,21 +484,21 @@ history and no filter; pipelines all carry the same ones.
 
 | name | spearman | inversion | strict | resolved | adj | peak err | ms |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `six:shipped` | 0.965 | 0.048 | 0.048 | 1.000 | 0.881 | 1.00 | 6.88 |
-| `six:fixed_weights` | 0.951 | 0.062 | 0.062 | 1.000 | 0.862 | 1.00 | 6.87 |
-| `six:plain_mean` | 0.950 | 0.062 | 0.062 | 1.000 | 0.869 | 1.00 | 6.87 |
-| `six:with_kernel` | 0.949 | 0.052 | 0.052 | 1.000 | 0.848 | 1.00 | 6.87 |
-| `single:wavelet` | 0.937 | 0.088 | 0.039 | 0.900 | 0.856 | 0.75 | 2.45 |
-| `single:tenengrad` | 0.931 | 0.071 | 0.048 | 0.952 | 0.842 | 1.50 | 2.38 |
-| `single:brenner` | 0.930 | 0.098 | 0.049 | 0.900 | 0.841 | 1.50 | 2.23 |
-| `single:gradient_variance` | 0.929 | 0.076 | 0.053 | 0.952 | 0.813 | 1.50 | 2.51 |
-| `single:laplacian` | 0.905 | 0.112 | 0.020 | 0.814 | 0.714 | 0.50 | 2.25 |
+| `six:shipped` | 0.965 | 0.048 | 0.048 | 1.000 | 0.881 | 1.00 | 6.85 |
+| `six:fixed_weights` | 0.951 | 0.062 | 0.062 | 1.000 | 0.862 | 1.00 | 6.81 |
+| `six:plain_mean` | 0.950 | 0.062 | 0.062 | 1.000 | 0.869 | 1.00 | 6.80 |
+| `six:with_kernel` | 0.949 | 0.052 | 0.052 | 1.000 | 0.848 | 1.00 | 6.79 |
+| `single:wavelet` | 0.937 | 0.088 | 0.039 | 0.900 | 0.856 | 0.75 | 2.39 |
+| `single:tenengrad` | 0.931 | 0.071 | 0.048 | 0.952 | 0.842 | 1.50 | 2.32 |
+| `single:brenner` | 0.930 | 0.098 | 0.049 | 0.900 | 0.841 | 1.50 | 2.18 |
+| `single:gradient_variance` | 0.929 | 0.076 | 0.053 | 0.952 | 0.813 | 1.50 | 2.45 |
+| `single:laplacian` | 0.905 | 0.112 | 0.020 | 0.814 | 0.714 | 0.50 | 2.19 |
 
 ---
 
 ## How much the reference itself depends on its parameters
 
-<sub>commit `e85a59d471f0` (working tree dirty) &middot; config `?` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+<sub>commit `d0ff8c0c6b6f`, source clean &middot; config `?` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
 
 ### `point_source_20260916_111545`
 

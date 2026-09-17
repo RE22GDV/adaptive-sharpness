@@ -464,16 +464,46 @@ def build(data: Path) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def render_figures(data: Path, out_dir: Path) -> list[str]:
+    """Regenerate every figure from the same reports the tables come from.
+
+    One command refreshes all the derived artefacts: a figure left over from a
+    superseded run is as misleading as a stale table and harder to notice.
+    """
+    from tools.ablation_figures import make_figures as ablation_figures
+    from tools.before_after import make_figure as before_after_figure
+
+    written: list[str] = []
+    for group in ("fixes", "normalisation", "factorial", "metrics",
+                  "agreement", "noise", "edges"):
+        report = _load(data / f"ablation_{group}.json")
+        if report:
+            ablation_figures(report, out_dir)
+            written.append(f"ablation_{group}")
+    report = _load(data / "before_after.json")
+    if report and report.get("runs"):
+        before_after_figure(report["runs"], out_dir)
+        written.append("before_after")
+    return written
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("data", type=Path, help="directory holding the JSON reports")
     parser.add_argument("--out", type=Path, default=Path("docs/RESULTS.md"))
+    parser.add_argument(
+        "--figures", type=Path, default=None,
+        help="also regenerate the figures into this directory",
+    )
     args = parser.parse_args(argv)
 
     text = build(args.data)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(text, encoding="utf-8", newline="\n")
     print(f"wrote {args.out} ({len(text.splitlines())} lines)")
+    if args.figures:
+        written = render_figures(args.data, args.figures)
+        print(f"wrote figures to {args.figures}: {', '.join(written)}")
     return 0
 
 
