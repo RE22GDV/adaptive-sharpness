@@ -7,13 +7,32 @@ system without bringing anything with it.
 ## Minimal use
 
 ```python
-from sharpness import SharpnessEvaluator, load_config
+from adaptive_sharpness import SharpnessEvaluator, load_default_config
 
-evaluator = SharpnessEvaluator(load_config("config/default.toml"))
+evaluator = SharpnessEvaluator(load_default_config())
 
 result = evaluator.evaluate(bgr_frame)
-print(result.score, result.confidence)
+if result.ready:
+    print(result.instantaneous_score, result.filtered_score, result.confidence)
 ```
+
+**There are two scores, and they answer different questions.**
+
+| Field | What it is | Use it for |
+| --- | --- | --- |
+| `instantaneous_score` | the ensemble output for this frame alone; the confidence never touches it | comparing two positions you have already settled on |
+| `filtered_score` | the same after temporal smoothing, whose gain the confidence does modulate | a live readout, or a loop that wants the jitter suppressed |
+| `confidence` | a heuristic about the frame's conditions | **diagnosis, not selection** - see below |
+| `ready` | warm-up finished *and* at least half the metrics informative | gating on the *scale*, which does work |
+
+`ready` is the gate worth having. Before it is true the normaliser has not seen
+enough to place a value on a scale, so the number is not yet a measurement.
+`confidence` is not that gate; the section below says why.
+
+For the whole sequence a real caller needs - calibrate, verify, freeze,
+compare, reset - see [the worked example](../demo/calibrated_focus_loop.py),
+which runs against a recording and is covered by
+[tests/test_calibrated_loop.py](../tests/test_calibrated_loop.py).
 
 `evaluate()` accepts a `Frame` or a bare NumPy array (`H x W x 3` BGR,
 `H x W x 4` BGRA, or `H x W` greyscale; `uint8`, `uint16` or `float32`).
@@ -24,7 +43,7 @@ The ROI is in **source frame** pixel coordinates; the library rescales it
 internally, so the caller never thinks about the analysis scale.
 
 ```python
-from sharpness import ROI
+from adaptive_sharpness import ROI
 
 roi = ROI(x=320, y=180, width=640, height=360)
 result = evaluator.evaluate(frame, roi=roi)
@@ -42,7 +61,7 @@ result = evaluator.evaluate(frame, roi=roi)
 Whole frame and ROI at once, each with its own normalisation history:
 
 ```python
-from sharpness import RegionEvaluator
+from adaptive_sharpness import RegionEvaluator
 
 evaluator = RegionEvaluator(config)
 full, region = evaluator.evaluate(frame, roi=roi)
@@ -116,8 +135,13 @@ class FocusSearch:
         if self.min_confidence > 0.0 and result.confidence < self.min_confidence:
             return result
 
-        if result.score > self.best_score:
-            self.best_score = result.score
+        if not result.ready:
+            # The scale has not settled, so this number is not comparable with
+            # the ones already collected.  This gate is the one that matters.
+            return result
+
+        if result.instantaneous_score > self.best_score:
+            self.best_score = result.instantaneous_score
             self.best_position = position
         else:
             # Sharpness fell: we passed the peak, so reverse and halve.
@@ -160,7 +184,7 @@ for position in fine_scan(around=target, span=0.05, steps=9):
     frame = camera.read()
     result = evaluator.evaluate(frame, roi=subject_roi, motor_position=position)
     # No confidence gate: see the note above.  Collect every settled frame.
-    candidates.append((result.score, position))
+    candidates.append((result.instantaneous_score, position))
 
 if candidates:
     servo.move_to(max(candidates)[1])
@@ -211,7 +235,7 @@ implement one interface:
 
 ```python
 from capture.base import FrameSource
-from sharpness.types import Frame
+from adaptive_sharpness.types import Frame
 
 class MyCamera(FrameSource):
     def open(self): ...
@@ -239,7 +263,7 @@ measure whether it helps before enabling it; on the GH6 path it buys 1.6 ms.
 ## Configuration from the host application
 
 ```python
-from sharpness import SharpnessConfig, SharpnessEvaluator
+from adaptive_sharpness import SharpnessConfig, SharpnessEvaluator
 
 config = SharpnessConfig().with_overrides(
     pipeline={"analysis_width": 240},              # cheaper

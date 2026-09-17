@@ -181,3 +181,86 @@ class TestPublishedStudyReports:
             if not runs:
                 continue
             assert set(runs) <= set(CORPUS), f"{study} used recordings outside the corpus"
+
+
+class TestSearchBudget:
+    """A budget that is not enforced turns the budget axis into decoration.
+
+    Д19 published a row labelled "budget 6" whose mean was ten evaluations:
+    the ternary narrowing respected the limit and the sweep of the remaining
+    window that follows it did not. The rows were then read as a
+    cost-against-success curve, which they were not.
+    """
+
+    @pytest.mark.parametrize("budget", [1, 2, 4, 6, 8, 10, 12, 16])
+    def test_ternary_never_exceeds_its_budget(self, budget: int) -> None:
+        import numpy as np
+
+        from tools.studies import _ternary
+
+        rng = np.random.default_rng(20260918)
+        for _ in range(40):
+            levels = rng.random(int(rng.integers(5, 25)))
+            assert _ternary(levels, budget)["evaluations"] <= budget
+
+    @pytest.mark.parametrize("budget", [1, 2, 4, 6, 8, 10, 12, 16])
+    def test_hill_climb_never_exceeds_its_budget(self, budget: int) -> None:
+        import numpy as np
+
+        from tools.studies import _hill_climb
+
+        rng = np.random.default_rng(20260918)
+        for _ in range(40):
+            size = int(rng.integers(5, 25))
+            levels = rng.random(size)
+            start = int(rng.integers(0, size))
+            assert _hill_climb(levels, start, budget)["evaluations"] <= budget
+
+    def test_a_larger_budget_never_finds_a_worse_peak(self) -> None:
+        """Ternary keeps the best value it has probed, so more probes cannot
+        hurt. This is what makes the budget axis readable as a curve."""
+        import numpy as np
+
+        from tools.studies import _ternary
+
+        rng = np.random.default_rng(7)
+        for _ in range(60):
+            levels = rng.random(int(rng.integers(6, 20)))
+            small = _ternary(levels, 4)["stopped_at"]
+            large = _ternary(levels, len(levels) + 4)["stopped_at"]
+            assert levels[large] >= levels[small] - 1e-12
+
+    def test_every_recording_gets_the_same_budgets(self) -> None:
+        """Rows averaged over different recordings are not comparable, and the
+        published aggregate had a 'budget 30' row over three recordings next to
+        a 'budget 6' row over eight."""
+        import json
+
+        from tools.studies import SEARCH_BUDGETS
+
+        path = _ROOT / "reports" / "study_d19.json"
+        if not path.exists():
+            pytest.skip("study_d19.json not published")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        counts = {
+            key: row.get("mean_evaluations_n")
+            for key, row in payload["aggregate"].items()
+        }
+        assert len(set(counts.values())) == 1, (
+            f"rows cover different numbers of recordings: {counts}"
+        )
+        for budget in SEARCH_BUDGETS:
+            assert f"ternary_budget{budget}" in payload["aggregate"]
+
+    def test_published_rows_respect_their_own_budget(self) -> None:
+        import json
+
+        path = _ROOT / "reports" / "study_d19.json"
+        if not path.exists():
+            pytest.skip("study_d19.json not published")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        for key, row in payload["aggregate"].items():
+            budget = int(key.rsplit("budget", 1)[1])
+            assert row["mean_evaluations"] <= budget, (
+                f"{key} averages {row['mean_evaluations']} evaluations"
+            )

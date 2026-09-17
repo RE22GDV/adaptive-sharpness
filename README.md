@@ -716,7 +716,9 @@ regression test:
   to about one protocol step, so any reported peak error of one step or less
   cannot separate two models. Measured directly, peak error ranks 27
   configurations at a rank correlation of 0.18 against adjacent-step
-  discrimination - which is to say it does not rank them at all.
+  discrimination, so it is ordering them by a different property rather than
+  being unusable - but on this corpus its values sit between 0.5 and 1.5 steps
+  and it separates very little.
 - **Differences smaller than about 0.04 are not resolvable on this corpus.**
   Not 0.02: a paired block bootstrap respecting the frame autocorrelation gives
   a 95% interval of `[-0.046, +0.029]` for a difference whose point estimate is

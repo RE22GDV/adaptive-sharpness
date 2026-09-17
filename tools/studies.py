@@ -878,6 +878,16 @@ def study_d18(data: Path, workers: int | None) -> dict[str, Any]:
 # Д19 - a search over a recorded pass
 # ---------------------------------------------------------------------------
 
+#: Evaluation budgets, the same for every recording.
+#:
+#: They used to include `steps.size * 2`, which differs per recording: the
+#: aggregate then held a row for "budget 30" averaged over three recordings
+#: next to a row for "budget 6" averaged over eight, and their success rates
+#: were not comparable.  Every recording has at least eight protocol steps, so
+#: a fixed ladder is meaningful for all of them.
+SEARCH_BUDGETS: tuple[int, ...] = (4, 6, 8, 10, 12, 16)
+
+
 def _step_levels(series: np.ndarray, labels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     steps, medians, _ = step_profile(series, labels)
     return np.asarray(steps), np.asarray(medians)
@@ -890,44 +900,77 @@ def _hill_climb(levels: np.ndarray, start: int, budget: int) -> dict[str, Any]:
     lens at all: no backlash, no settling, no cost of reversing direction. It
     answers "would this signal lead a search to the right step", not "how fast
     would the camera focus".
+
+    **The budget is hard.** Every read of `levels` is one evaluation, including
+    the first, and the search stops the moment the allowance is gone. An earlier
+    version let the count run past the limit, which made a row labelled "budget
+    6" report ten evaluations and turned the budget axis into decoration.
     """
     position = int(np.clip(start, 0, levels.size - 1))
-    visited = [position]
+    if budget < 1:
+        return {"stopped_at": position, "evaluations": 0, "visited": 0,
+                "budget_exhausted": True}
+    visited = {position}
     direction = 1
-    evaluations = 1
+    evaluations = 1          # reading the starting step costs one
+    reversed_once = False
     while evaluations < budget:
         nxt = position + direction
         if not 0 <= nxt < levels.size:
-            if direction == -1:
+            if reversed_once:
                 break
-            direction = -1
+            direction = -direction
+            reversed_once = True
             continue
         evaluations += 1
-        visited.append(nxt)
+        visited.add(nxt)
         if levels[nxt] > levels[position]:
             position = nxt
-        elif direction == 1:
-            direction = -1
+        elif not reversed_once:
+            direction = -direction
+            reversed_once = True
         else:
             break
     return {"stopped_at": position, "evaluations": evaluations,
-            "visited": len(set(visited))}
+            "visited": len(visited), "budget_exhausted": evaluations >= budget}
 
 
 def _ternary(levels: np.ndarray, budget: int) -> dict[str, Any]:
+    """Ternary section, with the final sweep of the remaining window budgeted.
+
+    The bug this replaces: the narrowing loop respected the budget and the
+    sweep that follows it did not, so a search given six evaluations used ten.
+    Every probe is counted here, and the sweep takes only what is left - if
+    nothing is left, the answer is whichever end of the window was probed last.
+    """
+    if budget < 1:
+        return {"stopped_at": 0, "evaluations": 0, "visited": 0,
+                "budget_exhausted": True}
     low, high, evaluations = 0, levels.size - 1, 0
+    best = low
+    best_value = -np.inf
     while high - low > 2 and evaluations + 2 <= budget:
         first = low + (high - low) // 3
         second = high - (high - low) // 3
         evaluations += 2
+        for candidate in (first, second):
+            if levels[candidate] > best_value:
+                best_value, best = float(levels[candidate]), int(candidate)
         if levels[first] < levels[second]:
             low = first + 1
         else:
             high = second - 1
-    window = np.arange(low, high + 1)
-    best = int(window[int(np.argmax(levels[window]))]) if window.size else low
-    return {"stopped_at": best, "evaluations": evaluations + window.size,
-            "visited": int(window.size)}
+
+    # Sweep what is left of the window, but only as far as the budget allows.
+    window = np.arange(low, min(high + 1, levels.size))
+    remaining = max(0, budget - evaluations)
+    for candidate in window[:remaining]:
+        evaluations += 1
+        if levels[candidate] > best_value:
+            best_value, best = float(levels[candidate]), int(candidate)
+    return {"stopped_at": int(best), "evaluations": evaluations,
+            "visited": int(min(len(window), remaining)),
+            "budget_exhausted": evaluations >= budget}
 
 
 def study_d19(data: Path, workers: int | None) -> dict[str, Any]:
@@ -960,7 +1003,7 @@ def study_d19(data: Path, workers: int | None) -> dict[str, Any]:
 
         trials = []
         for start in range(steps.size):
-            for budget in (6, 10, steps.size * 2):
+            for budget in SEARCH_BUDGETS:
                 outcome = _hill_climb(levels, start, budget)
                 trial = {
                     "strategy": "hill_climb",
@@ -972,7 +1015,7 @@ def study_d19(data: Path, workers: int | None) -> dict[str, Any]:
                 if truth_index is not None:
                     trial["error_vs_reference"] = abs(outcome["stopped_at"] - truth_index)
                 trials.append(trial)
-        for budget in (6, 10, steps.size * 2):
+        for budget in SEARCH_BUDGETS:
             outcome = _ternary(levels, budget)
             trial = {
                 "strategy": "ternary", "start_step": float("nan"), "budget": budget,

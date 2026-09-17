@@ -331,8 +331,10 @@ second does not hold.
 > each recording, with the block length taken from the autocorrelation of the
 > paired difference (decorrelation lag 3-74 frames), gives a 95% interval of
 > **`[-0.046, +0.029]`** on a point estimate of -0.005 - about nine times the
-> estimate. Adaptive weights are indistinguishable from fixed ones here, in
-> either direction. The per-recording table above is a description, not a
+> estimate. **No convincing difference was established**, in either direction.
+> That is not the same as showing the two are equivalent: the interval says
+> this corpus cannot separate them, and the true difference may be anywhere
+> within about 0.04. The per-recording table above is a description, not a
 > result.
 >
 > Resampling frames as if they were independent would have given 0.042 instead
