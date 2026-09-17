@@ -341,6 +341,74 @@ except motion which is the 95th percentile.
 
 ---
 
+## One measure against the whole set, on every scene type
+
+<sub>commit `a8b00c9cc14a`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>
+
+**Frames measured**
+
+| recording | measured | of | excluded | reference |
+| --- | --- | --- | --- | --- |
+| `cond_20260916_110502` | 435 | 618 | moving 183 | reference stale or absent |
+| `cond_20260916_110600` | 390 | 558 | moving 168 | reference stale or absent |
+| `cond_20260916_110656` | 394 | 565 | moving 171 | reference stale or absent |
+| `cond_20260916_110746` | 410 | 586 | moving 176 | reference stale or absent |
+| `point_source_20260916_111545` | 1204 | 1781 | moving 536, spot_wandered 41 | reference verified |
+| `point_source_20260916_111724` | 1125 | 1690 | moving 499, spot_wandered 66 | reference verified |
+| `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
+| `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
+
+| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `six_shipped` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.25 |
+| `only_laplacian` | 0.720 | 0.734 | 0.165 | 0.002 | 0.494 | 0.002 | 2.74 |
+| `only_tenengrad` | 0.729 | 0.778 | 0.089 | 0.003 | 0.495 | 0.002 | 2.91 |
+| `only_brenner` | 0.747 | 0.787 | 0.090 | 0.002 | 0.494 | 0.002 | 2.75 |
+| `only_wavelet` | 0.743 | 0.777 | 0.090 | 0.002 | 0.494 | 0.002 | 2.99 |
+| `only_fourier` | 0.690 | 0.681 | 0.250 | 0.002 | 0.494 | 0.002 | 3.93 |
+| `only_edge_width` | 0.705 | 0.766 | 0.179 | 0.088 | 0.494 | 0.002 | 4.40 |
+
+<details><summary>What each variant set</summary>
+
+| variant | enabled |
+| --- | --- |
+| `six_shipped` | laplacian, tenengrad, brenner, wavelet, fourier, edge_width |
+| `only_laplacian` | laplacian |
+| `only_tenengrad` | tenengrad |
+| `only_brenner` | brenner |
+| `only_wavelet` | wavelet |
+| `only_fourier` | fourier |
+| `only_edge_width` | edge_width |
+
+</details>
+
+**Against the point-source reference**
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `six_shipped` | 0.965 | 0.027 | 0.048 | 0.048 | 1.000 | 1.00 | 1.0 |
+| `only_laplacian` | 0.905 | 0.088 | 0.112 | 0.020 | 0.814 | 0.50 | 7.0 |
+| `only_tenengrad` | 0.931 | 0.036 | 0.071 | 0.048 | 0.952 | 1.50 | 5.0 |
+| `only_brenner` | 0.930 | 0.034 | 0.098 | 0.049 | 0.900 | 1.50 | 5.0 |
+| `only_wavelet` | 0.937 | 0.025 | 0.088 | 0.039 | 0.900 | 0.75 | 5.5 |
+| `only_fourier` | 0.830 | 0.190 | 0.145 | 0.061 | 0.814 | 0.75 | 6.5 |
+| `only_edge_width` | 0.817 | 0.130 | 0.157 | 0.157 | 1.000 | 1.00 | 1.0 |
+
+**Adjacent-step discrimination per recording**
+
+| recording | six_shipped | only_laplacian | only_tenengrad | only_brenner | only_wavelet | only_fourier | only_edge_width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `cond_20260916_110502` | 0.704 | 0.714 | 0.461 | 0.570 | 0.534 | 0.669 | 0.500 |
+| `cond_20260916_110600` | 0.856 | 0.749 | 0.873 | 0.897 | 0.861 | 0.822 | 0.700 |
+| `cond_20260916_110656` | 0.948 | 0.816 | 0.851 | 0.869 | 0.859 | 0.756 | 0.748 |
+| `cond_20260916_110746` | 0.772 | 0.837 | 0.735 | 0.743 | 0.802 | 0.805 | 0.790 |
+| `point_source_20260916_111545` | 0.934 | 0.887 | 0.891 | 0.901 | 0.929 | 0.881 | 0.916 |
+| `point_source_20260916_111724` | 0.828 | 0.540 | 0.794 | 0.780 | 0.784 | 0.524 | 0.701 |
+| `sweep_plain_20260916_110955` | 0.735 | 0.605 | 0.530 | 0.526 | 0.529 | 0.604 | 0.640 |
+| `sweep_texture_20260916_110108` | 0.797 | 0.615 | 0.696 | 0.688 | 0.645 | 0.463 | 0.647 |
+
+---
+
 ## Consensus kernel width
 
 <sub>commit `d0ff8c0c6b6f`, source clean &middot; config `c556332122033781` &middot; numpy 1.26.4 &middot; opencv 4.13.0</sub>

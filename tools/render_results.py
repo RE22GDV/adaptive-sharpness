@@ -416,6 +416,7 @@ def build(data: Path) -> str:
         ("normalisation", "Normalisation: moving or frozen, linear or logistic"),
         ("factorial", "Adaptivity: all combinations of the three mechanisms"),
         ("metrics", "Metric set and analysis resolution"),
+        ("singles", "One measure against the whole set, on every scene type"),
         ("agreement", "Consensus kernel width"),
         ("noise", "Noise estimator quantile"),
         ("edges", "Edge-sufficiency reference"),
@@ -475,7 +476,7 @@ def render_figures(data: Path, out_dir: Path) -> list[str]:
 
     written: list[str] = []
     for group in ("fixes", "normalisation", "factorial", "metrics",
-                  "agreement", "noise", "edges"):
+                  "agreement", "noise", "edges", "singles"):
         report = _load(data / f"ablation_{group}.json")
         if report:
             ablation_figures(report, out_dir)

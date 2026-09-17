@@ -321,6 +321,39 @@ their own: a single measure through the pipeline **ties** protocol steps
 (`resolved` 0.814-0.952) while the six-measure pipelines do not (1.000). Fusion
 removes ties.
 
+### Is one measure enough?
+
+The comparison above runs only where the point-source reference exists, which
+is two recordings of a bright point on black - the easiest possible target for
+a high-frequency measure, and the one place where the robustness fusion is for
+cannot be tested.
+
+Across all eight recordings, low texture and dark exposures included
+([table](RESULTS.md#one-measure-against-the-whole-set-on-every-scene-type)):
+
+| configuration | `adj` | peak plateau | saturation |
+| --- | --- | --- | --- |
+| **six, as shipped** | **0.822** | **1 step** | 0.005 |
+| `brenner` alone | 0.747 | 5 steps | 0.090 |
+| `wavelet` alone | 0.743 | 5.5 | 0.090 |
+| `tenengrad` alone | 0.729 | 5 | 0.089 |
+| `laplacian` alone | 0.720 | 7 | 0.165 |
+| `edge_width` alone | 0.705 | 1 | 0.179 |
+| `fourier` alone | 0.690 | 6.5 | 0.250 |
+
+The gap is **0.075 to 0.132** here against 0.025 on the point source alone. Six
+wins on **six recordings of eight**, and by the widest margin exactly where
+fusion is supposed to help - on the low-texture sweep, 0.735 against 0.640 for
+the best single measure.
+
+The sharper difference is the **peak plateau**: a single measure leaves a
+plateau five to seven steps wide, which is to say it does not localise the
+maximum at all, while six leave one step. Saturation is 18 to 50 times higher
+for a single measure.
+
+So a single measure nearly matches on a point source and does not on real
+scenes.
+
 ### A raw measure is not an offline category
 
 `wavelet` is computed from one frame and needs no future ones. Its absence from
