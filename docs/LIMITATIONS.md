@@ -97,10 +97,31 @@ should do the same.
 
 ## The ensemble
 
-**The sensitivity coefficients are reasoned, not fitted.** The `kappa_ij` matrix
-encodes qualitative facts (a second derivative amplifies noise more than a first
-derivative; the edge-width metric is undefined without edges). It has not been
-estimated from data. See §10 of [ALGORITHM.md](ALGORITHM.md).
+**The sensitivity coefficients are reasoned, not fitted - and they barely
+matter.** The `kappa_ij` matrix encodes qualitative facts (a second derivative
+amplifies noise more than a first derivative; the edge-width metric is undefined
+without edges). It has not been estimated from data. Scaling the whole matrix
+by 0.25 to 8 moves adjacent-step discrimination across a range of 0.016 -
+under half of what this corpus can resolve
+([Д18](STUDY_UA_RESULTS.md#д18-чутливість-коефіцієнтів-надійності)). Fitting
+the scale on the four condition recordings and evaluating on the other four
+gave a *worse* result than leaving it at 1.
+
+**On these recordings the adaptive weights hardly move.** Read out of every
+frame ([Д12](STUDY_UA_RESULTS.md#д12-поведінка-ваг)), a metric's weight travels
+0.01 to 0.05 over an entire recording, on means between 0.04 and 0.24. The
+inputs meant to drive them are saturated for much of the corpus: edge density
+sits at its minimum on 24-79% of frames. The weighting is adaptive in name and
+close to fixed in behaviour here.
+
+**And the difference from fixed weights is not resolvable.** A paired
+moving-block bootstrap, with the block length taken from the autocorrelation of
+the paired difference, gives 95% intervals of `[-0.046, +0.029]` against prior
+weights and `[-0.044, +0.028]` against equal weights, on point estimates of
+-0.005 and -0.004 ([Д07](STUDY_UA_RESULTS.md#д07-невизначеність-парних-різниць)).
+Adaptive weighting is neither shown to help nor shown to hurt. It is kept
+because the failures it is built for - one measure fooled by a specular
+highlight, a genuinely noisy sensor - are absent from all eight recordings.
 
 **The adaptive weighting reduces repeatability.** Measured over five independent
 noise realisations of the same sweep, every fixed method selected the same peak
@@ -114,10 +135,55 @@ deterministic repeatability matters more than adaptivity, use
 it wins clearly in two (`low_texture`, `clipped_highlights`), ties in six, and
 loses one (`exposure_drift`). It is not uniformly better, and the honest
 headline is that *combining* metrics matters much more than the combination
-rule.
+rule. The real recordings agree: fusion is worth +0.077 in adjacent-step
+discrimination over a single measure through the same pipeline, while the
+choice of weighting rule is worth nothing measurable.
+
+**The set of six is not optimal, and the best subset has five.** All 63
+non-empty subsets were run through the shipped configuration
+([Д15](STUDY_UA_RESULTS.md#д15-підмножини-метрик)). Dropping `tenengrad` scores
+better on both criteria and costs slightly less. The margin is +0.013, which is
+inside the interval above, so this is a lead for an independent check rather
+than a reason to change the default.
 
 **No comparison against published combination schemes has been made.** See §10
 of [ALGORITHM.md](ALGORITHM.md) for what a novelty claim would require.
+
+## What the score is, and is not
+
+**It cannot detect that the whole stream is defocused.** Blurring every frame of
+a recording leaves the mean score where it was - it moved by +0.000 to +0.014
+across three blur radii ([Д17](STUDY_UA_RESULTS.md#д17-штучні-деградації-реальних-кадрів)).
+The normaliser refits to whatever it is shown, so the least-blurred of a set of
+blurred frames still reads near the top. The score means "sharper than what
+this evaluator has been seeing"; it carries no absolute information, and a
+system that needs to know it is out of focus needs something else.
+
+**It depends substantially on when the evaluator was switched on.** Replaying
+the same recording from its midpoint and scoring the *same* frames gives
+differences of up to 0.64, rank agreement of 0.56 against the full pass, and in
+the worst single case a peak moved three protocol steps
+([Д10](STUDY_UA_RESULTS.md#д10-залежність-від-передісторії)). The documentation
+already said the score belongs to one stream's history; this is the size of
+that effect, and it is larger than any difference between methods reported
+anywhere in this project.
+
+**The confidence does not identify accurate frames.** Within a protocol step
+the true focus is constant, so the spread of the score around that step's
+median is measurement error. Splitting frames into confidence terciles inside
+each step, the confident frames were the accurate ones on four recordings of
+eight and the inaccurate ones on the other four, with rank correlations between
+confidence and error from -0.71 to +0.63
+([Д13](STUDY_UA_RESULTS.md#д13-якість-показника-впевненості)). It is also
+exactly zero on 24-79% of frames. Use its components to diagnose; do not
+threshold the scalar.
+
+**The normalisation scale is the load-bearing part.** Turning the freeze off
+drops rank correlation with the physical reference from 0.97 to 0.50
+([Д11](STUDY_UA_RESULTS.md#д11-параметри-автофіксації)). That is a larger
+effect than fusion, weighting and filtering combined, and it belongs in a
+limitations document because it means the score is only meaningful once the
+scale has settled - not from the first frame.
 
 ## Temporal filtering
 
@@ -130,6 +196,18 @@ genuine change, so any smoothing lags. The ablation shows
 `adaptive_no_temporal` sometimes locating the peak slightly better. The filter
 is for live jitter, and the step-response test is the right measurement of it
 (1 frame versus 6 for a plain EMA).
+
+**The smoothing/latency trade-off is a straight line, and the shipped value
+sits in the middle of it.** Sweeping `alpha_base`
+([Д14](STUDY_UA_RESULTS.md#д14-часовий-фільтр)): at 0.1 with confidence
+coupling, adjacent-step discrimination is 0.849 and the score needs 10.9 frames
+to settle after a focus change; at the shipped 0.35 it is 0.822 and 5.3 frames.
+Agreement with the physical reference is flat across the whole sweep
+(0.956-0.965), so the filter buys discrimination and costs latency, and does
+not affect correctness. Which end to pick depends on whether an extra search
+step or an extra five frames per measurement is more expensive - and nothing
+here can answer that, because there is no actuator in any of these
+measurements.
 
 ## Validation
 

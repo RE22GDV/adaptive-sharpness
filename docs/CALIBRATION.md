@@ -322,8 +322,29 @@ bottoms out is not a usable condition signal.
 **What this means for the claim.** "Fusing six measures beats one" and
 "adapting the weights beats fixing them" are separate claims with separate
 evidence. The first holds on all eight recordings and on both criteria. The
-second holds on the reference criterion, does not hold on the discrimination
-criterion, and is not established.
+second does not hold.
+
+> **Settled by the research programme.** Two studies finished this argument;
+> full write-ups in [STUDY_UA_RESULTS.md](STUDY_UA_RESULTS.md).
+>
+> **The difference is not resolvable.** A paired moving-block bootstrap inside
+> each recording, with the block length taken from the autocorrelation of the
+> paired difference (decorrelation lag 3-74 frames), gives a 95% interval of
+> **`[-0.046, +0.029]`** on a point estimate of -0.005 - about nine times the
+> estimate. Adaptive weights are indistinguishable from fixed ones here, in
+> either direction. The per-recording table above is a description, not a
+> result.
+>
+> Resampling frames as if they were independent would have given 0.042 instead
+> of 0.135 and produced an effect that is not there. That is a caution for any
+> future comparison on this corpus.
+>
+> **The weights were read out, and they barely move.** Over an entire recording
+> a metric's weight travels 0.01 to 0.05, on means between 0.04 and 0.24. There
+> is almost nothing for a bootstrap to have found. The saturation mechanism
+> proposed above survives only partly: the two worst recordings do have the
+> highest edge-density saturation, 79% and 76% of frames, but across all eight
+> the association is -0.41 and a recording at 66% is the biggest *win*.
 
 ---
 
@@ -380,6 +401,19 @@ correlations are, and 0.023 is roughly five times the largest recipe-induced
 movement. It is not noise in the reference. The honest reading is that the
 pipeline does cost about that much against the best raw measure on these two
 recordings, and the case for it has to be made on the other eight.
+
+> **Localised precisely.** A stage-by-stage ladder on the same frames
+> ([Д09](STUDY_UA_RESULTS.md#д09-нормалізація-поетапно)) shows the split is not
+> where this section assumed. Offline scaling is free - the log is exactly
+> neutral and the logistic map removes the linear map's 10% clipping at no
+> cost. The whole loss is **being online**: a single measure through the
+> streaming pipeline drops adjacent-step discrimination from 0.890 to 0.697.
+> Fusion returns +0.077 of that and the temporal filter +0.048, and fusion also
+> removes the 8.9% saturation that streaming a single measure introduces.
+>
+> So "the pipeline costs 0.023" is the residue after that repair, not its
+> price. The gross cost of running online is 0.193, and the two mechanisms this
+> section is about exist to recover it - which they do, by about two thirds.
 
 So most of the loss comes not from running in real time but from using *one*
 measure; fusion recovers more than half of it; and what is left is not
@@ -516,20 +550,46 @@ values, which is why it appears there and not in the metric set.
 
 ## What is still open
 
+Fourteen studies ([STUDY_UA_RESULTS.md](STUDY_UA_RESULTS.md)) closed three of
+these and sharpened the rest.
+
 - **Edge sufficiency is circular.** The candidate fix is to measure scene
   structure over a history rather than per frame, judged by a coverage-versus-
-  error curve rather than by having fewer zeros.
-- **`auto_freeze` has four constants**, fitted on the same recordings that
-  evaluate them.
+  error curve rather than by having fewer zeros. Now with a number attached:
+  edge density sits at its minimum on **24-79%** of frames depending on the
+  recording, so for much of the corpus the input is not a measurement.
+- ~~**`auto_freeze` has four constants**, fitted on the same recordings that
+  evaluate them.~~ **Closed, and the conclusion is the opposite of the worry.**
+  The full grid of 27 threshold combinations spans 0.591 to 0.971 in rank
+  correlation, but every combination that fires in time on every recording
+  lands near 0.96, and *not freezing at all* gives 0.50. The mechanism carries
+  the effect; the constants are almost free parameters in the harmless sense.
+  **This is the largest single effect measured anywhere in this project** -
+  larger than fusion, weighting and filtering together.
 - **The noise estimate has a structure-dependent floor** and reads about 35%
-  low. It is a relative signal, not a measurement.
-- **The ground-truth comparison rests on two recordings.** Any difference
-  smaller than about 0.02 in rank correlation is a direction, not a result.
+  low. Now measured against a known value rather than inferred: injecting
+  Gaussian noise at sigma 2, 5, 10 and 20 is reported as 0.90, 1.79, 3.51 and
+  6.50, so roughly a third of truth and **monotone**. It is a relative signal,
+  not a measurement.
+- ~~**Any difference smaller than about 0.02 in rank correlation is a
+  direction, not a result.**~~ **The threshold was too optimistic**: a bootstrap
+  respecting the frame autocorrelation puts it near **0.04**, and the naive
+  frame-level resampling that would have suggested 0.02 is exactly the mistake
+  this corpus invites.
 - **No closed-loop test.** Everything here measures the signal a search would
-  consume, never a search. Nothing measures autofocus latency, because the lens
-  position was never recorded.
+  consume, never a search. A search *simulated over the recorded profiles*
+  lands within one step of the reference on 100% of runs using 8.5 evaluations,
+  which says the signal has a climbable shape and says nothing about latency:
+  there is no actuator, no backlash and no settling time in a replay.
 - **The protocol step is a manual step number**, not a calibrated lens position,
   and steps are not equally spaced in defocus.
+- **New: the score is blind to uniform defocus.** Blurring every frame does not
+  lower the mean score. The normaliser refits, so the least-blurred of a blurred
+  set still reads near the top.
+- **New: warm-up dominates.** The same frames scored after a different history
+  differ by up to 0.64, with rank agreement falling to 0.56.
+- **New: the confidence has no reliable sign** as a per-frame quality
+  indicator - useful on four recordings of eight, harmful on the other four.
 
 ---
 

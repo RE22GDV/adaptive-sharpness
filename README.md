@@ -59,7 +59,8 @@ that adapt to the measured conditions of each frame.
 | Focus motor control | No search strategy, no actuator driver. `docs/INTEGRATION.md` shows how to write one on top. |
 | Absolute sharpness | The scale is fitted to what the camera has seen, then frozen, which removes the one cause that was provably breaking the ordering. It is not a guarantee: the score is a weighted sum of six measures that need not agree. Across streams or cameras the numbers are not comparable, and there is no calibrated "this frame is 0.8 sharp" unit. |
 | Object recognition | The optional scene map finds the *sharpest textured region*. It does not know which object matters. |
-| A calibrated probability | `confidence` is a heuristic indicator, not a statistically calibrated quantity. |
+| A calibrated probability | `confidence` is a heuristic indicator, not a statistically calibrated quantity. Measured as a per-frame quality signal it did not work at all: confident frames were the accurate ones on four of eight recordings and the inaccurate ones on the other four. Use its components to diagnose a frame, not the scalar to discard one. |
+| A defocus detector | The score says one frame is sharper than another **in the same stream**. It cannot say the stream itself is defocused: blur every frame and the mean score does not move. |
 
 ### Score semantics — read this before integrating
 
@@ -77,6 +78,20 @@ not directly comparable.** Two evaluators both reporting `0.8` do not
 necessarily see equally sharp images. Within one instance, on one stream, a
 rising score does mean increasing sharpness — that is the property a focus
 search needs.
+
+Two consequences of that are easy to miss, and both were measured rather than
+reasoned about ([full results](docs/STUDY_UA_RESULTS.md)):
+
+- **The score cannot tell you the whole stream is out of focus.** Blurring
+  every frame of a recording does not lower the mean score at all - it moved by
+  +0.000 to +0.014 - because the normaliser refits to whatever it is shown, so
+  the least-blurred of a set of blurred frames still reads near the top. The
+  score answers "sharper than what this evaluator has been seeing", and nothing
+  else.
+- **How much history the evaluator has seen changes the answer.** Feeding the
+  same frames after a different warm-up changed their scores by up to 0.64 and
+  dropped rank agreement to 0.56. Let the evaluator watch the stream before
+  trusting a comparison, and never compare across a `reset()`.
 
 ---
 
@@ -339,7 +354,14 @@ clipping, motion and low contrast.
 | fourier | 1.9 | 0.4 | 0.7 | 0.5 | 0.6 |
 | edge_width | 1.4 | **2.2** | 0.9 | 1.0 | 1.0 |
 
-**These are reasoned starting points, not values fitted to data.**
+**These are reasoned starting points, not values fitted to data.** Scaling the
+whole matrix by anything from 0.25 to 8 moves adjacent-step discrimination
+across a range of 0.016 - less than half what this corpus can resolve - so the
+specific numbers matter far less than their existence
+([Д18](docs/STUDY_UA_RESULTS.md#д18-чутливість-коефіцієнтів-надійності)).
+Fitting the scale on half the corpus and testing on the other half made the
+result *worse* than leaving it at 1, which is what tuning on eight recordings
+buys.
 
 **Stage 2 — agreement.** Measures that disagree with the reliability-weighted
 median are suppressed by a Gaussian kernel. **Off by default** (`use_agreement
@@ -354,6 +376,22 @@ recover when conditions improve.
 
 Under noise the Laplacian's weight halves (0.18 → 0.09) while Brenner's rises
 (0.18 → 0.28); with no edges the edge-width measure all but disappears.
+
+**That figure is synthetic, and the real recordings look nothing like it.**
+[Д12](docs/STUDY_UA_RESULTS.md#д12-поведінка-ваг) read the weights out of every
+frame of all eight recordings. Over a whole recording a metric's weight travels
+**0.01 to 0.05**, on means between 0.04 and 0.24. The degradation factors that
+are supposed to move them are pinned at an extreme for much of the corpus -
+edge density sits at its minimum on 24-79% of frames.
+
+So on this footage the weighting is adaptive in name and nearly fixed in
+behaviour, and that is the explanation for the result below rather than a
+separate finding: **adaptive weights are not distinguishable from fixed ones**,
+95% interval `[-0.046, +0.029]` on a point estimate of -0.005
+([Д07](docs/STUDY_UA_RESULTS.md#д07-невизначеність-парних-різниць)). The
+mechanism is kept because the conditions it is built for - a specular highlight
+fooling one measure, a genuinely noisy sensor - do not occur in these eight
+recordings, not because it has been shown to earn its place.
 
 ### Temporal filtering
 
@@ -676,11 +714,23 @@ regression test:
   [CALIBRATION.md](docs/CALIBRATION.md) and [RESULTS.md](docs/RESULTS.md).
 - **The point-source reference has its own uncertainty.** It locates best focus
   to about one protocol step, so any reported peak error of one step or less
-  cannot separate two models. Only two recordings carry it, so differences
-  below about 0.02 in rank correlation are a direction, not a result.
-- **The κ coefficients are reasoned, not fitted.** The factorial ablation shows
-  the reliability model they parametrise does earn its place, and that the
-  consensus kernel beside it does not — it is off by default.
+  cannot separate two models. Measured directly, peak error ranks 27
+  configurations at a rank correlation of 0.18 against adjacent-step
+  discrimination - which is to say it does not rank them at all.
+- **Differences smaller than about 0.04 are not resolvable on this corpus.**
+  Not 0.02: a paired block bootstrap respecting the frame autocorrelation gives
+  a 95% interval of `[-0.046, +0.029]` for a difference whose point estimate is
+  -0.005. Resampling frames as if they were independent would have given an
+  interval three times narrower and an effect that is not there.
+- **The κ coefficients are reasoned, not fitted, and barely matter.** Scaling
+  them by 0.25 to 8 moves the result across a range of 0.016, under half the
+  corpus's resolution. The consensus kernel beside them
+  does not earn its place at all and is off by default; the reliability model
+  itself is not distinguishable from fixed weights on these recordings.
+- **Freezing the normalisation scale is the single largest effect measured in
+  this project**: rank correlation with the reference is 0.50 without it and
+  0.97 with it. Where its four thresholds sit barely matters. None of the three
+  mechanisms the method is named for comes close to that.
 - **A protocol step is a manual step number, not a calibrated lens position**,
   and the steps are not equally spaced in defocus. Nothing here measures a
   closed autofocus loop or its latency: the lens position was never recorded.
@@ -691,8 +741,14 @@ regression test:
 - **Only global translation is detected as motion.** A subject moving inside a
   static frame is not.
 - **The scene map finds the sharpest textured region, not the important one.**
+- **The score is blind to uniform defocus and sensitive to warm-up.** Blurring
+  every frame does not lower the mean score; replaying the same frames after a
+  different warm-up changes them by up to 0.64. Both are consequences of a
+  scale fitted to one stream's own history, and both are measured.
 
-Full list with reasoning: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+Full list with reasoning: [docs/LIMITATIONS.md](docs/LIMITATIONS.md). The
+fourteen studies these numbers come from are in
+[docs/STUDY_UA_RESULTS.md](docs/STUDY_UA_RESULTS.md).
 
 ---
 

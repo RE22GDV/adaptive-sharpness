@@ -496,7 +496,87 @@ def build(data: Path) -> str:
             lines += loader(report)
             lines += ["---", ""]
 
+    lines += _programme_sections(data)
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _programme_sections(data: Path) -> list[str]:
+    """Tables for the Д07-Д20 studies that carry an ordinary `aggregate`.
+
+    Several of them do not - a bootstrap interval and a coverage curve are not
+    rows of variants - and those are written up in `docs/STUDY_UA_RESULTS.md`
+    instead of being forced into this shape.  Naming which ones are missing is
+    the point of the note below: a reader who counts ten sections must not
+    conclude that four studies did not happen.
+    """
+    studies = [f"d{n:02d}" for n in range(7, 21)]
+    found = [(s, _load(data / f"study_{s}.json")) for s in studies]
+    found = [(s, r) for s, r in found if r]
+    if not found:
+        return []
+
+    tabular = [(s, r) for s, r in found if r.get("aggregate")]
+    narrative = [s for s, r in found if not r.get("aggregate")]
+
+    lines = [
+        "## The research programme, D07-D20", "",
+        "Studies run on the recorded frames.  Full write-ups - what each one",
+        "tested, how, and what it does not prove - are in",
+        "[STUDY_UA_RESULTS.md](STUDY_UA_RESULTS.md).", "",
+    ]
+    if narrative:
+        lines += [
+            "Not tabulated here, because their output is not a table of "
+            "variants: " + ", ".join(f"`{s}`" for s in narrative)
+            + ".  See the write-up.", "",
+        ]
+    lines += ["---", ""]
+
+    for study, report in tabular:
+        summary = report["aggregate"]
+        lines += [
+            f"### {study.upper()}. {report.get('title', study)}", "",
+            _provenance_line(report), "",
+        ]
+        note = _sample_note(summary, _ABLATION_COLUMNS)
+        if note:
+            lines += [f"<sub>{note}</sub>", ""]
+        columns = [
+            (label, key, digits) for label, key, digits in _ABLATION_COLUMNS
+            if any(key in row for row in summary.values())
+        ]
+        lines += _table(
+            ["variant"] + [label for label, _, _ in columns],
+            [
+                [f"`{name}`"] + [
+                    _cell(row.get(key, float("nan")), digits)
+                    for _, key, digits in columns
+                ]
+                for name, row in summary.items()
+            ],
+        )
+        if any("spearman_gt" in row for row in summary.values()):
+            gt_columns = [
+                (label, key, digits)
+                for label, key, digits in _GROUND_TRUTH_COLUMNS
+                if any(key in row for row in summary.values())
+            ]
+            gt_note = _sample_note(summary, tuple(gt_columns))
+            lines += ["**Against the point-source reference**", ""]
+            if gt_note:
+                lines += [f"<sub>{gt_note}</sub>", ""]
+            lines += _table(
+                ["variant"] + [label for label, _, _ in gt_columns],
+                [
+                    [f"`{name}`"] + [
+                        _cell(row.get(key, float("nan")), digits)
+                        for _, key, digits in gt_columns
+                    ]
+                    for name, row in summary.items()
+                ],
+            )
+        lines += ["---", ""]
+    return lines
 
 
 def render_figures(data: Path, out_dir: Path) -> list[str]:

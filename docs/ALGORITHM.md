@@ -268,6 +268,12 @@ highlight.
 
 Set `ensemble.use_agreement = true` to enable it; the default is `false`.
 
+> **The stage that carries the result is not any of these three.** Freezing the
+> normalisation scale is worth +0.46 in rank correlation with the physical
+> reference - 0.50 without, 0.97 with - while the reliability model is not
+> distinguishable from fixed weights and the agreement kernel is negative. See
+> [STUDY_UA_RESULTS.md](STUDY_UA_RESULTS.md).
+
 ---
 
 ## 6. Stage 3: weights and the score
