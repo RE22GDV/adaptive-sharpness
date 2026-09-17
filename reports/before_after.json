@@ -302,8 +302,10 @@
     }
   ],
   "provenance": {
-    "commit": "ba902de786f7bd64844e44c640cab53b967b3e44",
-    "working_tree_dirty": false,
+    "commit": "1a750503c679a17943ddfb67ad2c57ce1444dc58",
+    "tracked_files_modified": true,
+    "untracked_files": 0,
+    "working_tree_dirty": true,
     "python": "3.11.2",
     "numpy": "1.26.4",
     "opencv": "4.13.0",

@@ -361,3 +361,46 @@ class TestCacheValidation:
         cached = load_measure_cache(tmp_path, files)
         assert not cached.has_reference
         assert "frames" in cached.note
+
+
+class TestProvenanceFlagMeansSomething:
+    """A run that records itself must not report itself as a modification.
+
+    The flag fired on every single run, twice for different reasons: first the
+    report was untracked and untracked files counted as dirt, then the reports
+    were committed and writing one made a tracked file modified.  Either way it
+    stopped carrying information.  It is now restricted to the paths whose
+    contents can change what a run computes.
+    """
+
+    def test_only_source_paths_are_checked(self) -> None:
+        from tools.evaluation import SOURCE_PATHS
+
+        for output in ("reports", "docs", "data"):
+            assert output not in SOURCE_PATHS
+
+    def test_source_paths_cover_the_code_that_runs(self) -> None:
+        from tools.evaluation import SOURCE_PATHS
+
+        for source in ("src", "tools", "tests"):
+            assert source in SOURCE_PATHS
+
+    def test_a_modified_source_file_is_named_not_just_counted(self) -> None:
+        """A bare boolean cannot be acted on; the file list can."""
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import provenance
+
+        record = provenance(load_default_config())
+        assert isinstance(record["source_modified_files"], list)
+        assert record["source_modified"] == bool(record["source_modified_files"])
+
+    def test_paths_survive_the_porcelain_format(self) -> None:
+        """Porcelain leaves the first column blank for an unstaged change, so
+        stripping the whole output eats a character of the first path."""
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import provenance
+
+        for name in provenance(load_default_config())["source_modified_files"]:
+            assert name.split("/")[0] in {
+                "src", "tools", "tests", "demo", "config", "pyproject.toml",
+            }, f"path looks truncated: {name}"

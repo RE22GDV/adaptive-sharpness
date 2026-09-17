@@ -24,6 +24,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 __all__ = [
+    "SOURCE_PATHS",
     "SPOT_PARAMETERS",
     "CachedMeasures",
     "load_measure_cache",
@@ -384,28 +385,39 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def _git_state() -> tuple[bool, int]:
-    """Whether tracked files differ from the commit, and how many are untracked.
+#: Paths whose contents decide what a run computes.  Anything else in the
+#: repository is an output or a document and cannot change a number.
+SOURCE_PATHS: tuple[str, ...] = (
+    "src", "tools", "tests", "demo", "config", "pyproject.toml",
+)
 
-    Untracked files are counted, not treated as dirt.  A tool writes its own
-    report while it runs, and that report is untracked until it is committed -
-    so counting it made every run flag itself as dirty and the flag stopped
-    meaning anything.  What matters for reproducing a number is whether the
-    *tracked* source differed from the commit.
+
+def _git_state() -> tuple[bool, list[str]]:
+    """Whether the *source* differs from the commit, and which files differ.
+
+    Restricted to SOURCE_PATHS on purpose.  A tool writes its own report into
+    the repository while it runs, so a check over the whole tree reports every
+    run as modified by the very act of recording itself - first because the
+    report was untracked, then, once reports were committed, because it was
+    tracked and changed.  The question worth answering is narrower: did the
+    code that produced this number differ from the commit it names.
     """
     root = Path(__file__).resolve().parents[1]
+    existing = [p for p in SOURCE_PATHS if (root / p).exists()]
     try:
-        tracked = subprocess.run(
-            ["git", "status", "--porcelain", "--untracked-files=no"],
+        changed = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=normal", "--", *existing],
             capture_output=True, text=True, check=True, cwd=root,
-        ).stdout.strip()
-        untracked = subprocess.run(
-            ["git", "ls-files", "--others", "--exclude-standard"],
-            capture_output=True, text=True, check=True, cwd=root,
-        ).stdout.strip()
+        ).stdout
     except (OSError, subprocess.CalledProcessError):
-        return False, 0
-    return bool(tracked), len([line for line in untracked.splitlines() if line])
+        return False, []
+    # Porcelain v1 is "XY<space><path>", and the X column is a space for an
+    # unstaged change - so the output must not be stripped as a whole, or the
+    # first line loses a character of its path.
+    files = [
+        line[3:].strip() for line in changed.splitlines() if line.strip()
+    ]
+    return bool(files), sorted(files)
 
 
 def provenance(config: Any = None, **extra: Any) -> dict[str, Any]:
@@ -417,13 +429,15 @@ def provenance(config: Any = None, **extra: Any) -> dict[str, Any]:
     """
     import cv2
 
-    tracked_modified, untracked = _git_state()
+    source_modified, modified_files = _git_state()
     record: dict[str, Any] = {
         "commit": _git_commit(),
-        "tracked_files_modified": tracked_modified,
-        "untracked_files": untracked,
+        "source_modified": source_modified,
+        "source_modified_files": modified_files,
+        "source_paths_checked": list(SOURCE_PATHS),
         # Kept under its old name so that older reports stay readable.
-        "working_tree_dirty": tracked_modified,
+        "working_tree_dirty": source_modified,
+        "tracked_files_modified": source_modified,
         "python": sys.version.split()[0],
         "numpy": np.__version__,
         "opencv": cv2.__version__,

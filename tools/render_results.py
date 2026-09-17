@@ -71,8 +71,11 @@ def _provenance_line(report: dict[str, Any]) -> str:
             "citing it.</sub>"
         )
     commit = str(meta.get("commit", "unknown"))[:12]
-    modified = meta.get("tracked_files_modified", meta.get("working_tree_dirty"))
-    state = " with local modifications" if modified else ", clean"
+    modified = meta.get(
+        "source_modified",
+        meta.get("tracked_files_modified", meta.get("working_tree_dirty")),
+    )
+    state = " with modified source" if modified else ", source clean"
     fingerprint = meta.get("config_fingerprint", "?")
     return (
         f"<sub>commit `{commit}`{state} &middot; config `{fingerprint}` &middot; "
