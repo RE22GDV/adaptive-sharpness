@@ -114,3 +114,112 @@ def test_claimed_documents_exist() -> None:
     }
     missing = {k: v for k, v in missing.items() if v}
     assert not missing, f"claims pointing at files that do not exist: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# Diagrams
+# ---------------------------------------------------------------------------
+
+_SCHEMES = _ROOT / "docs" / "figures" / "ua" / "schemes"
+
+
+def _extract():
+    from tools.figures_ua import SCHEME_SOURCE, _SCHEME_HEADING  # noqa: F401
+    import tools.figures_ua as mod
+
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        return mod.extract_schemes(_ROOT / mod.SCHEME_SOURCE, Path(tmp)), tmp
+
+
+def test_every_diagram_in_the_report_has_a_file() -> None:
+    """The `.mmd` files are generated from the report, never edited beside it.
+
+    A draft of this work shipped hand-kept copies of the same five diagrams
+    next to the document they came from. Two copies of one diagram is two
+    diagrams as soon as either is touched, which is the same failure as a
+    number quoted in prose drifting from the report it came from.
+    """
+    import tools.figures_ua as mod
+
+    source = _ROOT / mod.SCHEME_SOURCE
+    if not source.exists():
+        pytest.skip(f"{mod.SCHEME_SOURCE} not present")
+    in_document = mod._SCHEME_HEADING.findall(source.read_text(encoding="utf-8"))
+    assert in_document, "the report declares no diagrams"
+    if not _SCHEMES.exists():
+        pytest.skip("diagrams not generated yet; run tools/figures_ua.py")
+    on_disk = sorted(p.name for p in _SCHEMES.glob("*.mmd"))
+    assert len(on_disk) == len(in_document), (
+        f"the report has {len(in_document)} diagrams and {len(on_disk)} files "
+        f"exist; run 'python3 tools/figures_ua.py'"
+    )
+
+
+def test_the_files_still_match_the_report() -> None:
+    """Regenerating must be a no-op, or one of the two has been edited alone."""
+    import tempfile
+
+    import tools.figures_ua as mod
+
+    source = _ROOT / mod.SCHEME_SOURCE
+    if not (source.exists() and _SCHEMES.exists()):
+        pytest.skip("nothing to compare")
+    with tempfile.TemporaryDirectory() as tmp:
+        mod.extract_schemes(source, Path(tmp))
+        for fresh in sorted(Path(tmp).glob("*.mmd")):
+            committed = _SCHEMES / fresh.name
+            assert committed.exists(), f"{fresh.name} was never written out"
+            assert committed.read_text(encoding="utf-8") == fresh.read_text(
+                encoding="utf-8"
+            ), (
+                f"{fresh.name} differs from the report. Edit the diagram in "
+                f"{mod.SCHEME_SOURCE} and re-run tools/figures_ua.py; the "
+                f"'.mmd' file is generated and edits to it are lost."
+            )
+
+
+def test_diagrams_are_numbered_in_reading_order() -> None:
+    """A reader who meets 'Схема 5' before 'Схема 4' has found a defect; this
+    document did, inherited from a draft where the two appeared reversed."""
+    import tools.figures_ua as mod
+
+    source = _ROOT / mod.SCHEME_SOURCE
+    if not source.exists():
+        pytest.skip(f"{mod.SCHEME_SOURCE} not present")
+    numbers = [
+        int(n) for n, _ in mod._SCHEME_HEADING.findall(
+            source.read_text(encoding="utf-8")
+        )
+    ]
+    assert numbers == sorted(numbers), (
+        f"diagrams appear in the order {numbers}; renumber them so they read "
+        f"in sequence"
+    )
+
+
+def test_svg_output_is_reproducible() -> None:
+    """Regenerating an unchanged figure must produce an unchanged file.
+
+    Matplotlib stamps SVGs with the wall clock and derives element ids from a
+    per-process random salt, so two runs of the same code over the same data
+    differed in 1356 lines across 19 files. A diff that always changes cannot
+    show that something changed.
+    """
+    import tools.figures_ua as mod
+
+    assert plt_rcparam("svg.hashsalt"), (
+        "svg.hashsalt is unset, so element ids are random per process"
+    )
+    assert mod._SVG_METADATA.get("Date", "unset") is None, (
+        "the SVG date stamp is not being suppressed"
+    )
+
+
+def plt_rcparam(key: str):
+    import matplotlib.pyplot as plt
+
+    import tools.figures_ua  # noqa: F401  (applies the rcParams on import)
+
+    return plt.rcParams.get(key)

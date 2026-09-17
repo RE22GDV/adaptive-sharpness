@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import re
 from pathlib import Path
 
 import matplotlib
@@ -41,7 +42,17 @@ plt.rcParams.update({
     "axes.labelsize": 11, "figure.dpi": 140, "savefig.dpi": 180,
     "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
     "grid.alpha": .17, "axes.axisbelow": True, "svg.fonttype": "none",
+    # Without a fixed salt, matplotlib derives every SVG element id from a
+    # per-process random value, so regenerating unchanged figures rewrites
+    # every clip-path reference: 1356 changed lines across 19 files for no
+    # change at all, which buries any real one.
+    "svg.hashsalt": "adaptive-sharpness-ua",
 })
+
+#: Dropped from the SVG metadata for the same reason: an embedded wall-clock
+#: timestamp makes every regeneration a diff.  `None` removes the key rather
+#: than writing an empty one.
+_SVG_METADATA = {"Date": None}
 BLUE, TEAL, ORANGE, RED, GRAY = "#2563a6", "#07867d", "#d47722", "#b84751", "#778295"
 
 NAMES = {
@@ -61,6 +72,47 @@ STEMS = (
     "reference_peaks", "reliability_deltas", "runtime", "pair_ordering",
     "factorial_effects",
 )
+
+
+#: The document that holds the diagrams.  They live inside it as fenced
+#: `mermaid` blocks, which GitHub renders directly, and are extracted from it to
+#: standalone `.mmd` files for editors that want them.  The extraction runs one
+#: way only: a draft of this project carried hand-kept copies of the same five
+#: diagrams beside the document, which is precisely the arrangement that lets
+#: two versions of one thing disagree without anyone noticing.
+SCHEME_SOURCE = Path("docs") / "STUDY_UA_REPORT.md"
+
+_SCHEME_HEADING = re.compile(r"^\*\*Схема (\d+)\. (.+?)\*\*$", re.M)
+_FENCE = "```"
+
+
+def extract_schemes(source: Path, out: Path) -> list[dict[str, str]]:
+    """Write each `mermaid` block of the report to its own `.mmd` file.
+
+    Returns what was written, so the caller can report it and a test can check
+    that the document and the files still hold the same diagrams.
+    """
+    text = source.read_text(encoding="utf-8")
+    out.mkdir(parents=True, exist_ok=True)
+    written: list[dict[str, str]] = []
+    for match in _SCHEME_HEADING.finditer(text):
+        number, title = match.group(1), match.group(2)
+        rest = text[match.end():]
+        opening = rest.find(_FENCE + "mermaid")
+        if opening < 0:
+            continue
+        body = rest[opening + len(_FENCE) + len("mermaid"):]
+        closing = body.find(_FENCE)
+        if closing < 0:
+            continue
+        path = out / f"scheme_{int(number):02d}.mmd"
+        header = (
+            f"%% Схема {number}. {title}\n"
+            f"%% Згенеровано з {source.name} - редагувати треба там.\n"
+        )
+        path.write_text(header + body[:closing].strip() + "\n", encoding="utf-8")
+        written.append({"number": number, "title": title, "file": path.name})
+    return written
 
 
 def run(reports: Path, out: Path) -> int:
@@ -90,7 +142,10 @@ def run(reports: Path, out: Path) -> int:
         fig.text(.02, .012, note, fontsize=9, color="#485568")
         fig.tight_layout(rect=(0, .18 if n == 14 else .065, 1, .91), pad=1.6)
         for ext in ("png", "svg"):
-            fig.savefig(out / f"{stem}.{ext}", bbox_inches="tight", facecolor="white")
+            fig.savefig(
+                out / f"{stem}.{ext}", bbox_inches="tight", facecolor="white",
+                metadata=_SVG_METADATA if ext == "svg" else None,
+            )
         plt.close(fig)
         manifest.append(
             {"number": n, "stem": stem, "title": title, "source": source, "note": note}
@@ -457,6 +512,8 @@ def run(reports: Path, out: Path) -> int:
          "Контраст = сума результатів зі знаками / 4 для плану 2^3. "
          "Це опис ефектів, без перевірки значущості.")
 
+    schemes = extract_schemes(ROOT / SCHEME_SOURCE, out / "schemes")
+
     (out / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
@@ -479,13 +536,14 @@ def run(reports: Path, out: Path) -> int:
         ])),
         "factorial_contrasts": effects,
         "adaptive_vs_mean_rho": dict(zip(ll, vv)),
+        "schemes": schemes,
     }
     (out / "derived.json").write_text(
         json.dumps(derived, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     # ASCII only: a console that cannot encode this line must not be able to
     # destroy a completed run, which is how an hour of compute was lost once.
-    print(f"wrote {len(manifest)} figures to {out}")
+    print(f"wrote {len(manifest)} figures and {len(schemes)} diagrams to {out}")
     return 0
 
 
