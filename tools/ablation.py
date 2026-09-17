@@ -290,7 +290,28 @@ AGREEMENT_VARIANTS: dict[str, VariantSpec] = {
     },
 }
 
+#: One measure against the whole set, across every scene type.
+#:
+#: The fair comparison can only run where the point-source reference exists,
+#: which is two recordings of a bright point on black - the easiest possible
+#: target for a high-frequency measure, and the one place where the robustness
+#: that fusion is for cannot be tested.  This group has no reference and so
+#: scores only adjacent-step discrimination, but it runs on all eight
+#: recordings, including the low-texture sweep and the dark exposure strata.
+#: Based on what ships, not on REPAIRED: the question is whether the shipped
+#: system beats one measure, and REPAIRED keeps the consensus kernel on.
+SHIPPED: VariantSpec = spec_from_config(load_default_config())
+
+SINGLE_VARIANTS: dict[str, VariantSpec] = {
+    "six_shipped": SHIPPED,
+    **{
+        f"only_{name}": replace(SHIPPED, enabled=(name,))
+        for name in SHIPPED.enabled
+    },
+}
+
 VARIANT_GROUPS: dict[str, dict[str, VariantSpec]] = {
+    "singles": SINGLE_VARIANTS,
     "agreement": AGREEMENT_VARIANTS,
     "fixes": FIX_VARIANTS,
     "normalisation": NORMALISATION_VARIANTS,
