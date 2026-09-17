@@ -812,6 +812,9 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/STUDY_UA.md](docs/STUDY_UA.md) | the same study, in Ukrainian |
 | [docs/STUDY_UA_REPORT.md](docs/STUDY_UA_REPORT.md) | Ukrainian technical report: how the module works, five diagrams, change history, and the 20-item research programme |
 | [docs/STUDY_UA_RESULTS.md](docs/STUDY_UA_RESULTS.md) | results of studies Д07–Д20 — what was tested, how, what came out, and what it does not prove |
+| [docs/ZVIT_UA.pdf](docs/ZVIT_UA.pdf) | four-page Ukrainian summary, generated from the reports |
+| [docs/RELEASE.md](docs/RELEASE.md) | **what this release is entitled to claim**, the configuration it describes, and how to reproduce it |
+| [demo/calibrated_focus_loop.py](demo/calibrated_focus_loop.py) | the complete usage sequence: calibrate, verify, freeze, compare, reset |
 | [docs/claims.toml](docs/claims.toml) | every number quoted in prose, pinned to its report **and its sample size**, checked by `tests/test_claims.py` |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |
