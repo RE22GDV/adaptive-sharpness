@@ -1,0 +1,17 @@
+# One line-ending convention, so a file edited from Windows does not come back
+# as a whole-file diff.
+#
+# This repository is edited from a Windows desktop over a Samba share and run
+# on a Raspberry Pi, and it had no rule: 35 committed files used CRLF and 53
+# used LF, with no pattern.  Any tool that rewrote a file changed its endings
+# and turned a six-line edit into a fifteen-hundred-line diff, which happened
+# repeatedly and hid the real change each time.
+#
+# LF everywhere, normalised on commit, checked out as LF.
+* text=auto eol=lf
+
+# Binary, never touched.
+*.png binary
+*.jpg binary
+*.npz binary
+*.ico binary
