@@ -56,19 +56,21 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `baseline` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.94 |
-| `range` | 0.747 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 9.94 |
-| `horizon` | 0.755 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 11.14 |
-| `noise` | 0.756 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 9.94 |
-| `edges` | 0.750 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.95 |
-| `ready` | 0.755 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.95 |
-| `window` | 0.851 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.58 |
-| `freeze` | 0.822 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.32 |
-| `logistic` | 0.707 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 9.94 |
-| `freeze+logistic` | 0.829 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.33 |
-| `all` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.20 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `baseline` | 0.755 | 1.00 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.94 |
+| `range` | 0.747 | 1.00 | 0.805 | 0.021 | 0.002 | 0.494 | 0.976 | 9.94 |
+| `horizon` | 0.755 | 1.00 | 0.698 | 0.010 | 0.249 | 0.494 | 0.976 | 11.14 |
+| `noise` | 0.756 | 1.00 | 0.770 | 0.009 | 0.395 | 0.494 | 0.002 | 9.94 |
+| `edges` | 0.750 | 1.00 | 0.770 | 0.011 | 0.395 | 0.494 | 0.976 | 9.95 |
+| `ready` | 0.755 | 1.00 | 0.770 | 0.009 | 0.395 | 0.494 | 0.976 | 9.95 |
+| `window` | 0.851 | 1.00 | 0.787 | 0.029 | 0.255 | 0.494 | 0.976 | 10.58 |
+| `freeze` | 0.822 | 1.75 | 0.762 | 0.079 | 0.255 | 0.494 | 0.976 | 9.32 |
+| `logistic` | 0.707 | 1.00 | 0.761 | 0.003 | 0.395 | 0.494 | 0.976 | 9.94 |
+| `freeze+logistic` | 0.829 | 1.00 | 0.796 | 0.004 | 0.255 | 0.494 | 0.976 | 9.33 |
+| `all` | 0.810 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.20 |
 
 <details><summary>What each variant set</summary>
 
@@ -90,7 +92,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `baseline` | -0.154 | 0.165 | 0.529 | 0.529 | 1.000 | 2.00 | 1.0 |
 | `range` | -0.243 | 0.132 | 0.552 | 0.552 | 1.000 | 2.00 | 1.0 |
@@ -136,14 +140,16 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `rolling+linear` | 0.860 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.61 |
-| `rolling+logistic` | 0.785 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.60 |
-| `frozen+linear` | 0.821 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.24 |
-| `frozen+logistic` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.24 |
-| `short+rolling+linear` | 0.740 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 9.96 |
-| `short+frozen+logistic` | 0.750 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.79 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `rolling+linear` | 0.860 | 1.00 | 0.866 | 0.057 | 0.002 | 0.494 | 0.002 | 10.61 |
+| `rolling+logistic` | 0.785 | 1.00 | 0.848 | 0.004 | 0.002 | 0.494 | 0.002 | 10.60 |
+| `frozen+linear` | 0.821 | 2.50 | 0.814 | 0.167 | 0.002 | 0.494 | 0.002 | 9.24 |
+| `frozen+logistic` | 0.810 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.24 |
+| `short+rolling+linear` | 0.740 | 1.00 | 0.796 | 0.028 | 0.002 | 0.494 | 0.002 | 9.96 |
+| `short+frozen+logistic` | 0.750 | 1.00 | 0.868 | 0.045 | 0.002 | 0.494 | 0.002 | 8.79 |
 
 <details><summary>What each variant set</summary>
 
@@ -160,7 +166,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `rolling+linear` | 0.464 | 0.677 | 0.276 | 0.276 | 1.000 | 1.00 | 1.0 |
 | `rolling+logistic` | 0.364 | 0.822 | 0.295 | 0.295 | 1.000 | 2.00 | 1.0 |
@@ -201,18 +209,20 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `RAF` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
-| `RA-` | 0.767 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `R-F` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
-| `R--` | 0.774 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
-| `-AF` | 0.789 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
-| `-A-` | 0.741 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
-| `--F` | 0.827 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
-| `---` | 0.785 | 0.853 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
-| `RAF+nogate` | 0.787 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.16 |
-| `plain_mean` | 0.825 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `RAF` | 0.810 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `RA-` | 0.767 | 1.00 | 0.858 | 0.006 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `R-F` | 0.822 | 1.00 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `R--` | 0.774 | 1.00 | 0.849 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `-AF` | 0.789 | 1.00 | 0.840 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `-A-` | 0.741 | 1.12 | 0.845 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `--F` | 0.827 | 1.00 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
+| `---` | 0.785 | 1.12 | 0.853 | 0.006 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `RAF+nogate` | 0.787 | 1.00 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.16 |
+| `plain_mean` | 0.825 | 1.00 | 0.858 | 0.004 | 0.002 | 0.494 | 0.002 | 9.15 |
 
 <details><summary>What each variant set</summary>
 
@@ -233,7 +243,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `RAF` | 0.949 | 0.052 | 0.052 | 0.052 | 1.000 | 1.00 | 1.0 |
 | `RA-` | 0.952 | 0.043 | 0.057 | 0.057 | 1.000 | 1.00 | 1.0 |
@@ -278,19 +290,21 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `six` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.04 |
-| `seven` | 0.774 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.94 |
-| `w240` | 0.754 | 0.831 | 0.004 | 0.002 | 0.434 | 0.000 | 7.72 |
-| `w480` | 0.814 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.54 |
-| `w640` | 0.806 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 27.10 |
-| `without_laplacian` | 0.774 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.46 |
-| `without_tenengrad` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.26 |
-| `without_brenner` | 0.804 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.34 |
-| `without_wavelet` | 0.810 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.07 |
-| `without_fourier` | 0.772 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.33 |
-| `without_edge_width` | 0.774 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.74 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `six` | 0.810 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.04 |
+| `seven` | 0.774 | 1.00 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.94 |
+| `w240` | 0.754 | 1.00 | 0.831 | 0.004 | 0.002 | 0.434 | 0.000 | 7.72 |
+| `w480` | 0.814 | 1.00 | 0.849 | 0.004 | 0.002 | 0.536 | 0.341 | 16.54 |
+| `w640` | 0.806 | 1.00 | 0.866 | 0.004 | 0.002 | 0.538 | 0.692 | 27.10 |
+| `without_laplacian` | 0.774 | 1.00 | 0.831 | 0.005 | 0.002 | 0.494 | 0.002 | 8.46 |
+| `without_tenengrad` | 0.810 | 1.00 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.26 |
+| `without_brenner` | 0.804 | 1.00 | 0.841 | 0.005 | 0.002 | 0.494 | 0.002 | 8.34 |
+| `without_wavelet` | 0.810 | 1.00 | 0.850 | 0.005 | 0.002 | 0.494 | 0.002 | 8.07 |
+| `without_fourier` | 0.772 | 1.00 | 0.813 | 0.005 | 0.002 | 0.494 | 0.002 | 7.33 |
+| `without_edge_width` | 0.774 | 2.00 | 0.800 | 0.088 | 0.002 | 0.494 | 0.002 | 6.74 |
 
 <details><summary>What each variant set</summary>
 
@@ -312,7 +326,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `six` | 0.949 | 0.052 | 0.052 | 0.052 | 1.000 | 1.00 | 1.0 |
 | `seven` | 0.948 | 0.054 | 0.057 | 0.057 | 1.000 | 1.00 | 1.0 |
@@ -358,15 +374,17 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `six_shipped` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.25 |
-| `only_laplacian` | 0.720 | 0.734 | 0.165 | 0.002 | 0.494 | 0.002 | 2.74 |
-| `only_tenengrad` | 0.729 | 0.778 | 0.089 | 0.003 | 0.495 | 0.002 | 2.91 |
-| `only_brenner` | 0.747 | 0.787 | 0.090 | 0.002 | 0.494 | 0.002 | 2.75 |
-| `only_wavelet` | 0.743 | 0.777 | 0.090 | 0.002 | 0.494 | 0.002 | 2.99 |
-| `only_fourier` | 0.690 | 0.681 | 0.250 | 0.002 | 0.494 | 0.002 | 3.93 |
-| `only_edge_width` | 0.705 | 0.766 | 0.179 | 0.088 | 0.494 | 0.002 | 4.40 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `six_shipped` | 0.822 | 1.00 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.25 |
+| `only_laplacian` | 0.720 | 2.50 | 0.734 | 0.165 | 0.002 | 0.494 | 0.002 | 2.74 |
+| `only_tenengrad` | 0.729 | 2.00 | 0.778 | 0.089 | 0.003 | 0.495 | 0.002 | 2.91 |
+| `only_brenner` | 0.747 | 2.00 | 0.787 | 0.090 | 0.002 | 0.494 | 0.002 | 2.75 |
+| `only_wavelet` | 0.743 | 2.12 | 0.777 | 0.090 | 0.002 | 0.494 | 0.002 | 2.99 |
+| `only_fourier` | 0.690 | 3.62 | 0.681 | 0.250 | 0.002 | 0.494 | 0.002 | 3.93 |
+| `only_edge_width` | 0.705 | 1.75 | 0.766 | 0.179 | 0.088 | 0.494 | 0.002 | 4.40 |
 
 <details><summary>What each variant set</summary>
 
@@ -384,7 +402,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `six_shipped` | 0.965 | 0.027 | 0.048 | 0.048 | 1.000 | 1.00 | 1.0 |
 | `only_laplacian` | 0.905 | 0.088 | 0.112 | 0.020 | 0.814 | 0.50 | 7.0 |
@@ -426,14 +446,16 @@ except motion which is the 95th percentile.
 | `sweep_plain_20260916_110955` | 1181 | 1656 | moving 475 | reference stale or absent |
 | `sweep_texture_20260916_110108` | 1092 | 1563 | moving 471 | reference stale or absent |
 
-| variant | adj | mono | sat | sentinel | conf=0 | noise=0 | ms |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `off` | 0.822 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
-| `scale1` | 0.794 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale1.5` | 0.810 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale2.5` | 0.809 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
-| `scale4` | 0.795 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
-| `scale8` | 0.804 | 0.867 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
+<sub>Averaged over 8 recordings.</sub>
+
+| variant | adj | plateau/steps | mono | sat | sentinel | conf=0 | noise=0 | ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `off` | 0.822 | 1.00 | 0.885 | 0.005 | 0.002 | 0.494 | 0.002 | 9.11 |
+| `scale1` | 0.794 | 1.00 | 0.849 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `scale1.5` | 0.810 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `scale2.5` | 0.809 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
+| `scale4` | 0.795 | 1.00 | 0.876 | 0.005 | 0.002 | 0.494 | 0.002 | 9.13 |
+| `scale8` | 0.804 | 1.00 | 0.867 | 0.005 | 0.002 | 0.494 | 0.002 | 9.12 |
 
 <details><summary>What each variant set</summary>
 
@@ -450,7 +472,9 @@ except motion which is the 95th percentile.
 
 **Against the point-source reference**
 
-| variant | spearman | spread | inversion | strict | resolved | peak err | plateau |
+<sub>Averaged over 2 recordings.</sub>
+
+| variant | spearman | spread | inversion | strict | resolved | peak err | plateau/ref |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `off` | 0.965 | 0.027 | 0.048 | 0.048 | 1.000 | 1.00 | 1.0 |
 | `scale1` | 0.952 | 0.046 | 0.057 | 0.057 | 1.000 | 1.00 | 1.0 |

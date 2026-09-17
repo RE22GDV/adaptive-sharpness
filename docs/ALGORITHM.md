@@ -193,7 +193,7 @@ The five degradation factors, all measured per frame and all in `[0, 1]`:
 
 | `d_j` | Measured as |
 | --- | --- |
-| `noise` | `sigma / noise_ref_sigma`, `sigma` from the MAD of the finest Haar detail band: `sigma = median(|HH|) / 0.6745` (Donoho & Johnstone, 1994) |
+| `noise` | `sigma / noise_ref_sigma`, `sigma` from the finest Haar detail band: `sigma = Q_p(|HH|) / F(p)` with `p = analysis.noise_quantile` (default **75**) and `F(p)` the half-normal quantile `Phi^-1((1+p/100)/2)`. This is the Donoho & Johnstone (1994) estimator evaluated away from the median: on an 8-bit stream most `HH` coefficients are exactly zero, which pins the median at zero and reports no noise however much there is. At `p = 50` it reduces to the textbook `median(|HH|) / 0.6745`. |
 | `edge` | `1 - min(1, edge_density / edge_ref_density)`, edge density from Canny |
 | `clip` | clipped-pixel fraction against `clip_ref_fraction`, plus a penalty for a mean intensity outside `[brightness_low, brightness_high]` |
 | `motion` | `|shift| / motion_ref_px`, shift from `cv2.phaseCorrelate` on a decimated copy |
@@ -241,7 +241,17 @@ moved. Area-averaged resize is used instead.
 
 ---
 
-## 5. Stage 2: consensus agreement
+## 5. Stage 2: consensus agreement (off by default)
+
+> **This stage is disabled in the shipped configuration** (`use_agreement =
+> false`). It is documented because the code is there and can be switched on,
+> not because it is running. Measured against the point-source reference,
+> switching it off is better on every criterion, and widening the kernel only
+> walks the result back towards "off". See
+> [CALIBRATION](CALIBRATION.md#does-the-adaptivity-earn-its-keep). With the
+> stage off, `a_i = 1` for every metric and the weights are `p_i * r_i` alone.
+> Metric disagreement still feeds the confidence value; that path is separate
+> and stays on.
 
 Metrics that disagree with the consensus are down-weighted with a Gaussian
 kernel centred on the reliability-weighted median `s_med`:
@@ -256,7 +266,7 @@ agreement_scale`. This is one step of iteratively reweighted robust estimation;
 it protects the score when a single metric is fooled by, say, a specular
 highlight.
 
-Set `ensemble.use_agreement = false` to disable it.
+Set `ensemble.use_agreement = true` to enable it; the default is `false`.
 
 ---
 

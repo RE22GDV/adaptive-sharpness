@@ -342,7 +342,9 @@ clipping, motion and low contrast.
 **These are reasoned starting points, not values fitted to data.**
 
 **Stage 2 — agreement.** Measures that disagree with the reliability-weighted
-median are suppressed by a Gaussian kernel.
+median are suppressed by a Gaussian kernel. **Off by default** (`use_agreement
+= false`): it measured worse on every criterion here, so `a_i = 1` unless you
+turn it on. Disagreement still affects the confidence value either way.
 
 **Stage 3 — weights.** $w_i \propto \max(p_i r_i a_i, \varepsilon)$, renormalised
 to sum to 1. The floor keeps every measure marginally alive so the ensemble can
@@ -750,6 +752,8 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/CALIBRATION.md](docs/CALIBRATION.md) | what eight labelled recordings changed, which defaults moved, and what the data cannot support |
 | [docs/RESULTS.md](docs/RESULTS.md) | every results table, generated from the stored reports |
 | [docs/STUDY_UA.md](docs/STUDY_UA.md) | the same study, in Ukrainian |
+| [docs/STUDY_UA_REPORT.md](docs/STUDY_UA_REPORT.md) | Ukrainian technical report: how the module works, five diagrams, change history, and the 20-item research programme |
+| [docs/claims.toml](docs/claims.toml) | every number quoted in prose, pinned to its report **and its sample size**, checked by `tests/test_claims.py` |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |
 

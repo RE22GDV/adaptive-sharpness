@@ -404,3 +404,98 @@ class TestProvenanceFlagMeansSomething:
             assert name.split("/")[0] in {
                 "src", "tools", "tests", "demo", "config", "pyproject.toml",
             }, f"path looks truncated: {name}"
+
+
+class TestProcessingFingerprint:
+    """A cache is written by one tool and read by another.
+
+    `protocol_study.py` writes the raw metric arrays; `fair_comparison.py`
+    compares them against streaming pipelines built from the *current* config.
+    The fingerprint that says the two describe the same experiment used to be
+    built inside the writer, so the reader had no way to ask for the same
+    string - and did not check at all, reopening the `.npz` directly.  It now
+    lives in one place and both call it.
+    """
+
+    def test_a_changed_analysis_width_changes_the_fingerprint(self) -> None:
+        from dataclasses import replace
+
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import processing_fingerprint
+
+        config = load_default_config()
+        names = ("wavelet", "tenengrad")
+        wider = replace(
+            config, pipeline=replace(config.pipeline, analysis_width=640)
+        )
+        assert processing_fingerprint(config, names) != processing_fingerprint(
+            wider, names
+        )
+
+    def test_a_changed_noise_quantile_changes_the_fingerprint(self) -> None:
+        """The defect this guards is not hypothetical: the noise quantile moved
+        from 50 to 75, and a cache written before that describes a different
+        measurement."""
+        from dataclasses import replace
+
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import processing_fingerprint
+
+        config = load_default_config()
+        names = ("wavelet",)
+        median = replace(
+            config, analysis=replace(config.analysis, noise_quantile=50.0)
+        )
+        assert processing_fingerprint(config, names) != processing_fingerprint(
+            median, names
+        )
+
+    def test_a_different_measure_set_changes_the_fingerprint(self) -> None:
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import processing_fingerprint
+
+        config = load_default_config()
+        assert processing_fingerprint(config, ("wavelet",)) != processing_fingerprint(
+            config, ("wavelet", "brenner")
+        )
+
+    def test_the_same_configuration_gives_the_same_fingerprint(self) -> None:
+        from adaptive_sharpness import load_default_config
+        from tools.evaluation import processing_fingerprint
+
+        names = ("wavelet", "brenner")
+        assert processing_fingerprint(
+            load_default_config(), names
+        ) == processing_fingerprint(load_default_config(), names)
+
+
+class TestFairComparisonChecksItsCache:
+    """The raw signals and the pipelines in that report are compared against
+    each other, so raw arrays from a different configuration would make the
+    whole table incoherent.  The tool read them without checking."""
+
+    def test_it_asks_for_the_fingerprint(self) -> None:
+        source = (
+            Path(__file__).resolve().parents[1] / "tools" / "fair_comparison.py"
+        ).read_text(encoding="utf-8")
+        assert "processing_fingerprint(config, names)" in source
+
+    def test_it_does_not_reopen_the_cache_behind_the_loader(self) -> None:
+        """Reopening the `.npz` is what skipped the check."""
+        source = (
+            Path(__file__).resolve().parents[1] / "tools" / "fair_comparison.py"
+        ).read_text(encoding="utf-8")
+        assert "np.load(cached.path" not in source
+        assert "cached.raw" in source
+
+    def test_unverified_raw_metrics_stop_the_run(self) -> None:
+        """A stale cache must produce no row rather than a wrong one."""
+        from tools.evaluation import CachedMeasures
+
+        stale = CachedMeasures(
+            path=Path("nowhere.npz"), frames=10, raw=None,
+            spot_radius=None, spot_offset=None,
+            note="raw metrics stale, not used",
+        )
+        assert stale.raw is None
+        assert not stale.has_reference

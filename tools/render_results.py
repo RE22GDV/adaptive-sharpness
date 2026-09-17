@@ -110,6 +110,9 @@ def _ablation_section(
     lines = [f"## {title}", "", _provenance_line(report), ""]
     lines += _selection_table(report)
 
+    note = _sample_note(summary, tuple(columns))
+    if note:
+        lines += [f"<sub>{note}</sub>", ""]
     headers = ["variant"] + [label for label, _, _ in columns]
     rows = []
     for name, row in summary.items():
@@ -273,6 +276,7 @@ def _before_after(report: dict[str, Any]) -> list[str]:
 
 _ABLATION_COLUMNS = (
     ("adj", "adj", 3),
+    ("plateau/steps", "peak_plateau_steps", 2),
     ("mono", "mono", 3),
     ("sat", "sat", 3),
     ("sentinel", "sentinel", 3),
@@ -288,8 +292,35 @@ _GROUND_TRUTH_COLUMNS = (
     ("strict", "inversion_strict", 3),
     ("resolved", "resolved", 3),
     ("peak err", "peak_err", 2),
-    ("plateau", "peak_plateau", 1),
+    ("plateau/ref", "peak_plateau", 1),
 )
+
+
+def _sample_note(summary: dict[str, Any], columns: tuple) -> str:
+    """How many recordings the columns of a table were averaged over.
+
+    Not decoration.  Two of these tables sit next to each other, one averaged
+    over every recording and one over the two that carry the point-source
+    reference, and they share several column names - `plateau` appears in both
+    and means a different sample in each.  A published table of this project
+    was read as covering eight recordings when its plateau column covered two,
+    and the conclusion drawn from it was wrong, so the count is printed with
+    the table rather than left to the reader.
+    """
+    counts = sorted({
+        int(row[f"{key}_n"])
+        for row in summary.values()
+        for _, key, _ in columns
+        if isinstance(row.get(f"{key}_n"), (int, float))
+    })
+    if not counts:
+        return ""
+    if len(counts) == 1:
+        return f"Averaged over {counts[0]} recording{'s' if counts[0] != 1 else ''}."
+    return (
+        f"Averaged over {counts[0]} to {counts[-1]} recordings, depending on "
+        "the column; see the per-recording tables."
+    )
 
 
 def _reference_robustness(
@@ -432,7 +463,10 @@ def build(data: Path) -> str:
             and r["spearman_gt"] == r["spearman_gt"]
             for r in summary.values()
         ):
+            note = _sample_note(summary, _GROUND_TRUTH_COLUMNS)
             lines += ["**Against the point-source reference**", ""]
+            if note:
+                lines += [f"<sub>{note}</sub>", ""]
             lines += _table(
                 ["variant"] + [label for label, _, _ in _GROUND_TRUTH_COLUMNS],
                 [

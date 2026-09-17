@@ -35,6 +35,8 @@ __all__ = [
     "provenance",
     "config_fingerprint",
     "file_fingerprint",
+    "processing_fingerprint",
+    "CACHE_VERSION",
 ]
 
 
@@ -45,6 +47,11 @@ __all__ = [
 #: Parameters the point-source measurement depends on.  Stored with the cache,
 #: because changing any of them changes the reference.
 SPOT_PARAMETERS: dict[str, float] = {"half": 80, "fraction": 0.5, "blur": 9}
+
+#: Bumped when the cache layout changes in a way a stored file cannot
+#: describe.  It is part of the processing fingerprint, so an old file is
+#: rejected rather than silently misread.
+CACHE_VERSION = "2"
 
 
 @dataclass(frozen=True)
@@ -353,6 +360,33 @@ def config_fingerprint(config: Any) -> str:
     else:
         payload = config
     return hashlib.sha256(_stable_json(payload).encode()).hexdigest()[:16]
+
+
+def processing_fingerprint(config: Any, names: Sequence[str]) -> str:
+    """What a cached *raw metric* array depends on, in one string.
+
+    The raw arrays in a measure cache are the output of the whole measurement
+    path: which measures were computed, the metric parameters, the analysis
+    width, the noise quantile.  Any of those changing makes a stored array
+    describe a different experiment.
+
+    This used to be built inside `protocol_study.py`, which writes the cache,
+    while `fair_comparison.py`, which reads it, had no way to ask for the same
+    string and so read the arrays without checking them at all.  Both now call
+    this, because a cache written by one tool and read by another is exactly
+    the place where two numbers can silently stop being comparable.
+
+    The *spot reference* deliberately does not appear here: it is measured from
+    the frames themselves and has its own fingerprint, so changing a metric
+    does not needlessly invalidate it.
+    """
+    return "|".join((
+        CACHE_VERSION,
+        config_fingerprint(config.pipeline),
+        config_fingerprint(config.metrics),
+        config_fingerprint(config.analysis),
+        ",".join(names),
+    ))
 
 
 def file_fingerprint(paths: Sequence[Path], *, sample_bytes: int = 65536) -> str:

@@ -1,0 +1,195 @@
+# Numbers quoted in prose, pinned to the report that produced them.
+#
+# Every figure a document states in a sentence or a hand-written table is
+# registered here with the report it came from, the field it is, and - this is
+# the point of the file - how many recordings it was averaged over.
+#
+# This exists because of a specific defect.  `docs/CALIBRATION.md` printed a
+# table headed "across all eight recordings" whose plateau column held
+# `peak_plateau`, a statistic defined only on the two recordings that carry the
+# point-source reference.  The generated `docs/RESULTS.md` had it right; the
+# hand-written summary of it did not, and the wrong number was repeated
+# downstream.  Nothing checked the two against each other.
+#
+# `tests/test_claims.py` now does.  A claim whose value has moved fails and
+# names the document to fix; a claim that cites `n` wrongly fails even when the
+# value is right.
+#
+#   id      stable name, cited from the documents that use it
+#   report  file in reports/, without the .json
+#   variant key under "aggregate"
+#   field   key under that variant
+#   n       recordings the field was averaged over; checked against <field>_n
+#   value   what the documents say, at the precision they say it
+#   digits  decimal places the documents round to
+#   where   documents that quote it, so a failure names them
+
+[[claim]]
+id = "singles.six.adj"
+report = "ablation_singles"
+variant = "six_shipped"
+field = "adj"
+n = 8
+value = 0.822
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.six.plateau_all"
+report = "ablation_singles"
+variant = "six_shipped"
+field = "peak_plateau_steps"
+n = 8
+value = 1.0
+digits = 2
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.six.plateau_reference"
+report = "ablation_singles"
+variant = "six_shipped"
+field = "peak_plateau"
+n = 2
+value = 1.0
+digits = 1
+where = ["docs/RESULTS.md"]
+
+[[claim]]
+id = "singles.wavelet.plateau_all"
+report = "ablation_singles"
+variant = "only_wavelet"
+field = "peak_plateau_steps"
+n = 8
+value = 2.12
+digits = 2
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.wavelet.plateau_reference"
+report = "ablation_singles"
+variant = "only_wavelet"
+field = "peak_plateau"
+n = 2
+value = 5.5
+digits = 1
+where = ["docs/RESULTS.md"]
+
+[[claim]]
+id = "singles.fourier.plateau_all"
+report = "ablation_singles"
+variant = "only_fourier"
+field = "peak_plateau_steps"
+n = 8
+value = 3.62
+digits = 2
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.edge_width.plateau_all"
+report = "ablation_singles"
+variant = "only_edge_width"
+field = "peak_plateau_steps"
+n = 8
+value = 1.75
+digits = 2
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.brenner.adj"
+report = "ablation_singles"
+variant = "only_brenner"
+field = "adj"
+n = 8
+value = 0.747
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.six.sat"
+report = "ablation_singles"
+variant = "six_shipped"
+field = "sat"
+n = 8
+value = 0.005
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.six.spearman"
+report = "ablation_singles"
+variant = "six_shipped"
+field = "spearman_gt"
+n = 2
+value = 0.965
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "singles.wavelet.spearman"
+report = "ablation_singles"
+variant = "only_wavelet"
+field = "spearman_gt"
+n = 2
+value = 0.937
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.adaptive.spearman"
+report = "ablation_factorial"
+variant = "R-F"
+field = "spearman_gt"
+n = 2
+value = 0.965
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.adaptive.adj"
+report = "ablation_factorial"
+variant = "R-F"
+field = "adj"
+n = 8
+value = 0.822
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.prior.adj"
+report = "ablation_factorial"
+variant = "--F"
+field = "adj"
+n = 8
+value = 0.827
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.equal.adj"
+report = "ablation_factorial"
+variant = "plain_mean"
+field = "adj"
+n = 8
+value = 0.825
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.prior.spearman"
+report = "ablation_factorial"
+variant = "--F"
+field = "spearman_gt"
+n = 2
+value = 0.951
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "factorial.equal.spearman"
+report = "ablation_factorial"
+variant = "plain_mean"
+field = "spearman_gt"
+n = 2
+value = 0.950
+digits = 3
+where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]

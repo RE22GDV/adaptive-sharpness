@@ -49,11 +49,14 @@ from adaptive_sharpness import SharpnessConfig, load_default_config  # noqa: E40
 from tools.ablation import (  # noqa: E402
     REPAIRED,
     VariantSpec,
+    alternative_reference,
     ground_truth_scores,
     spec_from_config,
 )
+from tools.comprehensive_study import all_measures  # noqa: E402
 from tools.evaluation import (  # noqa: E402
     load_measure_cache,
+    processing_fingerprint,
     provenance,
     select_frames,
 )
@@ -115,13 +118,41 @@ def build_pipelines(config: SharpnessConfig) -> dict[str, tuple[VariantSpec, str
     return pipelines
 
 
-def analyse(directory: Path, config: SharpnessConfig) -> dict[str, Any] | None:
+def analyse(
+    directory: Path,
+    config: SharpnessConfig,
+    *,
+    reference_variant: str = "r50_w80_median",
+) -> dict[str, Any] | None:
     context = load_context(directory)
-    cached = load_measure_cache(directory, context.files)
+    names = tuple(all_measures(config))
+    cached = load_measure_cache(
+        directory, context.files,
+        processing_fingerprint=processing_fingerprint(config, names),
+    )
+    if cached.raw is None:
+        # The raw signals and the pipelines are compared against each other, so
+        # reading raw arrays that were written under a different analysis width
+        # or noise quantile would make the whole table incoherent.  This used
+        # to reopen the file directly and skip the check entirely.
+        logger.warning(
+            "%s: raw metrics unusable (%s); rebuild with "
+            "'python3 tools/protocol_study.py <dir> --refresh'",
+            directory.name, cached.note,
+        )
+        return None
     if not cached.has_reference:
         logger.info("%s: no usable reference - %s", directory.name, cached.note)
         return None
     radius, offset = cached.spot_radius, cached.spot_offset
+    reference_note = "spot size, recipe r50_w80_median"
+    if reference_variant != "r50_w80_median":
+        alternative = alternative_reference(directory, context.files, reference_variant)
+        if alternative is None:
+            logger.info("%s: alternative reference unavailable", directory.name)
+            return None
+        radius, offset = alternative
+        reference_note = f"spot size, recipe {reference_variant}"
 
     selection = select_frames(
         step=context.step, hold=context.hold,
@@ -137,16 +168,15 @@ def analyse(directory: Path, config: SharpnessConfig) -> dict[str, Any] | None:
         "selection": selection.summary(),
         "context": context.summary(),
         "cache": cached.note,
+        "reference": reference_note,
         "signals": {},
         "pipelines": {},
     }
 
-    raw_cache = np.load(cached.path, allow_pickle=False)
     for name in RAW_SIGNALS:
-        key = f"raw_{name}"
-        if key not in raw_cache.files:
+        if name not in cached.raw:
             continue
-        series = raw_cache[key][mask].astype(float)
+        series = np.asarray(cached.raw[name])[mask].astype(float)
         scores = ground_truth_scores(series, truth, labels)
         scores["adj"] = adjacent_discrimination(series, labels)
         scores["negative_fraction"] = float(np.mean(series < 0.0))
@@ -227,6 +257,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
     parser.add_argument("--json", type=Path, default=None)
+    parser.add_argument(
+        "--reference-variant", default="r50_w80_median",
+        help="spot-reference recipe, as fraction_window_background "
+             "(e.g. r25_w50_median); the comparison between a raw measure and "
+             "a pipeline should survive changing it",
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args(argv)
     logging.basicConfig(
@@ -239,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     for directory in sorted(args.root.iterdir()):
         if not (directory.is_dir() and (directory / "frames.csv").exists()):
             continue
-        entry = analyse(directory, config)
+        entry = analyse(directory, config, reference_variant=args.reference_variant)
         if entry:
             runs[directory.name] = entry
     if not runs:
@@ -249,6 +285,7 @@ def main(argv: list[str] | None = None) -> int:
         "runs": runs,
         "signals": aggregate(runs, "signals"),
         "pipelines": aggregate(runs, "pipelines"),
+        "reference_variant": args.reference_variant,
         "provenance": provenance(config, recordings=list(runs)),
     }
 

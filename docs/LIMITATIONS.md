@@ -23,12 +23,20 @@ program must restart the capture.
 
 ## Measurement of image conditions
 
-**The noise adaptation is inert on the GH6 live-view stream.** Measured across
-90 frames, the noise sigma is 0.0000 - the camera denoises the preview JPEG
-before sending it. The noise term of the weighting model therefore never
-engages on this source, and every noise-related result reported was obtained on
-synthetic data. On a raw or high-ISO source it would engage; that has not been
-demonstrated here.
+**The noise estimate reads low, and it used to read nothing at all.** An earlier
+version of this section said the noise adaptation was inert on the GH6
+live-view stream - sigma 0.0000 across 90 frames - and blamed the camera's
+preview denoising. That diagnosis was wrong. The estimator took the *median* of
+the finest Haar detail band, and on an 8-bit stream most of those coefficients
+are exactly zero, so the median was pinned at zero however much noise was
+present. Reading the same distribution at the 75th percentile instead moved the
+share of frames reporting zero noise from **97.59% to 0.17%** across the eight
+recordings ([table](RESULTS.md#each-repair-on-its-own)).
+
+What remains true is that the estimate is not a measurement. It has a
+structure-dependent floor, reads about 35% low against a known injected sigma,
+and responds to image content as well as to sensor noise. Treat it as a
+relative signal within one stream.
 
 **Only global translation is detected as motion.** Motion is estimated by phase
 correlation, which measures a rigid shift of the whole frame. A subject moving
@@ -36,11 +44,20 @@ correlation, which measures a rigid shift of the whole frame. A subject moving
 detected, so the motion degradation stays near zero for them and the weighting
 does not react.
 
-**Edge density conflates structure with contrast.** It is a Canny edge fraction
-at fixed thresholds, so a dim low-contrast scene reads as having little
-structure even when it is geometrically detailed. That is arguably the right
-answer for contrast autofocus, but it means `edge_sufficiency` - and therefore
-the confidence - is partly an exposure measurement.
+**Edge density conflates structure with contrast, and there is now evidence it
+costs something.** It is a Canny edge fraction at fixed thresholds, so a dim
+low-contrast scene reads as having little structure even when it is
+geometrically detailed. That means `edge_sufficiency` - and therefore the
+confidence - is partly an exposure measurement.
+
+The two recordings where adaptive weights do worst
+([CALIBRATION](CALIBRATION.md#does-the-adaptivity-earn-its-keep)) are the two
+darkest, with a measured edge density of 0.0000 against an `edge_ref_density`
+of 0.006. Both the edge and the exposure degradation factors are pinned at
+their extremes there, so the reliability model is weighting from inputs that
+have saturated. That is an association across two recordings rather than a
+demonstrated cause, but it is the predicted failure of a per-frame edge count
+that bottoms out, and it is what the redesign would have to fix.
 
 **The reference constants are scene-dependent.** `edge_ref_density`,
 `contrast_ref`, `noise_ref_sigma` and `motion_ref_px` set what counts as "enough

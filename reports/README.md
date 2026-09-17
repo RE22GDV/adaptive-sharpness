@@ -15,3 +15,36 @@ python3 tools/render_results.py reports --out docs/RESULTS.md
 No frame data is here. The recordings themselves are photographs of the
 operator's room and stay out of the repository; `docs/RESULTS.md` describes them
 statistically instead.
+
+## Every file here was measured on the target hardware
+
+All eleven reports were written on the Raspberry Pi 5 (`aarch64`), which is why
+their `ms`, `ms_p95` and `ms_p99` columns mean anything. Re-running a study on
+a desktop reproduces the *correctness* columns and replaces the timings with
+numbers from different hardware, so a report must not be regenerated anywhere
+else and committed.
+
+The correctness columns do move slightly between architectures - `aarch64` and
+`x86-64` order floating-point reductions differently. Measured across 351
+numeric fields of `fair_comparison.json`, the largest difference was 5e-6, well
+below any published digit.
+
+## `fair_comparison.json` predates the cache check
+
+The raw-signal half of that report was read out of `measures_cache.npz` without
+verifying the processing fingerprint, so nothing guaranteed the raw arrays had
+been written under the same configuration as the pipelines they were being
+compared against. `tools/fair_comparison.py` now requires a verified cache and
+refuses to run against a stale one.
+
+The committed file was checked against a re-run with the verification active:
+every published digit is identical, so the numbers were right and what was
+missing was the guarantee. It is left as measured on the Pi rather than
+replaced by a desktop run. To refresh it on the Pi:
+
+```bash
+python3 tools/fair_comparison.py data --json reports/fair_comparison.json
+```
+
+Its `cache` field then reads `raw metrics verified; reference verified` rather
+than `reference verified` alone - that string is the evidence the check ran.

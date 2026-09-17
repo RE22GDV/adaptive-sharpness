@@ -81,14 +81,12 @@ from tools.evaluation import (  # noqa: E402
     SPOT_PARAMETERS,
     config_fingerprint,
     file_fingerprint,
+    processing_fingerprint,
     load_measure_cache,
     provenance,
 )
 
 logger = logging.getLogger("protocol_study")
-
-#: Bump when the measurement code changes in a way that alters cached values.
-_CACHE_VERSION = "2"
 
 OWN: tuple[str, ...] = (
     "laplacian", "tenengrad", "brenner", "wavelet", "fourier", "edge_width",
@@ -250,19 +248,13 @@ def extract(
     # the measurement code are all the same as when it was written.  The check
     # lives in tools/evaluation.py so that every reader applies the same one.
     files = [directory / "frames" / str(r["image_file"]) for r in rows]
-    processing_fingerprint = "|".join((
-        _CACHE_VERSION,
-        config_fingerprint(config.pipeline),
-        config_fingerprint(config.metrics),
-        config_fingerprint(config.analysis),
-        ",".join(names),
-    ))
+    fingerprint = processing_fingerprint(config, names)
     spot_fingerprint = json.dumps(SPOT_PARAMETERS, sort_keys=True)
 
     if not refresh:
         cached_entry = load_measure_cache(
             directory, [str(r["image_file"]) for r in rows],
-            processing_fingerprint=processing_fingerprint,
+            processing_fingerprint=fingerprint,
         )
         usable = cached_entry.raw is not None and (
             not point_source or cached_entry.has_reference
@@ -331,7 +323,7 @@ def extract(
         "n": len(rows),
         "names": np.array(names),
         "file_fingerprint": np.array(file_fingerprint(files)),
-        "processing_fingerprint": np.array(processing_fingerprint),
+        "processing_fingerprint": np.array(fingerprint),
         "spot_fingerprint": np.array(spot_fingerprint),
         "spot_radius": radius_array if radius_array is not None else np.zeros(0),
         "spot_offset": offset if offset is not None else np.zeros(0),

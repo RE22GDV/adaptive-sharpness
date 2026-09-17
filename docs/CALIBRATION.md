@@ -272,12 +272,58 @@ kernel caused. With the kernel off, its remaining contribution is small.
 **The temporal filter is worth more than any weighting choice** for
 adjacent-step discrimination, at no cost in agreement with the reference.
 
-**Against a plain mean, the advantage is consistent but not established.** The
-shipped configuration is ahead on both point-source recordings and under both
-reference recipes, by 0.008 to 0.018 in rank correlation — four measurements,
-all the same sign. But only two recordings carry a reference at all, and the
-difference is smaller than the spread between recordings. This is a consistent
-direction, not a demonstrated effect, and it is reported that way.
+**Against a plain mean, the advantage depends on which criterion is used, and
+the two criteria disagree.** This is the least comfortable result in the
+document and it is the one most easily misread, because the two criteria are
+also measured on different numbers of recordings.
+
+| comparison | rank correlation, n=2 | `adj`, n=8 |
+| --- | --- | --- |
+| adaptive - prior weights | **+0.0145** | **-0.0050** |
+| adaptive - equal weights | **+0.0155** | **-0.0036** |
+
+By rank correlation against the reference, the shipped configuration is ahead
+on both point-source recordings and under both reference recipes - four
+measurements, all the same sign, and the paired difference survives a change of
+reference recipe with 0.003 to 0.005 of movement. By adjacent-step
+discrimination across all eight recordings, it is behind.
+
+The per-recording breakdown says why, and it is not a wash:
+
+| recording | adaptive | prior | difference |
+| --- | --- | --- | --- |
+| `cond_20260916_110502` | 0.704 | 0.827 | **-0.123** |
+| `cond_20260916_110746` | 0.772 | 0.829 | **-0.056** |
+| `sweep_plain_20260916_110955` | 0.735 | 0.738 | -0.003 |
+| `sweep_texture_20260916_110108` | 0.797 | 0.790 | +0.007 |
+| `point_source_20260916_111545` | 0.934 | 0.923 | +0.011 |
+| `point_source_20260916_111724` | 0.828 | 0.801 | +0.027 |
+| `cond_20260916_110600` | 0.856 | 0.814 | +0.042 |
+| `cond_20260916_110656` | 0.948 | 0.894 | +0.054 |
+
+**Adaptive weights win on five recordings of eight and still lose on average**,
+because the two losses are several times larger than any of the wins. The mean
+is carried by two recordings.
+
+Those two are the darkest in the corpus - mean brightness 0.2, measured edge
+density 0.0000 against an `edge_ref_density` of 0.006. Both the edge and the
+exposure degradation factors are pinned at their extremes there, so the
+reliability model is producing weights from inputs that have saturated and
+stopped carrying information. `cond_20260916_110656`, at brightness 0.8, is the
+largest win.
+
+That association is two recordings and a plausible mechanism, not a
+demonstrated cause - the two point-source recordings also have near-zero edge
+density and adaptivity wins on both. It is recorded here because it is a
+testable prediction and because it points at the same defect as
+[edge sufficiency](#what-is-still-open) below: a per-frame edge count that
+bottoms out is not a usable condition signal.
+
+**What this means for the claim.** "Fusing six measures beats one" and
+"adapting the weights beats fixing them" are separate claims with separate
+evidence. The first holds on all eight recordings and on both criteria. The
+second holds on the reference criterion, does not hold on the discrimination
+criterion, and is not established.
 
 ---
 
@@ -308,9 +354,32 @@ Two steps, each measured on its own:
   that is the normalisation plus the temporal filter.
 - **Fusing six recovers 0.028** (0.937 to 0.965), for 4.5 ms.
 
-**The net gap to the best raw measure is 0.023**, which sits at the level of the
-reference's own ambiguity - its coherent variants agree with each other at 0.98.
-The remainder is therefore below what this reference can resolve.
+**The net gap to the best raw measure is 0.023**, and it is a real gap.
+
+An earlier version of this section explained it away: the reference's coherent
+variants agree with each other at rank correlation 0.98, so 0.023 was called
+"below what this reference can resolve". That inference does not hold. A
+correlation *between two recipes* is not an error bar on a correlation
+*between a method and a recipe*, and the two need not have anything like the
+same magnitude.
+
+The question can be answered instead of argued, because the factorial was run
+against both recipes ([table](RESULTS.md#does-the-ranking-survive-a-different-reference-recipe)).
+Changing `r50_w80_median` to `r25_w50_median` moves every variant's rank
+correlation down by 0.004 to 0.011 - a common-mode shift - while the
+*differences between variants* move by only 0.002 to 0.005:
+
+| paired difference | `r50_w80` | `r25_w50` | moved by |
+| --- | --- | --- | --- |
+| adaptive - prior weights | +0.0145 | +0.0114 | -0.0031 |
+| adaptive - equal weights | +0.0155 | +0.0104 | -0.0050 |
+| kernel off - kernel on | +0.0159 | +0.0136 | -0.0022 |
+
+So paired differences are far more robust to the recipe than absolute
+correlations are, and 0.023 is roughly five times the largest recipe-induced
+movement. It is not noise in the reference. The honest reading is that the
+pipeline does cost about that much against the best raw measure on these two
+recordings, and the case for it has to be made on the other eight.
 
 So most of the loss comes not from running in real time but from using *one*
 measure; fusion recovers more than half of it; and what is left is not
@@ -333,23 +402,31 @@ Across all eight recordings, low texture and dark exposures included
 
 | configuration | `adj` | peak plateau | saturation |
 | --- | --- | --- | --- |
-| **six, as shipped** | **0.822** | **1 step** | 0.005 |
-| `brenner` alone | 0.747 | 5 steps | 0.090 |
-| `wavelet` alone | 0.743 | 5.5 | 0.090 |
-| `tenengrad` alone | 0.729 | 5 | 0.089 |
-| `laplacian` alone | 0.720 | 7 | 0.165 |
-| `edge_width` alone | 0.705 | 1 | 0.179 |
-| `fourier` alone | 0.690 | 6.5 | 0.250 |
+| **six, as shipped** | **0.822** | **1.00 step** | 0.005 |
+| `brenner` alone | 0.747 | 2.00 | 0.090 |
+| `wavelet` alone | 0.743 | 2.12 | 0.090 |
+| `tenengrad` alone | 0.729 | 2.00 | 0.089 |
+| `laplacian` alone | 0.720 | 2.50 | 0.165 |
+| `edge_width` alone | 0.705 | 1.75 | 0.179 |
+| `fourier` alone | 0.690 | 3.62 | 0.250 |
+
+Every column here is averaged over the same eight recordings.
 
 The gap is **0.075 to 0.132** here against 0.025 on the point source alone. Six
 wins on **six recordings of eight**, and by the widest margin exactly where
 fusion is supposed to help - on the low-texture sweep, 0.735 against 0.640 for
 the best single measure.
 
-The sharper difference is the **peak plateau**: a single measure leaves a
-plateau five to seven steps wide, which is to say it does not localise the
-maximum at all, while six leave one step. Saturation is 18 to 50 times higher
-for a single measure.
+A single measure also leaves a wider **peak plateau** - 1.75 to 3.62 steps
+against one - and saturates **19 to 54 times** more often.
+
+> An earlier version of this table printed 5 to 7 steps in the plateau column
+> and concluded that a single measure "does not localise the maximum at all".
+> Those were the `peak_plateau` figures from the *two* point-source recordings,
+> lifted into a table labelled as covering eight, and they were not even the
+> range of that column - `edge_width` sits at 1 step there. The all-recordings
+> statistic is `peak_plateau_steps`, printed above. The corrected difference
+> still favours six measures and is about a third of the size.
 
 So a single measure nearly matches on a point source and does not on real
 scenes.
@@ -359,11 +436,16 @@ scenes.
 `wavelet` is computed from one frame and needs no future ones. Its absence from
 the shipped system is not a matter of it being uncomputable online.
 
-What it lacks is a bounded scale, comparability between scenes, a confidence,
-and anything to fuse. For finding a maximum *within one stream* no scale is
-needed - only an ordering, and the raw measure gives a better one than the
-pipeline does. Whether those properties are worth 0.023 is a choice, not a
-consequence.
+What it lacks is a bounded scale, a confidence, and anything to fuse. For
+finding a maximum *within one stream* no scale is needed - only an ordering,
+and the raw measure gives a better one than the pipeline does. Whether those
+properties are worth 0.023 is a choice, not a consequence.
+
+Cross-scene comparability is **not** on that list, although an earlier version
+of this section claimed it. The scale is fitted to one stream's own history and
+then frozen to it, so two streams are normalised against two different
+histories; [README](../README.md#what-it-does-not-do) says so directly. The
+pipeline buys a bounded number and a confidence to go with it, not a unit.
 
 Also worth recording: three published measures - NVAR, GLVA and VOL5 - score
 about 0.10 against this reference. They are variance-family measures and respond
