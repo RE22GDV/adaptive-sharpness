@@ -1152,11 +1152,9 @@
   "title": "\u041f\u043e\u0432\u0435\u0434\u0456\u043d\u043a\u0430 \u0432\u0430\u0433",
   "data_root": "D:\\camera_focus_data",
   "provenance": {
-    "commit": "eb89fc4cd577816d73dd0a08264a4d51fdf5029a",
-    "source_modified": true,
-    "source_modified_files": [
-      "tools/report_pdf_ua.py"
-    ],
+    "commit": "4bb503193d106b9101cffadb48db6060fadff58a",
+    "source_modified": false,
+    "source_modified_files": [],
     "source_paths_checked": [
       "src",
       "tools",
@@ -1165,8 +1163,8 @@
       "config",
       "pyproject.toml"
     ],
-    "working_tree_dirty": true,
-    "tracked_files_modified": true,
+    "working_tree_dirty": false,
+    "tracked_files_modified": false,
     "python": "3.12.10",
     "numpy": "2.1.2",
     "opencv": "4.13.0",

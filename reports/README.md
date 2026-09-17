@@ -48,3 +48,19 @@ python3 tools/fair_comparison.py data --json reports/fair_comparison.json
 
 Its `cache` field then reads `raw metrics verified; reference verified` rather
 than `reference verified` alone - that string is the evidence the check ran.
+
+## The Д07-Д20 studies were measured on a desktop
+
+`study_d*.json` were computed on an x86-64 workstation, not the Pi, because
+they replay the corpus hundreds of times and none of their conclusions is about
+speed.  Their `ms` columns are therefore **not** comparable with the eleven
+reports above, and not with each other across machines.  For anything about
+throughput, use the Pi reports.
+
+All fourteen were recomputed from a clean tree so that `source_modified` is
+false in every one: an earlier set was written while the study code was still
+being edited, which meant no result could be tied to an exact state of it.
+
+```bash
+python3 tools/programme.py all --data <recordings> --workers 32
+```

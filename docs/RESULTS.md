@@ -644,15 +644,15 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D07. Невизначеність парних різниць
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `adaptive` | 0.822 | 0.005 | 5.34 |
-| `prior` | 0.827 | 0.004 | 5.29 |
-| `equal` | 0.826 | 0.004 | 5.28 |
+| `adaptive` | 0.822 | 0.005 | 6.56 |
+| `prior` | 0.827 | 0.004 | 6.56 |
+| `equal` | 0.826 | 0.004 | 6.56 |
 
 **Against the point-source reference**
 
@@ -668,7 +668,7 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D08. Відтворення першого коду
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
@@ -690,7 +690,7 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D09. Нормалізація поетапно
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
@@ -722,7 +722,7 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D10. Залежність від передісторії
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 | variant |
 | --- |
@@ -735,40 +735,40 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D11. Параметри автофіксації
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `off` | 0.809 | 0.004 | 7.66 |
-| `min120_pat60_stab0.02` | 0.810 | 0.056 | 5.69 |
-| `min120_pat60_stab0.05` | 0.818 | 0.057 | 5.67 |
-| `min120_pat60_stab0.1` | 0.788 | 0.177 | 5.28 |
-| `min120_pat120_stab0.02` | 0.810 | 0.005 | 5.77 |
-| `min120_pat120_stab0.05` | 0.823 | 0.004 | 5.65 |
-| `min120_pat120_stab0.1` | 0.823 | 0.004 | 5.35 |
-| `min120_pat240_stab0.02` | 0.807 | 0.004 | 6.64 |
-| `min120_pat240_stab0.05` | 0.809 | 0.004 | 6.13 |
-| `min120_pat240_stab0.1` | 0.809 | 0.004 | 5.72 |
-| `min240_pat60_stab0.02` | 0.818 | 0.051 | 5.85 |
-| `min240_pat60_stab0.05` | 0.818 | 0.051 | 5.95 |
-| `min240_pat60_stab0.1` | 0.817 | 0.051 | 5.76 |
-| `min240_pat120_stab0.02` | 0.811 | 0.004 | 6.56 |
-| `min240_pat120_stab0.05` | 0.822 | 0.005 | 5.82 |
-| `min240_pat120_stab0.1` | 0.822 | 0.005 | 5.87 |
-| `min240_pat240_stab0.02` | 0.807 | 0.004 | 6.12 |
-| `min240_pat240_stab0.05` | 0.809 | 0.004 | 6.49 |
-| `min240_pat240_stab0.1` | 0.809 | 0.004 | 6.12 |
-| `min480_pat60_stab0.02` | 0.814 | 0.051 | 5.10 |
-| `min480_pat60_stab0.05` | 0.813 | 0.051 | 6.39 |
-| `min480_pat60_stab0.1` | 0.813 | 0.051 | 6.38 |
-| `min480_pat120_stab0.02` | 0.810 | 0.004 | 6.97 |
-| `min480_pat120_stab0.05` | 0.810 | 0.004 | 6.56 |
-| `min480_pat120_stab0.1` | 0.810 | 0.004 | 6.35 |
-| `min480_pat240_stab0.02` | 0.807 | 0.004 | 6.31 |
-| `min480_pat240_stab0.05` | 0.807 | 0.004 | 6.21 |
-| `min480_pat240_stab0.1` | 0.807 | 0.004 | 6.44 |
+| `off` | 0.809 | 0.004 | 8.53 |
+| `min120_pat60_stab0.02` | 0.810 | 0.056 | 6.17 |
+| `min120_pat60_stab0.05` | 0.818 | 0.057 | 6.23 |
+| `min120_pat60_stab0.1` | 0.788 | 0.177 | 5.91 |
+| `min120_pat120_stab0.02` | 0.810 | 0.005 | 7.27 |
+| `min120_pat120_stab0.05` | 0.823 | 0.004 | 6.82 |
+| `min120_pat120_stab0.1` | 0.823 | 0.004 | 6.93 |
+| `min120_pat240_stab0.02` | 0.807 | 0.004 | 7.80 |
+| `min120_pat240_stab0.05` | 0.809 | 0.004 | 7.51 |
+| `min120_pat240_stab0.1` | 0.809 | 0.004 | 7.48 |
+| `min240_pat60_stab0.02` | 0.818 | 0.051 | 6.47 |
+| `min240_pat60_stab0.05` | 0.818 | 0.051 | 6.37 |
+| `min240_pat60_stab0.1` | 0.817 | 0.051 | 6.47 |
+| `min240_pat120_stab0.02` | 0.811 | 0.004 | 7.10 |
+| `min240_pat120_stab0.05` | 0.822 | 0.005 | 7.18 |
+| `min240_pat120_stab0.1` | 0.822 | 0.005 | 7.02 |
+| `min240_pat240_stab0.02` | 0.807 | 0.004 | 7.86 |
+| `min240_pat240_stab0.05` | 0.809 | 0.004 | 7.82 |
+| `min240_pat240_stab0.1` | 0.809 | 0.004 | 7.43 |
+| `min480_pat60_stab0.02` | 0.814 | 0.051 | 6.69 |
+| `min480_pat60_stab0.05` | 0.813 | 0.051 | 7.13 |
+| `min480_pat60_stab0.1` | 0.813 | 0.051 | 6.94 |
+| `min480_pat120_stab0.02` | 0.810 | 0.004 | 7.72 |
+| `min480_pat120_stab0.05` | 0.810 | 0.004 | 7.74 |
+| `min480_pat120_stab0.1` | 0.810 | 0.004 | 7.72 |
+| `min480_pat240_stab0.02` | 0.807 | 0.004 | 7.81 |
+| `min480_pat240_stab0.05` | 0.807 | 0.004 | 7.84 |
+| `min480_pat240_stab0.1` | 0.807 | 0.004 | 7.53 |
 
 **Against the point-source reference**
 
@@ -809,25 +809,25 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D14. Часовий фільтр
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `off` | 0.774 | 0.006 | 6.31 |
-| `alpha0.1_coupled` | 0.849 | 0.003 | 6.24 |
-| `alpha0.1_plain` | 0.832 | 0.004 | 5.64 |
-| `alpha0.2_coupled` | 0.836 | 0.003 | 5.46 |
-| `alpha0.2_plain` | 0.817 | 0.003 | 5.30 |
-| `alpha0.35_coupled` | 0.822 | 0.005 | 6.45 |
-| `alpha0.35_plain` | 0.801 | 0.004 | 6.13 |
-| `alpha0.5_coupled` | 0.817 | 0.005 | 5.67 |
-| `alpha0.5_plain` | 0.792 | 0.005 | 5.48 |
-| `alpha0.75_coupled` | 0.807 | 0.006 | 5.26 |
-| `alpha0.75_plain` | 0.781 | 0.006 | 6.41 |
-| `alpha1_coupled` | 0.798 | 0.006 | 5.98 |
-| `alpha1_plain` | 0.774 | 0.006 | 5.65 |
+| `off` | 0.774 | 0.006 | 6.76 |
+| `alpha0.1_coupled` | 0.849 | 0.003 | 6.50 |
+| `alpha0.1_plain` | 0.832 | 0.004 | 6.38 |
+| `alpha0.2_coupled` | 0.836 | 0.003 | 6.43 |
+| `alpha0.2_plain` | 0.817 | 0.003 | 6.40 |
+| `alpha0.35_coupled` | 0.822 | 0.005 | 6.61 |
+| `alpha0.35_plain` | 0.801 | 0.004 | 6.91 |
+| `alpha0.5_coupled` | 0.817 | 0.005 | 6.59 |
+| `alpha0.5_plain` | 0.792 | 0.005 | 6.21 |
+| `alpha0.75_coupled` | 0.807 | 0.006 | 6.45 |
+| `alpha0.75_plain` | 0.781 | 0.006 | 6.94 |
+| `alpha1_coupled` | 0.798 | 0.006 | 6.46 |
+| `alpha1_plain` | 0.774 | 0.006 | 6.53 |
 
 **Against the point-source reference**
 
@@ -853,75 +853,75 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D15. Підмножини метрик
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `1:lapl` | 0.720 | 0.165 | 1.74 |
-| `1:tene` | 0.729 | 0.089 | 1.94 |
-| `1:bren` | 0.747 | 0.090 | 1.89 |
-| `1:wave` | 0.743 | 0.090 | 2.05 |
-| `1:four` | 0.690 | 0.250 | 2.63 |
-| `1:edge` | 0.705 | 0.179 | 2.92 |
-| `2:lapl+tene` | 0.761 | 0.090 | 2.53 |
-| `2:lapl+bren` | 0.771 | 0.090 | 2.41 |
-| `2:lapl+wave` | 0.786 | 0.090 | 2.60 |
-| `2:lapl+four` | 0.755 | 0.140 | 3.11 |
-| `2:lapl+edge` | 0.766 | 0.051 | 3.33 |
-| `2:tene+bren` | 0.750 | 0.090 | 2.48 |
-| `2:tene+wave` | 0.739 | 0.090 | 2.53 |
-| `2:tene+four` | 0.775 | 0.087 | 3.02 |
-| `2:tene+edge` | 0.778 | 0.004 | 3.33 |
-| `2:bren+wave` | 0.751 | 0.090 | 2.36 |
-| `2:bren+four` | 0.773 | 0.087 | 2.81 |
-| `2:bren+edge` | 0.802 | 0.004 | 3.16 |
-| `2:wave+four` | 0.774 | 0.087 | 3.07 |
-| `2:wave+edge` | 0.782 | 0.004 | 3.48 |
-| `2:four+edge` | 0.802 | 0.092 | 3.84 |
-| `3:lapl+tene+bren` | 0.787 | 0.090 | 2.66 |
-| `3:lapl+tene+wave` | 0.796 | 0.090 | 3.11 |
-| `3:lapl+tene+four` | 0.790 | 0.087 | 3.48 |
-| `3:lapl+tene+edge` | 0.778 | 0.004 | 3.88 |
-| `3:lapl+bren+wave` | 0.804 | 0.090 | 3.09 |
-| `3:lapl+bren+four` | 0.794 | 0.088 | 3.65 |
-| `3:lapl+bren+edge` | 0.794 | 0.005 | 3.92 |
-| `3:lapl+wave+four` | 0.818 | 0.088 | 3.73 |
-| `3:lapl+wave+edge` | 0.787 | 0.005 | 4.03 |
-| `3:lapl+four+edge` | 0.797 | 0.050 | 4.41 |
-| `3:tene+bren+wave` | 0.745 | 0.090 | 2.85 |
-| `3:tene+bren+four` | 0.775 | 0.087 | 3.34 |
-| `3:tene+bren+edge` | 0.773 | 0.004 | 3.66 |
-| `3:tene+wave+four` | 0.776 | 0.088 | 3.56 |
-| `3:tene+wave+edge` | 0.763 | 0.005 | 3.80 |
-| `3:tene+four+edge` | 0.798 | 0.005 | 4.20 |
-| `3:bren+wave+four` | 0.772 | 0.087 | 3.46 |
-| `3:bren+wave+edge` | 0.773 | 0.004 | 3.49 |
-| `3:bren+four+edge` | 0.799 | 0.004 | 3.85 |
-| `3:wave+four+edge` | 0.791 | 0.004 | 4.04 |
-| `4:lapl+tene+bren+wave` | 0.799 | 0.090 | 2.98 |
-| `4:lapl+tene+bren+four` | 0.815 | 0.088 | 3.91 |
-| `4:lapl+tene+bren+edge` | 0.805 | 0.004 | 4.35 |
-| `4:lapl+tene+wave+four` | 0.811 | 0.088 | 4.15 |
-| `4:lapl+tene+wave+edge` | 0.792 | 0.004 | 4.58 |
-| `4:lapl+tene+four+edge` | 0.816 | 0.005 | 5.11 |
-| `4:lapl+bren+wave+four` | 0.824 | 0.088 | 4.20 |
-| `4:lapl+bren+wave+edge` | 0.796 | 0.005 | 4.36 |
-| `4:lapl+bren+four+edge` | 0.820 | 0.005 | 4.88 |
-| `4:lapl+wave+four+edge` | 0.817 | 0.004 | 4.89 |
-| `4:tene+bren+wave+four` | 0.781 | 0.088 | 3.93 |
-| `4:tene+bren+wave+edge` | 0.764 | 0.004 | 4.16 |
-| `4:tene+bren+four+edge` | 0.802 | 0.004 | 4.77 |
-| `4:tene+wave+four+edge` | 0.798 | 0.005 | 4.77 |
-| `4:bren+wave+four+edge` | 0.797 | 0.005 | 4.69 |
-| `5:lapl+tene+bren+wave+four` | 0.819 | 0.088 | 3.84 |
-| `5:lapl+tene+bren+wave+edge` | 0.800 | 0.005 | 4.17 |
-| `5:lapl+tene+bren+four+edge` | 0.827 | 0.005 | 4.67 |
-| `5:lapl+tene+wave+four+edge` | 0.824 | 0.005 | 4.74 |
-| `5:lapl+bren+wave+four+edge` | 0.835 | 0.005 | 4.68 |
-| `5:tene+bren+wave+four+edge` | 0.805 | 0.005 | 4.62 |
-| `6:six` | 0.822 | 0.005 | 4.77 |
+| `1:lapl` | 0.720 | 0.165 | 2.02 |
+| `1:tene` | 0.729 | 0.089 | 1.95 |
+| `1:bren` | 0.747 | 0.090 | 2.03 |
+| `1:wave` | 0.743 | 0.090 | 2.26 |
+| `1:four` | 0.690 | 0.250 | 2.85 |
+| `1:edge` | 0.705 | 0.179 | 2.97 |
+| `2:lapl+tene` | 0.761 | 0.090 | 2.73 |
+| `2:lapl+bren` | 0.771 | 0.090 | 2.52 |
+| `2:lapl+wave` | 0.786 | 0.090 | 2.67 |
+| `2:lapl+four` | 0.755 | 0.140 | 3.34 |
+| `2:lapl+edge` | 0.766 | 0.051 | 3.54 |
+| `2:tene+bren` | 0.750 | 0.090 | 2.69 |
+| `2:tene+wave` | 0.739 | 0.090 | 2.96 |
+| `2:tene+four` | 0.775 | 0.087 | 3.24 |
+| `2:tene+edge` | 0.778 | 0.004 | 3.57 |
+| `2:bren+wave` | 0.751 | 0.090 | 2.63 |
+| `2:bren+four` | 0.773 | 0.087 | 3.14 |
+| `2:bren+edge` | 0.802 | 0.004 | 3.43 |
+| `2:wave+four` | 0.774 | 0.087 | 3.55 |
+| `2:wave+edge` | 0.782 | 0.004 | 3.54 |
+| `2:four+edge` | 0.802 | 0.092 | 4.05 |
+| `3:lapl+tene+bren` | 0.787 | 0.090 | 3.00 |
+| `3:lapl+tene+wave` | 0.796 | 0.090 | 3.40 |
+| `3:lapl+tene+four` | 0.790 | 0.087 | 3.80 |
+| `3:lapl+tene+edge` | 0.778 | 0.004 | 4.07 |
+| `3:lapl+bren+wave` | 0.804 | 0.090 | 3.32 |
+| `3:lapl+bren+four` | 0.794 | 0.088 | 3.93 |
+| `3:lapl+bren+edge` | 0.794 | 0.005 | 4.08 |
+| `3:lapl+wave+four` | 0.818 | 0.088 | 4.00 |
+| `3:lapl+wave+edge` | 0.787 | 0.005 | 4.14 |
+| `3:lapl+four+edge` | 0.797 | 0.050 | 4.58 |
+| `3:tene+bren+wave` | 0.745 | 0.090 | 3.16 |
+| `3:tene+bren+four` | 0.775 | 0.087 | 3.71 |
+| `3:tene+bren+edge` | 0.773 | 0.004 | 3.89 |
+| `3:tene+wave+four` | 0.776 | 0.088 | 4.07 |
+| `3:tene+wave+edge` | 0.763 | 0.005 | 3.99 |
+| `3:tene+four+edge` | 0.798 | 0.005 | 4.71 |
+| `3:bren+wave+four` | 0.772 | 0.087 | 3.83 |
+| `3:bren+wave+edge` | 0.773 | 0.004 | 3.70 |
+| `3:bren+four+edge` | 0.799 | 0.004 | 4.33 |
+| `3:wave+four+edge` | 0.791 | 0.004 | 4.32 |
+| `4:lapl+tene+bren+wave` | 0.799 | 0.090 | 3.28 |
+| `4:lapl+tene+bren+four` | 0.815 | 0.088 | 4.13 |
+| `4:lapl+tene+bren+edge` | 0.805 | 0.004 | 4.45 |
+| `4:lapl+tene+wave+four` | 0.811 | 0.088 | 4.37 |
+| `4:lapl+tene+wave+edge` | 0.792 | 0.004 | 5.18 |
+| `4:lapl+tene+four+edge` | 0.816 | 0.005 | 5.47 |
+| `4:lapl+bren+wave+four` | 0.824 | 0.088 | 4.40 |
+| `4:lapl+bren+wave+edge` | 0.796 | 0.005 | 4.62 |
+| `4:lapl+bren+four+edge` | 0.820 | 0.005 | 5.45 |
+| `4:lapl+wave+four+edge` | 0.817 | 0.004 | 5.42 |
+| `4:tene+bren+wave+four` | 0.781 | 0.088 | 4.29 |
+| `4:tene+bren+wave+edge` | 0.764 | 0.004 | 4.46 |
+| `4:tene+bren+four+edge` | 0.802 | 0.004 | 4.87 |
+| `4:tene+wave+four+edge` | 0.798 | 0.005 | 5.10 |
+| `4:bren+wave+four+edge` | 0.797 | 0.005 | 4.79 |
+| `5:lapl+tene+bren+wave+four` | 0.819 | 0.088 | 4.30 |
+| `5:lapl+tene+bren+wave+edge` | 0.800 | 0.005 | 4.47 |
+| `5:lapl+tene+bren+four+edge` | 0.827 | 0.005 | 4.82 |
+| `5:lapl+tene+wave+four+edge` | 0.824 | 0.005 | 4.79 |
+| `5:lapl+bren+wave+four+edge` | 0.835 | 0.005 | 4.77 |
+| `5:tene+bren+wave+four+edge` | 0.805 | 0.005 | 4.94 |
+| `6:six` | 0.822 | 0.005 | 5.09 |
 
 **Against the point-source reference**
 
@@ -997,27 +997,27 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D16. Масштаб та ROI
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `w160_full` | 0.797 | 0.034 | 4.31 |
-| `w160_centre50` | 0.787 | 0.003 | 3.92 |
-| `w160_centre25` | 0.704 | 0.004 | 3.70 |
-| `w240_full` | 0.769 | 0.004 | 4.88 |
-| `w240_centre50` | 0.794 | 0.055 | 4.62 |
-| `w240_centre25` | 0.704 | 0.004 | 3.95 |
-| `w320_full` | 0.822 | 0.005 | 6.02 |
-| `w320_centre50` | 0.790 | 0.005 | 5.58 |
-| `w320_centre25` | 0.704 | 0.004 | 3.68 |
-| `w480_full` | 0.821 | 0.004 | 9.21 |
-| `w480_centre50` | 0.790 | 0.005 | 6.04 |
-| `w480_centre25` | 0.704 | 0.004 | 3.86 |
-| `w640_full` | 0.810 | 0.004 | 14.65 |
-| `w640_centre50` | 0.790 | 0.005 | 4.87 |
-| `w640_centre25` | 0.704 | 0.004 | 2.89 |
+| `w160_full` | 0.797 | 0.034 | 4.56 |
+| `w160_centre50` | 0.787 | 0.003 | 4.32 |
+| `w160_centre25` | 0.704 | 0.004 | 3.82 |
+| `w240_full` | 0.769 | 0.004 | 5.33 |
+| `w240_centre50` | 0.794 | 0.055 | 4.86 |
+| `w240_centre25` | 0.704 | 0.004 | 4.07 |
+| `w320_full` | 0.822 | 0.005 | 6.76 |
+| `w320_centre50` | 0.790 | 0.005 | 6.12 |
+| `w320_centre25` | 0.704 | 0.004 | 4.06 |
+| `w480_full` | 0.821 | 0.004 | 10.29 |
+| `w480_centre50` | 0.790 | 0.005 | 6.48 |
+| `w480_centre25` | 0.704 | 0.004 | 3.98 |
+| `w640_full` | 0.810 | 0.004 | 16.09 |
+| `w640_centre50` | 0.790 | 0.005 | 5.83 |
+| `w640_centre25` | 0.704 | 0.004 | 3.46 |
 
 **Against the point-source reference**
 
@@ -1045,7 +1045,7 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D17. Штучні деградації на реальних кадрах
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
@@ -1099,19 +1099,19 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D18. Чутливість коефіцієнтів надійності
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `kappa0` | 0.827 | 0.004 | 5.87 |
-| `kappa0.25` | 0.830 | 0.004 | 5.35 |
-| `kappa0.5` | 0.825 | 0.004 | 5.18 |
-| `kappa1` | 0.822 | 0.005 | 5.98 |
-| `kappa2` | 0.814 | 0.004 | 5.24 |
-| `kappa4` | 0.827 | 0.004 | 5.09 |
-| `kappa8` | 0.824 | 0.004 | 5.94 |
+| `kappa0` | 0.827 | 0.004 | 6.22 |
+| `kappa0.25` | 0.830 | 0.004 | 5.69 |
+| `kappa0.5` | 0.825 | 0.004 | 5.53 |
+| `kappa1` | 0.822 | 0.005 | 6.08 |
+| `kappa2` | 0.814 | 0.004 | 5.71 |
+| `kappa4` | 0.827 | 0.004 | 5.49 |
+| `kappa8` | 0.824 | 0.004 | 5.91 |
 
 **Against the point-source reference**
 
@@ -1131,7 +1131,7 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D19. Пошук по записаному проходу
 
-<sub>commit `eb89fc4cd577`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 | variant |
 | --- |
@@ -1152,39 +1152,39 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D20. Стійкість критеріїв оцінювання
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `4bb503193d10`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 <sub>Averaged over 8 recordings.</sub>
 
 | variant | adj | sat | ms |
 | --- | --- | --- | --- |
-| `lapl` | 0.720 | 0.165 | 1.94 |
-| `tene` | 0.729 | 0.089 | 2.03 |
-| `bren` | 0.747 | 0.090 | 1.90 |
-| `wave` | 0.743 | 0.090 | 2.14 |
-| `four` | 0.690 | 0.250 | 2.70 |
-| `edge` | 0.705 | 0.179 | 3.02 |
-| `lapl+tene` | 0.761 | 0.090 | 2.58 |
-| `lapl+bren` | 0.771 | 0.090 | 2.45 |
-| `lapl+wave` | 0.786 | 0.090 | 2.47 |
+| `lapl` | 0.720 | 0.165 | 1.88 |
+| `tene` | 0.729 | 0.089 | 2.02 |
+| `bren` | 0.747 | 0.090 | 1.95 |
+| `wave` | 0.743 | 0.090 | 2.09 |
+| `four` | 0.690 | 0.250 | 2.71 |
+| `edge` | 0.705 | 0.179 | 2.93 |
+| `lapl+tene` | 0.761 | 0.090 | 2.45 |
+| `lapl+bren` | 0.771 | 0.090 | 2.43 |
+| `lapl+wave` | 0.786 | 0.090 | 2.43 |
 | `lapl+four` | 0.755 | 0.140 | 3.25 |
-| `lapl+edge` | 0.766 | 0.051 | 3.41 |
-| `lapl+tene+bren` | 0.787 | 0.090 | 2.96 |
-| `lapl+tene+wave` | 0.796 | 0.090 | 3.24 |
-| `lapl+tene+four` | 0.790 | 0.087 | 3.82 |
-| `lapl+tene+edge` | 0.778 | 0.004 | 3.80 |
-| `lapl+bren+wave` | 0.804 | 0.090 | 2.85 |
-| `lapl+bren+four` | 0.794 | 0.088 | 3.30 |
-| `lapl+bren+edge` | 0.794 | 0.005 | 3.52 |
-| `lapl+wave+four` | 0.818 | 0.088 | 3.89 |
-| `lapl+wave+edge` | 0.787 | 0.005 | 4.07 |
-| `lapl+four+edge` | 0.797 | 0.050 | 4.70 |
-| `lapl+tene+bren+wave+four+edge` | 0.822 | 0.005 | 6.32 |
-| `weights_adaptive` | 0.822 | 0.005 | 5.86 |
-| `weights_prior` | 0.827 | 0.004 | 5.62 |
-| `weights_equal` | 0.826 | 0.004 | 5.41 |
-| `kernel_on` | 0.810 | 0.005 | 5.25 |
-| `filter_off` | 0.774 | 0.006 | 4.93 |
+| `lapl+edge` | 0.766 | 0.051 | 3.47 |
+| `lapl+tene+bren` | 0.787 | 0.090 | 2.92 |
+| `lapl+tene+wave` | 0.796 | 0.090 | 3.22 |
+| `lapl+tene+four` | 0.790 | 0.087 | 3.77 |
+| `lapl+tene+edge` | 0.778 | 0.004 | 3.86 |
+| `lapl+bren+wave` | 0.804 | 0.090 | 2.93 |
+| `lapl+bren+four` | 0.794 | 0.088 | 3.36 |
+| `lapl+bren+edge` | 0.794 | 0.005 | 3.47 |
+| `lapl+wave+four` | 0.818 | 0.088 | 4.03 |
+| `lapl+wave+edge` | 0.787 | 0.005 | 3.93 |
+| `lapl+four+edge` | 0.797 | 0.050 | 4.61 |
+| `lapl+tene+bren+wave+four+edge` | 0.822 | 0.005 | 6.44 |
+| `weights_adaptive` | 0.822 | 0.005 | 5.88 |
+| `weights_prior` | 0.827 | 0.004 | 5.69 |
+| `weights_equal` | 0.826 | 0.004 | 5.39 |
+| `kernel_on` | 0.810 | 0.005 | 5.52 |
+| `filter_off` | 0.774 | 0.006 | 5.15 |
 
 **Against the point-source reference**
 
