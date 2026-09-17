@@ -908,8 +908,8 @@
       "frozen_fraction": 0.39503857172489354,
       "frozen_fraction_spread": 0.7989893318360471,
       "frozen_fraction_n": 8,
-      "ms": 5.343875000107801,
-      "ms_spread": 3.2108999985211994,
+      "ms": 6.241924999812909,
+      "ms_spread": 3.644799999165116,
       "ms_n": 8,
       "peak_err": 1.0,
       "peak_err_spread": 0.0,
@@ -943,8 +943,8 @@
       "frozen_fraction": 0.39503857172489354,
       "frozen_fraction_spread": 0.7989893318360471,
       "frozen_fraction_n": 8,
-      "ms": 5.2890875001594395,
-      "ms_spread": 3.0316000011225697,
+      "ms": 6.264362500360221,
+      "ms_spread": 3.9120999972510617,
       "ms_n": 8,
       "peak_err": 1.0,
       "peak_err_spread": 0.0,
@@ -978,8 +978,8 @@
       "frozen_fraction": 0.39503857172489354,
       "frozen_fraction_spread": 0.7989893318360471,
       "frozen_fraction_n": 8,
-      "ms": 5.281693749793703,
-      "ms_spread": 3.1450999958906323,
+      "ms": 6.178000000318207,
+      "ms_spread": 3.8237999942793977,
       "ms_n": 8,
       "peak_err": 1.0,
       "peak_err_spread": 0.0,
@@ -1012,11 +1012,10 @@
   "title": "\u041d\u0435\u0432\u0438\u0437\u043d\u0430\u0447\u0435\u043d\u0456\u0441\u0442\u044c \u043f\u0430\u0440\u043d\u0438\u0445 \u0440\u0456\u0437\u043d\u0438\u0446\u044c",
   "data_root": "D:\\camera_focus_data",
   "provenance": {
-    "commit": "b13a31ac66e045d98796b1e992dc6474db40057d",
+    "commit": "eb89fc4cd577816d73dd0a08264a4d51fdf5029a",
     "source_modified": true,
     "source_modified_files": [
-      "tools/programme.py",
-      "tools/studies.py"
+      "tools/report_pdf_ua.py"
     ],
     "source_paths_checked": [
       "src",

@@ -1131,20 +1131,22 @@ Not tabulated here, because their output is not a table of variants: `d12`, `d13
 
 ### D19. Пошук по записаному проходу
 
-<sub>commit `b13a31ac66e0` with modified source &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
+<sub>commit `eb89fc4cd577`, source clean &middot; config `c556332122033781` &middot; numpy 2.1.2 &middot; opencv 4.13.0</sub>
 
 | variant |
 | --- |
+| `hill_climb_budget4` |
 | `hill_climb_budget6` |
+| `hill_climb_budget8` |
 | `hill_climb_budget10` |
+| `hill_climb_budget12` |
 | `hill_climb_budget16` |
+| `ternary_budget4` |
 | `ternary_budget6` |
+| `ternary_budget8` |
 | `ternary_budget10` |
+| `ternary_budget12` |
 | `ternary_budget16` |
-| `hill_climb_budget30` |
-| `ternary_budget30` |
-| `hill_climb_budget32` |
-| `ternary_budget32` |
 
 ---
 

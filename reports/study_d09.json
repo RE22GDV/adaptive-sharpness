@@ -741,12 +741,10 @@
   "title": "\u041d\u043e\u0440\u043c\u0430\u043b\u0456\u0437\u0430\u0446\u0456\u044f \u043f\u043e\u0435\u0442\u0430\u043f\u043d\u043e",
   "data_root": "D:\\camera_focus_data",
   "provenance": {
-    "commit": "b13a31ac66e045d98796b1e992dc6474db40057d",
+    "commit": "eb89fc4cd577816d73dd0a08264a4d51fdf5029a",
     "source_modified": true,
     "source_modified_files": [
-      "tools/figures_studies_ua.py",
-      "tools/programme.py",
-      "tools/studies.py"
+      "tools/report_pdf_ua.py"
     ],
     "source_paths_checked": [
       "src",

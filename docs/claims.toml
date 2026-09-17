@@ -381,3 +381,33 @@ field = "adj"
 value = 0.180
 digits = 3
 where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d19.ternary4.within_one_step"
+report = "study_d19"
+variant = "ternary_budget4"
+field = "within_one_step_of_reference"
+n = 2
+value = 1.0
+digits = 2
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d19.ternary4.evaluations"
+report = "study_d19"
+variant = "ternary_budget4"
+field = "mean_evaluations"
+n = 8
+value = 4.0
+digits = 1
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d19.hill10.within_one_step"
+report = "study_d19"
+variant = "hill_climb_budget10"
+field = "within_one_step_of_reference"
+n = 2
+value = 0.97
+digits = 2
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
