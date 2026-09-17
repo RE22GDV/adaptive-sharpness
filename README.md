@@ -753,6 +753,7 @@ stale-frame dropping, configuration loading, and the UI switches.
 | [docs/RESULTS.md](docs/RESULTS.md) | every results table, generated from the stored reports |
 | [docs/STUDY_UA.md](docs/STUDY_UA.md) | the same study, in Ukrainian |
 | [docs/STUDY_UA_REPORT.md](docs/STUDY_UA_REPORT.md) | Ukrainian technical report: how the module works, five diagrams, change history, and the 20-item research programme |
+| [docs/STUDY_UA_RESULTS.md](docs/STUDY_UA_RESULTS.md) | results of studies Д07–Д20 — what was tested, how, what came out, and what it does not prove |
 | [docs/claims.toml](docs/claims.toml) | every number quoted in prose, pinned to its report **and its sample size**, checked by `tests/test_claims.py` |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | using the library inside a focus loop |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | what this does not do |

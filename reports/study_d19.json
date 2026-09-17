@@ -1,0 +1,833 @@
+{
+  "runs": {
+    "cond_20260916_110502": {
+      "selection": {
+        "total_frames": 618,
+        "selected": 435,
+        "excluded": {
+          "moving": 183
+        }
+      },
+      "has_reference": false,
+      "steps": 8,
+      "signal_peak_step": 7.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.125,
+          "found_signal_peak_fraction": 0.875,
+          "mean_evaluations": 4.875
+        },
+        "hill_climb_budget10": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 5.625
+        },
+        "hill_climb_budget16": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 5.625
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget16": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        }
+      }
+    },
+    "cond_20260916_110600": {
+      "selection": {
+        "total_frames": 558,
+        "selected": 390,
+        "excluded": {
+          "moving": 168
+        }
+      },
+      "has_reference": false,
+      "steps": 8,
+      "signal_peak_step": 2.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 4.5,
+          "found_signal_peak_fraction": 0.25,
+          "mean_evaluations": 4.125
+        },
+        "hill_climb_budget10": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 4.5,
+          "found_signal_peak_fraction": 0.25,
+          "mean_evaluations": 4.25
+        },
+        "hill_climb_budget16": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 4.5,
+          "found_signal_peak_fraction": 0.25,
+          "mean_evaluations": 4.25
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 6.0,
+          "found_signal_peak_fraction": 0.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 6.0,
+          "found_signal_peak_fraction": 0.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget16": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 6.0,
+          "found_signal_peak_fraction": 0.0,
+          "mean_evaluations": 7.0
+        }
+      }
+    },
+    "cond_20260916_110656": {
+      "selection": {
+        "total_frames": 565,
+        "selected": 394,
+        "excluded": {
+          "moving": 171
+        }
+      },
+      "has_reference": false,
+      "steps": 8,
+      "signal_peak_step": 5.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.75
+        },
+        "hill_climb_budget10": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.875
+        },
+        "hill_climb_budget16": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.875
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget16": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        }
+      }
+    },
+    "cond_20260916_110746": {
+      "selection": {
+        "total_frames": 586,
+        "selected": 410,
+        "excluded": {
+          "moving": 176
+        }
+      },
+      "has_reference": false,
+      "steps": 8,
+      "signal_peak_step": 4.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.875
+        },
+        "hill_climb_budget10": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.875
+        },
+        "hill_climb_budget16": {
+          "trials": 8,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 4.875
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        },
+        "ternary_budget16": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 7.0
+        }
+      }
+    },
+    "point_source_20260916_111545": {
+      "selection": {
+        "total_frames": 1781,
+        "selected": 1204,
+        "excluded": {
+          "moving": 536,
+          "spot_wandered": 41
+        }
+      },
+      "has_reference": true,
+      "steps": 15,
+      "signal_peak_step": 13.0,
+      "reference_peak_step": 12.0,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 2.2,
+          "found_signal_peak_fraction": 0.5333333333333333,
+          "mean_evaluations": 5.066666666666666,
+          "mean_error_vs_reference": 2.2666666666666666,
+          "within_one_step_of_reference": 0.6666666666666666
+        },
+        "hill_climb_budget10": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 1.0,
+          "found_signal_peak_fraction": 0.8,
+          "mean_evaluations": 6.8,
+          "mean_error_vs_reference": 1.6,
+          "within_one_step_of_reference": 0.9333333333333333
+        },
+        "hill_climb_budget30": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 0.8,
+          "found_signal_peak_fraction": 0.9333333333333333,
+          "mean_evaluations": 7.466666666666667,
+          "mean_error_vs_reference": 1.6666666666666667,
+          "within_one_step_of_reference": 0.9333333333333333
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "ternary_budget30": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        }
+      }
+    },
+    "point_source_20260916_111724": {
+      "selection": {
+        "total_frames": 1690,
+        "selected": 1125,
+        "excluded": {
+          "moving": 499,
+          "spot_wandered": 66
+        }
+      },
+      "has_reference": true,
+      "steps": 15,
+      "signal_peak_step": 9.0,
+      "reference_peak_step": 10.0,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 0.5333333333333333,
+          "found_signal_peak_fraction": 0.6666666666666666,
+          "mean_evaluations": 5.4,
+          "mean_error_vs_reference": 1.2666666666666666,
+          "within_one_step_of_reference": 0.8
+        },
+        "hill_climb_budget10": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 6.666666666666667,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "hill_climb_budget30": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 6.733333333333333,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        },
+        "ternary_budget30": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0,
+          "mean_error_vs_reference": 1.0,
+          "within_one_step_of_reference": 1.0
+        }
+      }
+    },
+    "sweep_plain_20260916_110955": {
+      "selection": {
+        "total_frames": 1656,
+        "selected": 1181,
+        "excluded": {
+          "moving": 475
+        }
+      },
+      "has_reference": false,
+      "steps": 16,
+      "signal_peak_step": 8.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 16,
+          "mean_error_vs_signal_peak": 1.375,
+          "found_signal_peak_fraction": 0.625,
+          "mean_evaluations": 5.0
+        },
+        "hill_climb_budget10": {
+          "trials": 16,
+          "mean_error_vs_signal_peak": 1.0,
+          "found_signal_peak_fraction": 0.875,
+          "mean_evaluations": 6.0
+        },
+        "hill_climb_budget32": {
+          "trials": 16,
+          "mean_error_vs_signal_peak": 1.0,
+          "found_signal_peak_fraction": 0.875,
+          "mean_evaluations": 6.0
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        },
+        "ternary_budget32": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        }
+      }
+    },
+    "sweep_texture_20260916_110108": {
+      "selection": {
+        "total_frames": 1563,
+        "selected": 1092,
+        "excluded": {
+          "moving": 471
+        }
+      },
+      "has_reference": false,
+      "steps": 15,
+      "signal_peak_step": 6.0,
+      "reference_peak_step": null,
+      "variants": {
+        "hill_climb_budget6": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 1.6,
+          "found_signal_peak_fraction": 0.6666666666666666,
+          "mean_evaluations": 4.933333333333334
+        },
+        "hill_climb_budget10": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 1.2,
+          "found_signal_peak_fraction": 0.8666666666666667,
+          "mean_evaluations": 5.8
+        },
+        "hill_climb_budget30": {
+          "trials": 15,
+          "mean_error_vs_signal_peak": 1.2,
+          "found_signal_peak_fraction": 0.8666666666666667,
+          "mean_evaluations": 5.8
+        },
+        "ternary_budget6": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        },
+        "ternary_budget10": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        },
+        "ternary_budget30": {
+          "trials": 1,
+          "mean_error_vs_signal_peak": 0.0,
+          "found_signal_peak_fraction": 1.0,
+          "mean_evaluations": 10.0
+        }
+      }
+    }
+  },
+  "aggregate": {
+    "hill_climb_budget6": {
+      "found_signal_peak_fraction": 0.7020833333333333,
+      "found_signal_peak_fraction_spread": 0.75,
+      "found_signal_peak_fraction_n": 8,
+      "mean_error_vs_reference": 1.7666666666666666,
+      "mean_error_vs_reference_spread": 1.0,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 1.2916666666666667,
+      "mean_error_vs_signal_peak_spread": 4.5,
+      "mean_error_vs_signal_peak_n": 8,
+      "mean_evaluations": 4.878125,
+      "mean_evaluations_spread": 1.2750000000000004,
+      "mean_evaluations_n": 8,
+      "trials": 11.625,
+      "trials_spread": 8.0,
+      "trials_n": 8,
+      "within_one_step_of_reference": 0.7333333333333334,
+      "within_one_step_of_reference_spread": 0.13333333333333341,
+      "within_one_step_of_reference_n": 2
+    },
+    "hill_climb_budget10": {
+      "found_signal_peak_fraction": 0.8489583333333334,
+      "found_signal_peak_fraction_spread": 0.75,
+      "found_signal_peak_fraction_n": 8,
+      "mean_error_vs_reference": 1.3,
+      "mean_error_vs_reference_spread": 0.6000000000000001,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 0.9625,
+      "mean_error_vs_signal_peak_spread": 4.5,
+      "mean_error_vs_signal_peak_n": 8,
+      "mean_evaluations": 5.611458333333333,
+      "mean_evaluations_spread": 2.55,
+      "mean_evaluations_n": 8,
+      "trials": 11.625,
+      "trials_spread": 8.0,
+      "trials_n": 8,
+      "within_one_step_of_reference": 0.9666666666666667,
+      "within_one_step_of_reference_spread": 0.06666666666666665,
+      "within_one_step_of_reference_n": 2
+    },
+    "hill_climb_budget16": {
+      "found_signal_peak_fraction": 0.8125,
+      "found_signal_peak_fraction_spread": 0.75,
+      "found_signal_peak_fraction_n": 4,
+      "mean_error_vs_signal_peak": 1.125,
+      "mean_error_vs_signal_peak_spread": 4.5,
+      "mean_error_vs_signal_peak_n": 4,
+      "mean_evaluations": 4.90625,
+      "mean_evaluations_spread": 1.375,
+      "mean_evaluations_n": 4,
+      "trials": 8.0,
+      "trials_spread": 0.0,
+      "trials_n": 4
+    },
+    "ternary_budget6": {
+      "found_signal_peak_fraction": 0.875,
+      "found_signal_peak_fraction_spread": 1.0,
+      "found_signal_peak_fraction_n": 8,
+      "mean_error_vs_reference": 1.0,
+      "mean_error_vs_reference_spread": 0.0,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 0.75,
+      "mean_error_vs_signal_peak_spread": 6.0,
+      "mean_error_vs_signal_peak_n": 8,
+      "mean_evaluations": 8.5,
+      "mean_evaluations_spread": 3.0,
+      "mean_evaluations_n": 8,
+      "trials": 1.0,
+      "trials_spread": 0.0,
+      "trials_n": 8,
+      "within_one_step_of_reference": 1.0,
+      "within_one_step_of_reference_spread": 0.0,
+      "within_one_step_of_reference_n": 2
+    },
+    "ternary_budget10": {
+      "found_signal_peak_fraction": 0.875,
+      "found_signal_peak_fraction_spread": 1.0,
+      "found_signal_peak_fraction_n": 8,
+      "mean_error_vs_reference": 1.0,
+      "mean_error_vs_reference_spread": 0.0,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 0.75,
+      "mean_error_vs_signal_peak_spread": 6.0,
+      "mean_error_vs_signal_peak_n": 8,
+      "mean_evaluations": 8.5,
+      "mean_evaluations_spread": 3.0,
+      "mean_evaluations_n": 8,
+      "trials": 1.0,
+      "trials_spread": 0.0,
+      "trials_n": 8,
+      "within_one_step_of_reference": 1.0,
+      "within_one_step_of_reference_spread": 0.0,
+      "within_one_step_of_reference_n": 2
+    },
+    "ternary_budget16": {
+      "found_signal_peak_fraction": 0.75,
+      "found_signal_peak_fraction_spread": 1.0,
+      "found_signal_peak_fraction_n": 4,
+      "mean_error_vs_signal_peak": 1.5,
+      "mean_error_vs_signal_peak_spread": 6.0,
+      "mean_error_vs_signal_peak_n": 4,
+      "mean_evaluations": 7.0,
+      "mean_evaluations_spread": 0.0,
+      "mean_evaluations_n": 4,
+      "trials": 1.0,
+      "trials_spread": 0.0,
+      "trials_n": 4
+    },
+    "hill_climb_budget30": {
+      "found_signal_peak_fraction": 0.9333333333333332,
+      "found_signal_peak_fraction_spread": 0.1333333333333333,
+      "found_signal_peak_fraction_n": 3,
+      "mean_error_vs_reference": 1.3333333333333335,
+      "mean_error_vs_reference_spread": 0.6666666666666667,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 0.6666666666666666,
+      "mean_error_vs_signal_peak_spread": 1.2,
+      "mean_error_vs_signal_peak_n": 3,
+      "mean_evaluations": 6.666666666666667,
+      "mean_evaluations_spread": 1.666666666666667,
+      "mean_evaluations_n": 3,
+      "trials": 15.0,
+      "trials_spread": 0.0,
+      "trials_n": 3,
+      "within_one_step_of_reference": 0.9666666666666667,
+      "within_one_step_of_reference_spread": 0.06666666666666665,
+      "within_one_step_of_reference_n": 2
+    },
+    "ternary_budget30": {
+      "found_signal_peak_fraction": 1.0,
+      "found_signal_peak_fraction_spread": 0.0,
+      "found_signal_peak_fraction_n": 3,
+      "mean_error_vs_reference": 1.0,
+      "mean_error_vs_reference_spread": 0.0,
+      "mean_error_vs_reference_n": 2,
+      "mean_error_vs_signal_peak": 0.0,
+      "mean_error_vs_signal_peak_spread": 0.0,
+      "mean_error_vs_signal_peak_n": 3,
+      "mean_evaluations": 10.0,
+      "mean_evaluations_spread": 0.0,
+      "mean_evaluations_n": 3,
+      "trials": 1.0,
+      "trials_spread": 0.0,
+      "trials_n": 3,
+      "within_one_step_of_reference": 1.0,
+      "within_one_step_of_reference_spread": 0.0,
+      "within_one_step_of_reference_n": 2
+    },
+    "hill_climb_budget32": {
+      "found_signal_peak_fraction": 0.875,
+      "found_signal_peak_fraction_spread": 0.0,
+      "found_signal_peak_fraction_n": 1,
+      "mean_error_vs_signal_peak": 1.0,
+      "mean_error_vs_signal_peak_spread": 0.0,
+      "mean_error_vs_signal_peak_n": 1,
+      "mean_evaluations": 6.0,
+      "mean_evaluations_spread": 0.0,
+      "mean_evaluations_n": 1,
+      "trials": 16.0,
+      "trials_spread": 0.0,
+      "trials_n": 1
+    },
+    "ternary_budget32": {
+      "found_signal_peak_fraction": 1.0,
+      "found_signal_peak_fraction_spread": 0.0,
+      "found_signal_peak_fraction_n": 1,
+      "mean_error_vs_signal_peak": 0.0,
+      "mean_error_vs_signal_peak_spread": 0.0,
+      "mean_error_vs_signal_peak_n": 1,
+      "mean_evaluations": 10.0,
+      "mean_evaluations_spread": 0.0,
+      "mean_evaluations_n": 1,
+      "trials": 1.0,
+      "trials_spread": 0.0,
+      "trials_n": 1
+    }
+  },
+  "study": "d19",
+  "title": "\u041f\u043e\u0448\u0443\u043a \u043f\u043e \u0437\u0430\u043f\u0438\u0441\u0430\u043d\u043e\u043c\u0443 \u043f\u0440\u043e\u0445\u043e\u0434\u0443",
+  "data_root": "D:\\camera_focus_data",
+  "provenance": {
+    "commit": "b13a31ac66e045d98796b1e992dc6474db40057d",
+    "source_modified": true,
+    "source_modified_files": [
+      "tools/programme.py",
+      "tools/studies.py"
+    ],
+    "source_paths_checked": [
+      "src",
+      "tools",
+      "tests",
+      "demo",
+      "config",
+      "pyproject.toml"
+    ],
+    "working_tree_dirty": true,
+    "tracked_files_modified": true,
+    "python": "3.12.10",
+    "numpy": "2.1.2",
+    "opencv": "4.13.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "config_fingerprint": "c556332122033781",
+    "config": {
+      "analysis": {
+        "brightness_high": 0.85,
+        "brightness_low": 0.15,
+        "clip_high_level": 250,
+        "clip_low_level": 5,
+        "clip_ref_fraction": 0.15,
+        "contrast_ref": 0.08,
+        "edge_ref_density": 0.006,
+        "motion_downscale": 4,
+        "motion_ref_px": 15.0,
+        "noise_quantile": 75.0,
+        "noise_ref_sigma": 6.0
+      },
+      "capture": {
+        "backend": "auto",
+        "device": "0",
+        "fourcc": "MJPG",
+        "fps": 30,
+        "height": 720,
+        "loop": false,
+        "path": "",
+        "threaded": true,
+        "width": 1280
+      },
+      "ensemble": {
+        "agreement_scale": 1.5,
+        "confidence_dispersion_ref": 0.45,
+        "confidence_snr_ref": 12.0,
+        "sensitivity": {
+          "brenner": {
+            "clip": 0.6,
+            "contrast": 0.9,
+            "edge": 0.9,
+            "motion": 0.9,
+            "noise": 1.0
+          },
+          "edge_width": {
+            "clip": 0.9,
+            "contrast": 1.0,
+            "edge": 2.2,
+            "motion": 1.0,
+            "noise": 1.4
+          },
+          "fourier": {
+            "clip": 0.7,
+            "contrast": 0.6,
+            "edge": 0.4,
+            "motion": 0.5,
+            "noise": 1.9
+          },
+          "gradient_variance": {
+            "clip": 0.6,
+            "contrast": 0.8,
+            "edge": 0.7,
+            "motion": 0.7,
+            "noise": 1.3
+          },
+          "laplacian": {
+            "clip": 0.5,
+            "contrast": 0.7,
+            "edge": 0.6,
+            "motion": 0.6,
+            "noise": 2.2
+          },
+          "tenengrad": {
+            "clip": 0.6,
+            "contrast": 0.8,
+            "edge": 0.7,
+            "motion": 0.7,
+            "noise": 1.2
+          },
+          "wavelet": {
+            "clip": 0.5,
+            "contrast": 0.6,
+            "edge": 0.5,
+            "motion": 0.6,
+            "noise": 1.6
+          }
+        },
+        "use_agreement": false,
+        "use_motion_compensation": true,
+        "use_noise_compensation": true,
+        "warmup_confidence": 0.3,
+        "weight_floor": 0.02
+      },
+      "focus_map": {
+        "high_percentile": 90.0,
+        "low_percentile": 10.0,
+        "measure": "grad_over_var",
+        "min_contrast": 0.02,
+        "min_gradient_energy": 0.0,
+        "min_relative_spread": 0.8,
+        "smooth": true,
+        "tile_size": 32
+      },
+      "metrics": {
+        "brenner_shift": 2,
+        "contrast_normalize": true,
+        "edge_canny_percentile": 97.0,
+        "edge_canny_ratio": 0.4,
+        "edge_min_gradient": 1.0,
+        "edge_range_window": 11,
+        "enabled": [
+          "laplacian",
+          "tenengrad",
+          "brenner",
+          "wavelet",
+          "fourier",
+          "edge_width"
+        ],
+        "fourier_high_cutoff": 0.25,
+        "priors": {
+          "brenner": 1.0,
+          "edge_width": 0.8,
+          "fourier": 0.8,
+          "gradient_variance": 1.0,
+          "laplacian": 1.0,
+          "tenengrad": 1.0,
+          "wavelet": 1.0
+        },
+        "wavelet_levels": 2
+      },
+      "normalization": {
+        "auto_freeze": true,
+        "auto_freeze_min_samples": 240,
+        "auto_freeze_patience": 120,
+        "auto_freeze_stability": 0.05,
+        "auto_thaw": false,
+        "auto_thaw_margin": 3.0,
+        "auto_thaw_outside": 0.5,
+        "high_percentile": 95.0,
+        "log_compress": true,
+        "logistic_gain": 4.0,
+        "long_window_multiple": 2,
+        "low_percentile": 5.0,
+        "mapping": "logistic",
+        "min_range_absolute": 1e-06,
+        "min_range_ratio": 0.001,
+        "ready_informative_fraction": 0.5,
+        "warmup": 5,
+        "window": 960
+      },
+      "pipeline": {
+        "allow_upscale": false,
+        "analysis_width": 320,
+        "color_order": "BGR",
+        "default_roi_fraction": 1.0,
+        "input_max": null,
+        "interpolation": "INTER_AREA",
+        "prefilter_sigma": 0.0
+      },
+      "regions": {
+        "blob_min_tiles": 2,
+        "blob_relative_threshold": 0.55,
+        "detectors": [
+          "faces",
+          "sharp_blobs"
+        ],
+        "face_cascade": "haarcascade_frontalface_default.xml",
+        "face_interval": 3,
+        "face_min_neighbors": 5,
+        "face_min_size_fraction": 0.08,
+        "face_scale_factor": 1.15,
+        "max_regions": 5,
+        "merge_iou": 0.45,
+        "min_area_fraction": 0.004,
+        "subject_iou_match": 0.3
+      },
+      "temporal": {
+        "alpha_base": 0.35,
+        "confidence_coupling": true,
+        "enabled": true,
+        "gate_abs_jump": 0.12,
+        "gate_full_sigma": 5.0,
+        "gate_sigma": 2.5,
+        "history": 30,
+        "min_confidence_gain": 0.3
+      }
+    },
+    "recordings": [
+      "cond_20260916_110502",
+      "cond_20260916_110600",
+      "cond_20260916_110656",
+      "cond_20260916_110746",
+      "point_source_20260916_111545",
+      "point_source_20260916_111724",
+      "sweep_plain_20260916_110955",
+      "sweep_texture_20260916_110108"
+    ]
+  }
+}

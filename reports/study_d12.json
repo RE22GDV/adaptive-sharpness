@@ -1,0 +1,1368 @@
+{
+  "runs": {
+    "cond_20260916_110502": {
+      "selection": {
+        "total_frames": 618,
+        "selected": 435,
+        "excluded": {
+          "moving": 183
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.19554291768028317,
+          "weight_std": 0.005638455845035249,
+          "weight_min": 0.17521420864520126,
+          "weight_max": 0.19941248682666063,
+          "reliability_mean": 0.3371975164104522,
+          "weight_range": 0.024198278181459365,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7168883002595,
+            "motion_px": 0.6645114638807937,
+            "brightness": -0.9642883006853515,
+            "local_contrast": -0.971977164083582,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.971977164083582
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18093832473954458,
+          "weight_std": 0.0023181085013978756,
+          "weight_min": 0.1776872657710122,
+          "weight_max": 0.18564446097053353,
+          "reliability_mean": 0.3155642152040694,
+          "weight_range": 0.007957195199521316,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": 0.5511797976135239,
+            "motion_px": -0.5471349409639661,
+            "brightness": 0.9351284788227088,
+            "local_contrast": 0.9215322981556615,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.9215322981556615
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.1451943482378739,
+          "weight_std": 0.01118894521853723,
+          "weight_min": 0.13473431062760785,
+          "weight_max": 0.17407797272339343,
+          "reliability_mean": 0.25863843994276803,
+          "weight_range": 0.039343662095785575,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": 0.7168290267491488,
+            "motion_px": -0.6435744098947862,
+            "brightness": 0.9752662043039748,
+            "local_contrast": 0.9833244160906905,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.9833244160906905
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.2367985623639941,
+          "weight_std": 0.014475246051969336,
+          "weight_min": 0.19164359160487343,
+          "weight_max": 0.24826273522207426,
+          "reliability_mean": 0.4041290343226466,
+          "weight_range": 0.05661914361720083,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7169073125175373,
+            "motion_px": 0.5890144430173616,
+            "brightness": -0.985129574039948,
+            "local_contrast": -0.9935298722769,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.9935298722769
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.2025229290869576,
+          "weight_std": 0.017114023974230678,
+          "weight_min": 0.15008984492257121,
+          "weight_max": 0.21463899697927788,
+          "reliability_mean": 0.42887673357324835,
+          "weight_range": 0.06454915205670667,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7168915536940305,
+            "motion_px": 0.6951441604695475,
+            "brightness": -0.9450106549512081,
+            "local_contrast": -0.9531012323289165,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.9531012323289165
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.039002917891346654,
+          "weight_std": 0.025115785872009407,
+          "weight_min": 0.025910185441264236,
+          "weight_max": 0.12912317707119236,
+          "reliability_mean": 0.10165793451822945,
+          "weight_range": 0.10321299162992813,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": 0.7169090409046315,
+            "motion_px": -0.6162876474078524,
+            "brightness": 0.9808291060559907,
+            "local_contrast": 0.9890812129976951,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.9890812129976951
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 1.0,
+        "edge_density": 0.7862068965517242,
+        "motion_px": 0.0022988505747126436,
+        "brightness": 0.0022988505747126436,
+        "local_contrast": 0.0022988505747126436,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.0022988505747126436
+      },
+      "driver_means": {
+        "noise_level": 0.07244175533787912,
+        "edge_density": 0.0008557630906768837,
+        "motion_px": 0.34670849796393016,
+        "brightness": 0.1524638054095224,
+        "local_contrast": 0.031915382710238256,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 18.724059885885662
+      },
+      "weight_variation": 0.012641760910529964,
+      "max_weight_share": 0.236798562363994,
+      "frames": 435
+    },
+    "cond_20260916_110600": {
+      "selection": {
+        "total_frames": 558,
+        "selected": 390,
+        "excluded": {
+          "moving": 168
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.19063029270472634,
+          "weight_std": 0.009944989854582555,
+          "weight_min": 0.1623314833119354,
+          "weight_max": 0.19740580324362203,
+          "reliability_mean": 0.5462705111597285,
+          "weight_range": 0.03507431993168664,
+          "correlations": {
+            "noise_level": -0.15607186315992044,
+            "edge_density": -0.8329655674755779,
+            "motion_px": 0.744250581731433,
+            "brightness": -0.6365660946825682,
+            "local_contrast": -0.8045006111909905,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.7743081302815423
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18919242216747015,
+          "weight_std": 0.002890113351079399,
+          "weight_min": 0.18298172911369082,
+          "weight_max": 0.19186808714532613,
+          "reliability_mean": 0.5492153376416593,
+          "weight_range": 0.008886358031635316,
+          "correlations": {
+            "noise_level": -0.12356983621855372,
+            "edge_density": -0.3242012323707025,
+            "motion_px": -0.4156423422598743,
+            "brightness": 0.20680286710036896,
+            "local_contrast": -0.10134805923469886,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.08213567377927433
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.16422454405529513,
+          "weight_std": 0.011039667555996863,
+          "weight_min": 0.1533997550845401,
+          "weight_max": 0.19236384051420036,
+          "reliability_mean": 0.48985252093738424,
+          "weight_range": 0.03896408542966026,
+          "correlations": {
+            "noise_level": 0.15382298905098787,
+            "edge_density": 0.8304210126497433,
+            "motion_px": -0.755363384273502,
+            "brightness": 0.6432036746918223,
+            "local_contrast": 0.8025081841937969,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.7723784154753458
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.2156243010343076,
+          "weight_std": 0.01862602090755901,
+          "weight_min": 0.17707449935294658,
+          "weight_max": 0.22785890009903098,
+          "reliability_mean": 0.610533945868396,
+          "weight_range": 0.050784400746084396,
+          "correlations": {
+            "noise_level": -0.15607186315992044,
+            "edge_density": -0.8330857343599029,
+            "motion_px": 0.7408016135239851,
+            "brightness": -0.6416182699637577,
+            "local_contrast": -0.809284944471895,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.7790908451833244
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.1833990494031837,
+          "weight_std": 0.021965263493271433,
+          "weight_min": 0.13582029199617196,
+          "weight_max": 0.1997164505329068,
+          "reliability_mean": 0.641556601750211,
+          "weight_range": 0.06389615853673483,
+          "correlations": {
+            "noise_level": -0.15607186315992044,
+            "edge_density": -0.8329621994347761,
+            "motion_px": 0.7437794311093938,
+            "brightness": -0.6380851458632542,
+            "local_contrast": -0.8057760962369145,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.7755838176248567
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.05692939063501705,
+          "weight_std": 0.042331300279700994,
+          "weight_min": 0.03206865027235811,
+          "weight_max": 0.14502714562590047,
+          "reliability_mean": 0.26005400314235994,
+          "weight_range": 0.11295849535354235,
+          "correlations": {
+            "noise_level": 0.1562967505708137,
+            "edge_density": 0.8331899030504187,
+            "motion_px": -0.7417748662687814,
+            "brightness": 0.6379200711844102,
+            "local_contrast": 0.8061851415601275,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.7759882101080926
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.9897435897435898,
+        "edge_density": 0.6641025641025641,
+        "motion_px": 0.002564102564102564,
+        "brightness": 0.002564102564102564,
+        "local_contrast": 0.002564102564102564,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.002564102564102564
+      },
+      "driver_means": {
+        "noise_level": 0.07281325154124192,
+        "edge_density": 0.007729033119658119,
+        "motion_px": 0.3292325734494713,
+        "brightness": 0.5028097858687871,
+        "local_contrast": 0.11482010428542286,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 67.14823271434882
+      },
+      "weight_variation": 0.017799559240365043,
+      "max_weight_share": 0.21562430103430757,
+      "frames": 390
+    },
+    "cond_20260916_110656": {
+      "selection": {
+        "total_frames": 565,
+        "selected": 394,
+        "excluded": {
+          "moving": 171
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.18449223114322133,
+          "weight_std": 0.012410036161018167,
+          "weight_min": 0.16252712154699508,
+          "weight_max": 0.19668408964138398,
+          "reliability_mean": 0.6281377566504727,
+          "weight_range": 0.034156968094388895,
+          "correlations": {
+            "noise_level": -0.36863561158448915,
+            "edge_density": -0.8870526514111116,
+            "motion_px": 0.8230938225474101,
+            "brightness": 0.11261776193585,
+            "local_contrast": -0.8521095983672372,
+            "clipped_high": -0.7958376097482788,
+            "clipped_low": NaN,
+            "snr": -0.6116461385955042
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.1876554818216475,
+          "weight_std": 0.0032378687327111804,
+          "weight_min": 0.1829864474014089,
+          "weight_max": 0.19166946956870332,
+          "reliability_mean": 0.649874795930012,
+          "weight_range": 0.008683022167294413,
+          "correlations": {
+            "noise_level": -0.1582190770364853,
+            "edge_density": -0.8276483624347856,
+            "motion_px": 0.4399853243624902,
+            "brightness": 0.2759052224570608,
+            "local_contrast": -0.6643187281637354,
+            "clipped_high": -0.7507420663616018,
+            "clipped_low": NaN,
+            "snr": -0.5991369234036689
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.17102607392348362,
+          "weight_std": 0.014009402806066093,
+          "weight_min": 0.15535122928456413,
+          "weight_max": 0.19291664667648414,
+          "reliability_mean": 0.6118616895972049,
+          "weight_range": 0.037565417391920014,
+          "correlations": {
+            "noise_level": 0.40089395482579804,
+            "edge_density": 0.890539699157201,
+            "motion_px": -0.8271869127844325,
+            "brightness": -0.07025951647894571,
+            "local_contrast": 0.8856969922300544,
+            "clipped_high": 0.8348253000986972,
+            "clipped_low": NaN,
+            "snr": 0.6454360091683494
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.20463592924682958,
+          "weight_std": 0.02276359598951556,
+          "weight_min": 0.17728790461914617,
+          "weight_max": 0.22753494872288885,
+          "reliability_mean": 0.6857787498297766,
+          "weight_range": 0.05024704410374267,
+          "correlations": {
+            "noise_level": -0.36863561158448915,
+            "edge_density": -0.8870552819540704,
+            "motion_px": 0.7717598944060413,
+            "brightness": 0.027533399092484475,
+            "local_contrast": -0.8954823855562689,
+            "clipped_high": -0.7958463763364529,
+            "clipped_low": NaN,
+            "snr": -0.6550189257845359
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.1700731002817817,
+          "weight_std": 0.0272618183677364,
+          "weight_min": 0.13518606130507135,
+          "weight_max": 0.1980556255263353,
+          "reliability_mean": 0.7002240808165527,
+          "weight_range": 0.06286956422126394,
+          "correlations": {
+            "noise_level": -0.41161111954492796,
+            "edge_density": -0.8938538676200427,
+            "motion_px": 0.8178090234569857,
+            "brightness": 0.073879376265786,
+            "local_contrast": -0.8920879576878612,
+            "clipped_high": -0.8477167818279016,
+            "clipped_low": NaN,
+            "snr": -0.6516205739488795
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.08211718358303625,
+          "weight_std": 0.05147534648790279,
+          "weight_min": 0.03262921909200406,
+          "weight_max": 0.1446474807575597,
+          "reliability_mean": 0.433471569519635,
+          "weight_range": 0.11201826166555565,
+          "correlations": {
+            "noise_level": 0.36922697758353823,
+            "edge_density": 0.8869935168053994,
+            "motion_px": -0.8062048713110416,
+            "brightness": -0.06910802828984187,
+            "local_contrast": 0.8748340774973722,
+            "clipped_high": 0.7964183427600054,
+            "clipped_low": NaN,
+            "snr": 0.6343884717766203
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.9314720812182741,
+        "edge_density": 0.5076142131979695,
+        "motion_px": 0.0025380710659898475,
+        "brightness": 0.0025380710659898475,
+        "local_contrast": 0.0025380710659898475,
+        "clipped_high": 0.5406091370558376,
+        "clipped_low": 1.0,
+        "snr": 0.0025380710659898475
+      },
+      "driver_means": {
+        "noise_level": 0.07556741424036444,
+        "edge_density": 0.015344710589396503,
+        "motion_px": 0.20227392913734832,
+        "brightness": 0.7608245986296048,
+        "local_contrast": 0.11653751467452947,
+        "clipped_high": 0.0011833315707839819,
+        "clipped_low": 0.0,
+        "snr": 66.47989599934671
+      },
+      "weight_variation": 0.021859678090825025,
+      "max_weight_share": 0.20463592924682986,
+      "frames": 394
+    },
+    "cond_20260916_110746": {
+      "selection": {
+        "total_frames": 586,
+        "selected": 410,
+        "excluded": {
+          "moving": 176
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.19270089935474266,
+          "weight_std": 0.009248018717632828,
+          "weight_min": 0.1710986214924286,
+          "weight_max": 0.1982374401298594,
+          "reliability_mean": 0.45392553232257693,
+          "weight_range": 0.027138818637430784,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7419867743676491,
+            "motion_px": 0.7072519547496618,
+            "brightness": -0.8520028920239946,
+            "local_contrast": -0.9605081152091124,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.9605081152091124
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18558998095886683,
+          "weight_std": 0.002931133727778863,
+          "weight_min": 0.18130014581699072,
+          "weight_max": 0.19027039156561854,
+          "reliability_mean": 0.44540865860928225,
+          "weight_range": 0.008970245748627814,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.11008862400963797,
+            "motion_px": -0.38469516874420256,
+            "brightness": 0.6803025046651516,
+            "local_contrast": 0.4535723504398323,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.4535723504398323
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.15571149392875153,
+          "weight_std": 0.013145704111875031,
+          "weight_min": 0.14089859722220954,
+          "weight_max": 0.18374209015330506,
+          "reliability_mean": 0.3872240307336205,
+          "weight_range": 0.04284349293109552,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": 0.7423999521422996,
+            "motion_px": -0.6499914466779811,
+            "brightness": 0.8802371250739438,
+            "local_contrast": 0.982246176360359,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.982246176360359
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.2247313067604759,
+          "weight_std": 0.019805386660940144,
+          "weight_min": 0.17990389403744567,
+          "weight_max": 0.2415138176538575,
+          "reliability_mean": 0.5201620110108036,
+          "weight_range": 0.06160992361641182,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7432048074906572,
+            "motion_px": 0.6147381791130924,
+            "brightness": -0.8909595521454474,
+            "local_contrast": -0.9918976317527172,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.9918976317527172
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.19210817399510569,
+          "weight_std": 0.022566967766523945,
+          "weight_min": 0.14093244786963813,
+          "weight_max": 0.21015989807638275,
+          "reliability_mean": 0.5487642377234402,
+          "weight_range": 0.06922745020674462,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": -0.7425149314777792,
+            "motion_px": 0.6508411201935445,
+            "brightness": -0.8793550664612708,
+            "local_contrast": -0.9818646938454821,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.9818646938454821
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.04915814500205737,
+          "weight_std": 0.03976492231040152,
+          "weight_min": 0.028082214790867262,
+          "weight_max": 0.1417353028870206,
+          "reliability_mean": 0.19684363941880487,
+          "weight_range": 0.11365308809615335,
+          "correlations": {
+            "noise_level": NaN,
+            "edge_density": 0.7426228998781687,
+            "motion_px": -0.6453366983654667,
+            "brightness": 0.8816364746732435,
+            "local_contrast": 0.9835875461890271,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.9835875461890271
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 1.0,
+        "edge_density": 0.7634146341463415,
+        "motion_px": 0.0024390243902439024,
+        "brightness": 0.0024390243902439024,
+        "local_contrast": 0.0024390243902439024,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.0024390243902439024
+      },
+      "driver_means": {
+        "noise_level": 0.07244175533787912,
+        "edge_density": 0.003986534552845528,
+        "motion_px": 0.2597373683968381,
+        "brightness": 0.23198695193290253,
+        "local_contrast": 0.06030024224294537,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 35.37683872197856
+      },
+      "weight_variation": 0.01791035554919206,
+      "max_weight_share": 0.22473130676047587,
+      "frames": 410
+    },
+    "point_source_20260916_111545": {
+      "selection": {
+        "total_frames": 1781,
+        "selected": 1204,
+        "excluded": {
+          "moving": 536,
+          "spot_wandered": 41
+        }
+      },
+      "has_reference": true,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.2001862351248602,
+          "weight_std": 0.0028370245006033596,
+          "weight_min": 0.19284677224204497,
+          "weight_max": 0.21240883446072215,
+          "reliability_mean": 0.32801575905891583,
+          "weight_range": 0.01956206221867718,
+          "correlations": {
+            "noise_level": -0.15229234389678523,
+            "edge_density": -0.9591700193477919,
+            "motion_px": 0.4211991560641551,
+            "brightness": -0.37491782422217745,
+            "local_contrast": -0.4916655508359689,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.4666777888883744
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18349850767419384,
+          "weight_std": 0.002289194002657344,
+          "weight_min": 0.17522315683562356,
+          "weight_max": 0.18586342094742003,
+          "reliability_mean": 0.30176298995443857,
+          "weight_range": 0.010640264111796471,
+          "correlations": {
+            "noise_level": 0.10544412920455963,
+            "edge_density": 0.7989078740101107,
+            "motion_px": -0.4811875138390222,
+            "brightness": 0.58896804927378,
+            "local_contrast": 0.8043017929047331,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.7766059116753681
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.1512595821353927,
+          "weight_std": 0.007995297487668782,
+          "weight_min": 0.1331500177248263,
+          "weight_max": 0.16646238974701946,
+          "reliability_mean": 0.2503572306568987,
+          "weight_range": 0.03331237202219317,
+          "correlations": {
+            "noise_level": 0.07687891728399276,
+            "edge_density": 0.9747181823635507,
+            "motion_px": -0.4066868986395895,
+            "brightness": 0.3791507388989663,
+            "local_contrast": 0.5324379048381308,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.5107018883794964
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.23731261350182986,
+          "weight_std": 0.008477512973748255,
+          "weight_min": 0.21878986215227497,
+          "weight_max": 0.2517319636960896,
+          "reliability_mean": 0.3874204804564454,
+          "weight_range": 0.032942101543814606,
+          "correlations": {
+            "noise_level": 0.011385213211249653,
+            "edge_density": -0.9788175618671366,
+            "motion_px": 0.3666141575934304,
+            "brightness": -0.3914783143651708,
+            "local_contrast": -0.5398762780673246,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.5278039230963052
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.1896957487195866,
+          "weight_std": 0.010186796771458242,
+          "weight_min": 0.16729525102692966,
+          "weight_max": 0.20772265619590816,
+          "reliability_mean": 0.3860516455362516,
+          "weight_range": 0.0404274051689785,
+          "correlations": {
+            "noise_level": -0.050817849134918686,
+            "edge_density": -0.9817814234561273,
+            "motion_px": 0.38671618193319585,
+            "brightness": -0.35682963315979954,
+            "local_contrast": -0.5140569263074926,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.49414104267171
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.03804731284413677,
+          "weight_std": 0.011641702317018056,
+          "weight_min": 0.024242563635931882,
+          "weight_max": 0.06956325471257715,
+          "reliability_mean": 0.08166008985420531,
+          "weight_range": 0.04532069107664527,
+          "correlations": {
+            "noise_level": 0.006956317257311314,
+            "edge_density": 0.9847895134569057,
+            "motion_px": -0.36559062084797106,
+            "brightness": 0.3489564792405337,
+            "local_contrast": 0.5072819598348389,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.49249799743313327
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.012458471760797342,
+        "edge_density": 0.30398671096345514,
+        "motion_px": 0.0008305647840531562,
+        "brightness": 0.0008305647840531562,
+        "local_contrast": 0.0008305647840531562,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.0008305647840531562
+      },
+      "driver_means": {
+        "noise_level": 0.07153924172449183,
+        "edge_density": 0.001241578995939461,
+        "motion_px": 0.2154249685992591,
+        "brightness": 0.10431689844559508,
+        "local_contrast": 0.04211196083563111,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 36.82591339057457
+      },
+      "weight_variation": 0.007237921342192339,
+      "max_weight_share": 0.23731261350183017,
+      "frames": 1204
+    },
+    "point_source_20260916_111724": {
+      "selection": {
+        "total_frames": 1690,
+        "selected": 1125,
+        "excluded": {
+          "moving": 499,
+          "spot_wandered": 66
+        }
+      },
+      "has_reference": true,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.19960437966701217,
+          "weight_std": 0.0029074216208944724,
+          "weight_min": 0.19033053284148616,
+          "weight_max": 0.20880168129232018,
+          "reliability_mean": 0.336931166456687,
+          "weight_range": 0.01847114845083403,
+          "correlations": {
+            "noise_level": -0.02828974838793846,
+            "edge_density": -0.9776890467606222,
+            "motion_px": 0.37638865676799216,
+            "brightness": -0.23040367800894526,
+            "local_contrast": -0.41645639515763333,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.41540414371875045
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18397272269252685,
+          "weight_std": 0.0019296086493953795,
+          "weight_min": 0.1782132833984043,
+          "weight_max": 0.18583759457546065,
+          "reliability_mean": 0.3116327559728347,
+          "weight_range": 0.0076243111770563365,
+          "correlations": {
+            "noise_level": 0.004204159277835445,
+            "edge_density": 0.768612218892842,
+            "motion_px": -0.4283316582702814,
+            "brightness": 0.4495227818707863,
+            "local_contrast": 0.7825087605745493,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.7812860783168002
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.1528585632831644,
+          "weight_std": 0.007733371867062117,
+          "weight_min": 0.13720350110517657,
+          "weight_max": 0.16830292372727604,
+          "reliability_mean": 0.26058212557181765,
+          "weight_range": 0.03109942262209947,
+          "correlations": {
+            "noise_level": 0.004281057438895556,
+            "edge_density": 0.9668011566449145,
+            "motion_px": -0.3947711147491935,
+            "brightness": 0.2592787670928093,
+            "local_contrast": 0.46829081918984355,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.4676777587509577
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.23574581339560974,
+          "weight_std": 0.00858130781070405,
+          "weight_min": 0.2142356308427603,
+          "weight_max": 0.25177780071839084,
+          "reliability_mean": 0.39656920050673594,
+          "weight_range": 0.037542169875630554,
+          "correlations": {
+            "noise_level": 0.01587536587853728,
+            "edge_density": -0.9646167300298281,
+            "motion_px": 0.364513593294691,
+            "brightness": -0.28528696129125014,
+            "local_contrast": -0.4721513106924941,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.47217356058675813
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.18780566761448791,
+          "weight_std": 0.010346401308856978,
+          "weight_min": 0.1618439697442422,
+          "weight_max": 0.20477965385832395,
+          "reliability_mean": 0.3937916327094399,
+          "weight_range": 0.042935684114081746,
+          "correlations": {
+            "noise_level": -0.012073152816795177,
+            "edge_density": -0.988501353618507,
+            "motion_px": 0.37264057782300797,
+            "brightness": -0.17384853417010984,
+            "local_contrast": -0.40490460403134754,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.4044050686211496
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.04001285334719897,
+          "weight_std": 0.012819368855264733,
+          "weight_min": 0.024509713843336268,
+          "weight_max": 0.0814587834579201,
+          "reliability_mean": 0.0886103353076262,
+          "weight_range": 0.05694906961458383,
+          "correlations": {
+            "noise_level": 0.008817011052151711,
+            "edge_density": 0.9893807019574978,
+            "motion_px": -0.3617888072076172,
+            "brightness": 0.17967076727755055,
+            "local_contrast": 0.40354965289459105,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.4032813731089046
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.0008888888888888889,
+        "edge_density": 0.2391111111111111,
+        "motion_px": 0.0008888888888888889,
+        "brightness": 0.0008888888888888889,
+        "local_contrast": 0.0008888888888888889,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.0008888888888888889
+      },
+      "driver_means": {
+        "noise_level": 0.07237736265879147,
+        "edge_density": 0.0014039043209876545,
+        "motion_px": 0.146306640919423,
+        "brightness": 0.1042949613749851,
+        "local_contrast": 0.04333708219507421,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 26.288635280301857
+      },
+      "weight_variation": 0.007386246685362957,
+      "max_weight_share": 0.2357458133956095,
+      "frames": 1125
+    },
+    "sweep_plain_20260916_110955": {
+      "selection": {
+        "total_frames": 1656,
+        "selected": 1181,
+        "excluded": {
+          "moving": 475
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.1771930904319578,
+          "weight_std": 0.01590883882055512,
+          "weight_min": 0.1541903383799138,
+          "weight_max": 0.1972093071180195,
+          "reliability_mean": 0.6525965533864923,
+          "weight_range": 0.043018968738105706,
+          "correlations": {
+            "noise_level": -0.757968892646546,
+            "edge_density": -0.9352692862986144,
+            "motion_px": 0.7976600674172053,
+            "brightness": -0.04434596156680174,
+            "local_contrast": -0.941673051183564,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.19816375207382741
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.18769131776115183,
+          "weight_std": 0.003560056363751607,
+          "weight_min": 0.18298058042372398,
+          "weight_max": 0.1918413628715725,
+          "reliability_mean": 0.7037869047307481,
+          "weight_range": 0.00886078244784852,
+          "correlations": {
+            "noise_level": 0.44911987291142785,
+            "edge_density": -0.07190983972492833,
+            "motion_px": 0.28588351091950814,
+            "brightness": -0.5725657175880848,
+            "local_contrast": -0.03616995513133706,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.7449438179450749
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.17763800661723736,
+          "weight_std": 0.016443336697180604,
+          "weight_min": 0.15403852090213155,
+          "weight_max": 0.20011001597362627,
+          "reliability_mean": 0.685204402404006,
+          "weight_range": 0.04607149507149472,
+          "correlations": {
+            "noise_level": 0.7578601672563544,
+            "edge_density": 0.9344726117644964,
+            "motion_px": -0.7986044051317852,
+            "brightness": 0.04636598625885787,
+            "local_contrast": 0.9421733366496287,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.1973677668849086
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.1963263933060111,
+          "weight_std": 0.0237140810794553,
+          "weight_min": 0.17566573561641616,
+          "weight_max": 0.22763209120933356,
+          "reliability_mean": 0.7135818596983303,
+          "weight_range": 0.0519663555929174,
+          "correlations": {
+            "noise_level": -0.7579814340642654,
+            "edge_density": -0.9353098726370417,
+            "motion_px": 0.7951258355666226,
+            "brightness": -0.049717238869187434,
+            "local_contrast": -0.944345050411175,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.19452337450032237
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.15989410200145038,
+          "weight_std": 0.028722324141269653,
+          "weight_min": 0.13166736374359989,
+          "weight_max": 0.19917535646907827,
+          "reliability_mean": 0.71429863045351,
+          "weight_range": 0.06750799272547839,
+          "correlations": {
+            "noise_level": -0.7579646743416419,
+            "edge_density": -0.9352605801281783,
+            "motion_px": 0.7973074278327673,
+            "brightness": -0.0460406764948202,
+            "local_contrast": -0.942500828281587,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.19705363601401743
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.10125708988219154,
+          "weight_std": 0.05378960191899081,
+          "weight_min": 0.032257527959451075,
+          "weight_max": 0.14675385076212005,
+          "reliability_mean": 0.55098130959111,
+          "weight_range": 0.11449632280266897,
+          "correlations": {
+            "noise_level": 0.7579814340642654,
+            "edge_density": 0.935318792340918,
+            "motion_px": -0.7970410285367351,
+            "brightness": 0.04638145239618002,
+            "local_contrast": 0.9427106592526973,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.19678294582919129
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.7392040643522438,
+        "edge_density": 0.3793395427603726,
+        "motion_px": 0.000846740050804403,
+        "brightness": 0.000846740050804403,
+        "local_contrast": 0.000846740050804403,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.000846740050804403
+      },
+      "driver_means": {
+        "noise_level": 0.10114856412585999,
+        "edge_density": 0.0337025178756233,
+        "motion_px": 0.14138919416875043,
+        "brightness": 0.5506050259459252,
+        "local_contrast": 0.13306050350078183,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 63.74832693331188
+      },
+      "weight_variation": 0.023689706503533848,
+      "max_weight_share": 0.19632639330601082,
+      "frames": 1181
+    },
+    "sweep_texture_20260916_110108": {
+      "selection": {
+        "total_frames": 1563,
+        "selected": 1092,
+        "excluded": {
+          "moving": 471
+        }
+      },
+      "has_reference": false,
+      "metrics": {
+        "laplacian": {
+          "weight_mean": 0.17931379359408567,
+          "weight_std": 0.012340358492757646,
+          "weight_min": 0.16206418977257958,
+          "weight_max": 0.19686671969131028,
+          "reliability_mean": 0.700343892591273,
+          "weight_range": 0.0348025299187307,
+          "correlations": {
+            "noise_level": -0.533517012178531,
+            "edge_density": -0.798724856111457,
+            "motion_px": 0.786456792683401,
+            "brightness": -0.09674127030583153,
+            "local_contrast": -0.8221771536432033,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.4463599962596577
+          }
+        },
+        "tenengrad": {
+          "weight_mean": 0.1864430593524507,
+          "weight_std": 0.0035452276695941004,
+          "weight_min": 0.18298030085754735,
+          "weight_max": 0.19182008846219187,
+          "reliability_mean": 0.7386889609759827,
+          "weight_range": 0.008839787604644517,
+          "correlations": {
+            "noise_level": -0.23079567505995022,
+            "edge_density": -0.7115256259325892,
+            "motion_px": 0.6127771670073612,
+            "brightness": -0.10090935413622128,
+            "local_contrast": -0.6935788354868024,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.7038126913846329
+          }
+        },
+        "brenner": {
+          "weight_mean": 0.17650071283512517,
+          "weight_std": 0.013065342844777016,
+          "weight_min": 0.15514916175300675,
+          "weight_max": 0.19283288896336015,
+          "reliability_mean": 0.7175308066864795,
+          "weight_range": 0.0376837272103534,
+          "correlations": {
+            "noise_level": 0.5335102530707853,
+            "edge_density": 0.7986886385679984,
+            "motion_px": -0.7869386838302436,
+            "brightness": 0.09677811343323901,
+            "local_contrast": 0.8221527144302946,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.4463376212939931
+          }
+        },
+        "wavelet": {
+          "weight_mean": 0.1953498806382752,
+          "weight_std": 0.021901296204824016,
+          "weight_min": 0.17678292643392926,
+          "weight_max": 0.22723665402889068,
+          "reliability_mean": 0.7527128241528138,
+          "weight_range": 0.05045372759496142,
+          "correlations": {
+            "noise_level": -0.5332481522034518,
+            "edge_density": -0.7986849383236203,
+            "motion_px": 0.7866925776387118,
+            "brightness": -0.09680139150723384,
+            "local_contrast": -0.8220980118783238,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.4466726283478669
+          }
+        },
+        "fourier": {
+          "weight_mean": 0.15937686639804077,
+          "weight_std": 0.025813425938419468,
+          "weight_min": 0.13541221230519668,
+          "weight_max": 0.19823884958355242,
+          "reliability_mean": 0.7563151582385337,
+          "weight_range": 0.06282663727835575,
+          "correlations": {
+            "noise_level": -0.5335095806262198,
+            "edge_density": -0.7987229966452165,
+            "motion_px": 0.7864000627457439,
+            "brightness": -0.09674007230519047,
+            "local_contrast": -0.8221742323647372,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": -0.44635734222748663
+          }
+        },
+        "edge_width": {
+          "weight_mean": 0.10301568718202253,
+          "weight_std": 0.0502619344561807,
+          "weight_min": 0.032586889508624,
+          "weight_max": 0.14557878860973633,
+          "reliability_mean": 0.5854665601830801,
+          "weight_range": 0.11299189910111233,
+          "correlations": {
+            "noise_level": 0.5300113021592547,
+            "edge_density": 0.7981664228920327,
+            "motion_px": -0.7894842508671198,
+            "brightness": 0.09764965889961305,
+            "local_contrast": 0.8210972574420329,
+            "clipped_high": NaN,
+            "clipped_low": NaN,
+            "snr": 0.44988926926228123
+          }
+        }
+      },
+      "drivers_at_minimum_fraction": {
+        "noise_level": 0.004578754578754579,
+        "edge_density": 0.30128205128205127,
+        "motion_px": 0.0009157509157509158,
+        "brightness": 0.0009157509157509158,
+        "local_contrast": 0.0009157509157509158,
+        "clipped_high": 1.0,
+        "clipped_low": 1.0,
+        "snr": 0.0009157509157509158
+      },
+      "driver_means": {
+        "noise_level": 0.07763275490898196,
+        "edge_density": 0.027277946301383804,
+        "motion_px": 0.1725109920403889,
+        "brightness": 0.6620492571465185,
+        "local_contrast": 0.1329903316901931,
+        "clipped_high": 0.0,
+        "clipped_low": 0.0,
+        "snr": 74.8505960938067
+      },
+      "weight_variation": 0.021154597601092156,
+      "max_weight_share": 0.19534988063827527,
+      "frames": 1092
+    }
+  },
+  "weight_floor": 0.02,
+  "study": "d12",
+  "title": "\u041f\u043e\u0432\u0435\u0434\u0456\u043d\u043a\u0430 \u0432\u0430\u0433",
+  "data_root": "D:\\camera_focus_data",
+  "provenance": {
+    "commit": "b13a31ac66e045d98796b1e992dc6474db40057d",
+    "source_modified": true,
+    "source_modified_files": [
+      "tools/programme.py",
+      "tools/studies.py"
+    ],
+    "source_paths_checked": [
+      "src",
+      "tools",
+      "tests",
+      "demo",
+      "config",
+      "pyproject.toml"
+    ],
+    "working_tree_dirty": true,
+    "tracked_files_modified": true,
+    "python": "3.12.10",
+    "numpy": "2.1.2",
+    "opencv": "4.13.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "config_fingerprint": "c556332122033781",
+    "config": {
+      "analysis": {
+        "brightness_high": 0.85,
+        "brightness_low": 0.15,
+        "clip_high_level": 250,
+        "clip_low_level": 5,
+        "clip_ref_fraction": 0.15,
+        "contrast_ref": 0.08,
+        "edge_ref_density": 0.006,
+        "motion_downscale": 4,
+        "motion_ref_px": 15.0,
+        "noise_quantile": 75.0,
+        "noise_ref_sigma": 6.0
+      },
+      "capture": {
+        "backend": "auto",
+        "device": "0",
+        "fourcc": "MJPG",
+        "fps": 30,
+        "height": 720,
+        "loop": false,
+        "path": "",
+        "threaded": true,
+        "width": 1280
+      },
+      "ensemble": {
+        "agreement_scale": 1.5,
+        "confidence_dispersion_ref": 0.45,
+        "confidence_snr_ref": 12.0,
+        "sensitivity": {
+          "brenner": {
+            "clip": 0.6,
+            "contrast": 0.9,
+            "edge": 0.9,
+            "motion": 0.9,
+            "noise": 1.0
+          },
+          "edge_width": {
+            "clip": 0.9,
+            "contrast": 1.0,
+            "edge": 2.2,
+            "motion": 1.0,
+            "noise": 1.4
+          },
+          "fourier": {
+            "clip": 0.7,
+            "contrast": 0.6,
+            "edge": 0.4,
+            "motion": 0.5,
+            "noise": 1.9
+          },
+          "gradient_variance": {
+            "clip": 0.6,
+            "contrast": 0.8,
+            "edge": 0.7,
+            "motion": 0.7,
+            "noise": 1.3
+          },
+          "laplacian": {
+            "clip": 0.5,
+            "contrast": 0.7,
+            "edge": 0.6,
+            "motion": 0.6,
+            "noise": 2.2
+          },
+          "tenengrad": {
+            "clip": 0.6,
+            "contrast": 0.8,
+            "edge": 0.7,
+            "motion": 0.7,
+            "noise": 1.2
+          },
+          "wavelet": {
+            "clip": 0.5,
+            "contrast": 0.6,
+            "edge": 0.5,
+            "motion": 0.6,
+            "noise": 1.6
+          }
+        },
+        "use_agreement": false,
+        "use_motion_compensation": true,
+        "use_noise_compensation": true,
+        "warmup_confidence": 0.3,
+        "weight_floor": 0.02
+      },
+      "focus_map": {
+        "high_percentile": 90.0,
+        "low_percentile": 10.0,
+        "measure": "grad_over_var",
+        "min_contrast": 0.02,
+        "min_gradient_energy": 0.0,
+        "min_relative_spread": 0.8,
+        "smooth": true,
+        "tile_size": 32
+      },
+      "metrics": {
+        "brenner_shift": 2,
+        "contrast_normalize": true,
+        "edge_canny_percentile": 97.0,
+        "edge_canny_ratio": 0.4,
+        "edge_min_gradient": 1.0,
+        "edge_range_window": 11,
+        "enabled": [
+          "laplacian",
+          "tenengrad",
+          "brenner",
+          "wavelet",
+          "fourier",
+          "edge_width"
+        ],
+        "fourier_high_cutoff": 0.25,
+        "priors": {
+          "brenner": 1.0,
+          "edge_width": 0.8,
+          "fourier": 0.8,
+          "gradient_variance": 1.0,
+          "laplacian": 1.0,
+          "tenengrad": 1.0,
+          "wavelet": 1.0
+        },
+        "wavelet_levels": 2
+      },
+      "normalization": {
+        "auto_freeze": true,
+        "auto_freeze_min_samples": 240,
+        "auto_freeze_patience": 120,
+        "auto_freeze_stability": 0.05,
+        "auto_thaw": false,
+        "auto_thaw_margin": 3.0,
+        "auto_thaw_outside": 0.5,
+        "high_percentile": 95.0,
+        "log_compress": true,
+        "logistic_gain": 4.0,
+        "long_window_multiple": 2,
+        "low_percentile": 5.0,
+        "mapping": "logistic",
+        "min_range_absolute": 1e-06,
+        "min_range_ratio": 0.001,
+        "ready_informative_fraction": 0.5,
+        "warmup": 5,
+        "window": 960
+      },
+      "pipeline": {
+        "allow_upscale": false,
+        "analysis_width": 320,
+        "color_order": "BGR",
+        "default_roi_fraction": 1.0,
+        "input_max": null,
+        "interpolation": "INTER_AREA",
+        "prefilter_sigma": 0.0
+      },
+      "regions": {
+        "blob_min_tiles": 2,
+        "blob_relative_threshold": 0.55,
+        "detectors": [
+          "faces",
+          "sharp_blobs"
+        ],
+        "face_cascade": "haarcascade_frontalface_default.xml",
+        "face_interval": 3,
+        "face_min_neighbors": 5,
+        "face_min_size_fraction": 0.08,
+        "face_scale_factor": 1.15,
+        "max_regions": 5,
+        "merge_iou": 0.45,
+        "min_area_fraction": 0.004,
+        "subject_iou_match": 0.3
+      },
+      "temporal": {
+        "alpha_base": 0.35,
+        "confidence_coupling": true,
+        "enabled": true,
+        "gate_abs_jump": 0.12,
+        "gate_full_sigma": 5.0,
+        "gate_sigma": 2.5,
+        "history": 30,
+        "min_confidence_gain": 0.3
+      }
+    },
+    "recordings": [
+      "cond_20260916_110502",
+      "cond_20260916_110600",
+      "cond_20260916_110656",
+      "cond_20260916_110746",
+      "point_source_20260916_111545",
+      "point_source_20260916_111724",
+      "sweep_plain_20260916_110955",
+      "sweep_texture_20260916_110108"
+    ]
+  }
+}

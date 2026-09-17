@@ -59,12 +59,27 @@ def test_claim_matches_its_report(claim: dict[str, Any]) -> None:
     if report is None:
         pytest.skip(f"reports/{claim['report']}.json not present")
 
-    aggregate = report.get("aggregate") or {}
-    assert claim["variant"] in aggregate, (
-        f"{claim['id']}: report has no variant {claim['variant']!r}; "
-        f"it has {sorted(aggregate)}"
-    )
-    row = aggregate[claim["variant"]]
+    # A study report is not always shaped like an ablation.  `path` walks to
+    # any nested value, which is how Д07's bootstrap interval and Д18's
+    # held-out split get registered next to ordinary aggregate rows.
+    if claim.get("path"):
+        row: dict[str, Any] = report
+        for step in claim["path"]:
+            assert isinstance(row, dict) and step in row, (
+                f"{claim['id']}: reports/{claim['report']}.json has no "
+                f"{'.'.join(claim['path'])}"
+            )
+            row = row[step]
+        assert isinstance(row, dict), (
+            f"{claim['id']}: {'.'.join(claim['path'])} is not a mapping"
+        )
+    else:
+        aggregate = report.get("aggregate") or {}
+        assert claim["variant"] in aggregate, (
+            f"{claim['id']}: report has no variant {claim['variant']!r}; "
+            f"it has {sorted(aggregate)}"
+        )
+        row = aggregate[claim["variant"]]
 
     field = claim["field"]
     assert field in row, f"{claim['id']}: variant has no field {field!r}"

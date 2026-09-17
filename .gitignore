@@ -32,3 +32,8 @@ focus_ui_*.png
 *.swp
 .DS_Store
 Thumbs.db
+
+# Checkouts of old commits, created by the Д08 study to run the first
+# version's own code.  They are working copies of this repository, not
+# content, and git would otherwise try to add one as an embedded repo.
+.worktrees/

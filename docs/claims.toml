@@ -193,3 +193,191 @@ n = 2
 value = 0.950
 digits = 3
 where = ["docs/CALIBRATION.md", "docs/STUDY_UA.md", "docs/STUDY_UA_REPORT.md"]
+
+# ---------------------------------------------------------------------------
+# Д07-Д20.  A study report is not always shaped like an ablation, so a claim
+# may give `path` instead of `variant` to walk to a nested object.
+# ---------------------------------------------------------------------------
+
+[[claim]]
+id = "d07.adaptive_prior.low"
+report = "study_d07"
+path = ["corpus", "adaptive-prior"]
+field = "low"
+value = -0.0458
+digits = 4
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d07.adaptive_prior.high"
+report = "study_d07"
+path = ["corpus", "adaptive-prior"]
+field = "high"
+value = 0.0287
+digits = 4
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d07.adaptive_prior.mean"
+report = "study_d07"
+path = ["corpus", "adaptive-prior"]
+field = "mean"
+value = -0.0051
+digits = 4
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d08.first_commit.spearman"
+report = "study_d08"
+variant = "first_commit"
+field = "spearman_gt"
+n = 2
+value = -0.150
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d09.raw.adj"
+report = "study_d09"
+variant = "1_raw"
+field = "adj"
+n = 8
+value = 0.890
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d09.streaming_single.adj"
+report = "study_d09"
+variant = "5a_streaming_single"
+field = "adj"
+n = 8
+value = 0.697
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d09.streaming_ensemble.adj"
+report = "study_d09"
+variant = "5b_streaming_ensemble"
+field = "adj"
+n = 8
+value = 0.774
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d09.filtered.adj"
+report = "study_d09"
+variant = "6_temporal_filter"
+field = "adj"
+n = 8
+value = 0.822
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d10.start50.rank_agreement"
+report = "study_d10"
+variant = "start_50pct"
+field = "rank_agreement"
+n = 8
+value = 0.558
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d11.off.spearman"
+report = "study_d11"
+variant = "off"
+field = "spearman_gt"
+n = 2
+value = 0.501
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d11.shipped.spearman"
+report = "study_d11"
+variant = "min240_pat120_stab0.05"
+field = "spearman_gt"
+n = 2
+value = 0.965
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d15.best_five.adj"
+report = "study_d15"
+variant = "5:lapl+bren+wave+four+edge"
+field = "adj"
+n = 8
+value = 0.835
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d16.shipped.spearman"
+report = "study_d16"
+variant = "w320_full"
+field = "spearman_gt"
+n = 2
+value = 0.965
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d17.blur4.score_shift"
+report = "study_d17"
+variant = "blur_4"
+field = "score_shift"
+n = 8
+value = 0.014
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d17.noise20.adj"
+report = "study_d17"
+variant = "noise_20"
+field = "adj"
+n = 8
+value = 0.710
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d18.held_out.shipped"
+report = "study_d18"
+path = ["held_out"]
+field = "shipped_held_out_adj"
+value = 0.8235
+digits = 4
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d18.held_out.tuned"
+report = "study_d18"
+path = ["held_out"]
+field = "held_out_adj"
+value = 0.8135
+digits = 4
+where = ["docs/STUDY_UA_RESULTS.md"]
+
+[[claim]]
+id = "d20.adj_vs_spearman"
+report = "study_d20"
+path = ["criteria_agreement", "adj"]
+field = "spearman_gt"
+value = 0.851
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d20.peak_err_vs_adj"
+report = "study_d20"
+path = ["criteria_agreement", "peak_err"]
+field = "adj"
+value = 0.180
+digits = 3
+where = ["docs/STUDY_UA_RESULTS.md"]
