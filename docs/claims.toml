@@ -411,3 +411,23 @@ n = 2
 value = 0.97
 digits = 2
 where = ["docs/STUDY_UA_RESULTS.md", "docs/STUDY_UA_REPORT.md"]
+
+[[claim]]
+id = "d11.off.peak_err"
+report = "study_d11"
+variant = "off"
+field = "peak_err"
+n = 2
+value = 2.0
+digits = 1
+where = ["docs/STUDY_UA_REPORT.md", "docs/ZVIT_UA.pdf"]
+
+[[claim]]
+id = "d11.shipped.peak_err"
+report = "study_d11"
+variant = "min240_pat120_stab0.05"
+field = "peak_err"
+n = 2
+value = 1.0
+digits = 1
+where = ["docs/STUDY_UA_REPORT.md", "docs/ZVIT_UA.pdf"]
